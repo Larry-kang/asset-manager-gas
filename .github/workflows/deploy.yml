@@ -25,8 +25,11 @@ jobs:
 
       - name: Generate Config Files
         run: |
-          echo '${{ secrets.CLASP_CONFIG }}' > .clasp.json
-          echo '${{ secrets.CLASP_SECRET }}' > ~/.clasprc.json
+          echo "$CLASP_CONFIG" > .clasp.json
+          echo "$CLASP_SECRET" > ~/.clasprc.json
+        env:
+          CLASP_CONFIG: ${{ secrets.CLASP_CONFIG }}
+          CLASP_SECRET: ${{ secrets.CLASP_SECRET }}
 
       - name: Deploy
         run: clasp push -f
