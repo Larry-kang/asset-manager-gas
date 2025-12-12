@@ -31,5 +31,14 @@ jobs:
           CLASP_CONFIG: ${{ secrets.CLASP_CONFIG }}
           CLASP_SECRET: ${{ secrets.CLASP_SECRET }}
 
+      - name: Debug - Check Files
+        run: |
+          ls -la
+          ls -la ~/
+          echo "Checking .clasp.json content:"
+          cat .clasp.json
+          echo "Checking .clasprc.json structure (masked):"
+          sed 's/"access_token": ".*"/"access_token": "***/' ~/.clasprc.json | sed 's/"refresh_token": ".*"/"refresh_token": "***/'
+
       - name: Deploy
         run: clasp push -f
