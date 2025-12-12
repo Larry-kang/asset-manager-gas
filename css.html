@@ -359,26 +359,18 @@
       right: 0;
       width: 100%;
       height: auto;
-      /* Allow auto height based on padding */
       min-height: 60px;
-      /* Minimum touch target */
       flex-direction: row;
       justify-content: space-evenly;
-      /* Better spacing than around */
       align-items: center;
-      /* Vertical center */
       padding: 12px 16px;
       padding-bottom: calc(12px + env(safe-area-inset-bottom, 20px));
-      /* Explicit bottom padding */
       border-top: 1px solid var(--border-color);
       border-right: none;
       background: rgba(18, 18, 18, 0.98);
-      /* Less transparent for readability */
       backdrop-filter: blur(10px);
       z-index: 1000;
-      /* High z-index to stay on top */
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-      /* Shadow to separate from content */
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
     }
 
     .sidebar-logo,
@@ -388,7 +380,6 @@
 
     .main-content {
       padding: 20px;
-      /* Ensure ample space for fixed nav + safe area */
       padding-bottom: calc(90px + env(safe-area-inset-bottom, 20px));
     }
 
@@ -401,14 +392,12 @@
 
     .nav-item span {
       display: block;
-      /* Show labels on mobile if space permits, or hide if preferred. Keeping concise */
       font-size: 10px;
       font-weight: 500;
     }
 
     .nav-item i {
       font-size: 20px;
-      /* Larger icons for touch */
       width: auto;
       margin-bottom: 2px;
     }
@@ -417,8 +406,7 @@
       background: transparent;
       color: var(--text-gold);
     }
-
-    /* Active indicator dot */
+    
     .nav-item.active::after {
       content: '';
       display: block;
@@ -444,11 +432,8 @@
   }
 
   .view {
-    /* display: none; Removed for Vue v-show compatibility */
     animation: fadeIn 0.4s;
   }
-
-  /* .view.active removed as Vue handles display */
 
   @keyframes fadeIn {
     from {
@@ -517,7 +502,6 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
-    /* Fix spacing issue */
   }
 
   .tag {
