@@ -18,3 +18,5 @@ creds.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.clasp.json
+.agent/

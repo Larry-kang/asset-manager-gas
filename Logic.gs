@@ -201,7 +201,7 @@ function calculateLoans(loanRows, marketData) {
       let colValTWD = colQty * price * (isUsd ? marketData.fx : 1);
 
       contracts.push({
-        row: rowIdx + 1, // Sheet uses 1-based index (Header is Row 1). Array index 1 is Row 2. So row = i + 1.
+        row: rowIdx, // Sheet Row Index (i=1 -> Row 2)
         // Wait, if I iterate from i=1 (2nd row of array), that corresponds to Row 2 in sheet.
         // So Array Index 1 == Sheet Row 2.
         // The formula should be: SheetRow = 1 + i.

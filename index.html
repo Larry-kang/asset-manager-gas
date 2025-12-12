@@ -3,188 +3,244 @@
 
 <head>
   <base target="_top">
-  <?!= include('css'); ?>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <?!= include('css'); ?>
 </head>
 
 <body>
 
-  <!-- Top Navigation Bar (Glass) -->
-  <div class="nav-bar">
-    <div id="navBack" class="nav-back hidden"><i class="fa-solid fa-chevron-left"></i> 返回</div>
-    <div id="navTitle">資產管家</div>
-    <div id="navAction" class="nav-action" onclick="load(true)"><i class="fa-solid fa-rotate-right"></i></div>
-  </div>
+  <div class="app-root">
 
-  <!-- Main View Container -->
-  <div class="view-container">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <i class="fa-solid fa-gem" style="color:var(--text-gold)"></i>
+        <div class="logo-text">ASSET MANAGER</div>
+      </div>
 
-    <!-- DASHBOARD VIEW -->
-    <div id="dash" class="view active">
-      <!-- Overview Card -->
-      <h1>概覽</h1>
-      <div class="chart-scroll">
-        <div class="chart-card">
-          <h3>淨資產 (TWD)</h3>
-          <div class="text-val" style="font-size:32px" id="netWorth">...</div>
+      <div class="nav-menu">
+        <div class="nav-item active" onclick="go('dash', this)">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
         </div>
-        <div class="chart-card">
-          <h3>總資產 / 總負債</h3>
-          <div class="grid-2">
-            <div>
-              <div class="text-sub">Asset</div>
-              <div class="text-val" id="totalAssets">...</div>
+        <div class="nav-item" onclick="go('holdings', this)">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Portfolio</span>
+        </div>
+        <div class="nav-item" onclick="go('loan', this)">
+          <i class="fa-solid fa-landmark"></i>
+          <span>Vault</span>
+        </div>
+        <div class="nav-item" onclick="go('settings', this)">
+          <i class="fa-solid fa-gear"></i>
+          <span>Settings</span>
+        </div>
+      </div>
+
+      <div class="user-profile">
+        <div
+          style="width:32px; height:32px; border-radius:50%; background:#333; display:flex; align-items:center; justify-content:center; font-size:12px">
+          MK</div>
+        <div style="font-size:13px; color:var(--text-secondary)">Ming-Hao</div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+      <!-- DASHBOARD -->
+      <div id="dash" class="view active">
+
+        <!-- Centered Balance Header -->
+        <div class="dash-header">
+          <div class="dash-label">Total Vault Balance <i class="fa-regular fa-circle-question"
+              style="font-size:12px"></i></div>
+          <div class="dash-balance" id="netWorth">...</div>
+
+          <div class="dash-actions">
+            <button class="btn-gold-pill" onclick="openTxModal()"><i class="fa-solid fa-plus"
+                style="margin-right:8px"></i> Add Funds</button>
+            <button class="btn-outline" onclick="openTxModal()"><i class="fa-solid fa-arrow-up"></i></button>
+            <button class="btn-outline" onclick="load(true)"><i class="fa-solid fa-rotate"></i></button>
+          </div>
+        </div>
+
+        <div class="grid-stack">
+
+          <!-- Assets Section -->
+          <div>
+            <div class="section-title">Assets</div>
+            <div class="card">
+              <!-- Chart + List Layout -->
+              <div style="display:flex; gap:32px; align-items:center; flex-wrap:wrap">
+                <div style="width:140px; height:140px; position:relative; flex-shrink:0">
+                  <canvas id="assetChart"></canvas>
+                </div>
+
+                <div id="assetList" style="flex:1; min-width:280px">
+                  <!-- Injected by JS -->
+                  <div style="text-align:center; color:var(--text-secondary)">Loading...</div>
+                </div>
+              </div>
             </div>
-            <div>
-              <div class="text-sub">Debt</div>
-              <div class="text-val" id="totalDebt">...</div>
+          </div>
+
+          <!-- Transactions Section -->
+          <div>
+            <div class="section-title">Transactions</div>
+            <div class="card" id="recentTxList">
+              <!-- Injected by JS -->
             </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PORTFOLIO / HOLDINGS -->
+      <div id="holdings" class="view hidden">
+        <div class="top-header">
+          <div class="section-title">Portfolio Holdings</div>
+          <button class="btn-gold-pill" onclick="openTxModal()">+ Trade</button>
+        </div>
+        <div id="holdingsList"></div>
+      </div>
+
+      <!-- VAULT / LOANS -->
+      <div id="loan" class="view hidden">
+        <div class="section-title">Vault (Loans)</div>
+        <div id="riskList" style="margin-bottom:24px"></div>
+        <div id="loanList"></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="settings" class="view hidden">
+        <div class="section-title">Settings</div>
+        <div class="card">
+          <div class="asset-row">
+            <div>System Status</div>
+            <div class="bg-success">Operational</div>
+          </div>
+          <div class="asset-row" onclick="google.script.run.runSystemCheck()">
+            <div>Run Diagnostics</div>
+            <div style="color:var(--text-secondary)"><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+          <div class="asset-row">
+            <div>Version</div>
+            <div style="color:var(--text-secondary)">v4.0.2</div>
           </div>
         </div>
       </div>
 
-      <!-- Chart -->
-      <h2>資產配置</h2>
-      <div style="background:var(--bg-card);border-radius:12px;padding:20px;margin-left:16px;margin-right:16px">
-        <canvas id="assetChart" height="200"></canvas>
-      </div>
-    </div>
-
-    <!-- HOLDINGS VIEW -->
-    <div id="holdings" class="view">
-      <h1>持倉</h1>
-      <div id="holdingsList">
-        <!-- Injected by JS -->
-      </div>
-    </div>
-
-    <!-- LOAN VIEW -->
-    <div id="loan" class="view">
-      <h1>借貸</h1>
-
-      <div id="riskList" style="margin-bottom:20px">
-        <!-- Risk Cards (Horizontal Scroll) -->
-      </div>
-
-      <div id="loanList">
-        <!-- Contract Groups -->
-      </div>
-    </div>
-
-    <!-- SETTINGS VIEW -->
-    <div id="settings" class="view">
-      <h1>設定</h1>
-      <div class="ios-list">
-        <div class="ios-row" onclick="toggleTheme()">
-          <div class="flex-cnt"><i class="fa-solid fa-moon"></i> 深色模式</div>
-          <div id="themeBtn" class="text-sub">Switch</div>
-        </div>
-      </div>
-
-      <h3>資料庫</h3>
-      <div class="ios-list">
-        <div class="ios-row">
-          <div class="flex-cnt"><i class="fa-solid fa-database"></i> 執行系統檢查</div>
-          <button class="ios-btn-outline" onclick="google.script.run.runSystemCheck()">Run</button>
-        </div>
-      </div>
-
-      <p style="text-align:center;color:var(--text-secondary);font-size:12px;margin-top:20px">Asset Manager v3.2 (iOS
-        Style)</p>
-    </div>
-
-  </div>
-
-  <!-- Bottom Tab Bar (Glass) -->
-  <div class="tab-bar">
-    <div class="tab-item active" onclick="go('dash')">
-      <i class="tab-icon fa-solid fa-chart-pie"></i>
-      <span>概覽</span>
-    </div>
-    <div class="tab-item" onclick="go('holdings')">
-      <i class="tab-icon fa-solid fa-wallet"></i>
-      <span>持倉</span>
-    </div>
-    <div class="tab-item" onclick="go('loan')">
-      <i class="tab-icon fa-solid fa-hand-holding-dollar"></i>
-      <span>借貸</span>
-    </div>
-    <div class="tab-item" onclick="go('settings')">
-      <i class="tab-icon fa-solid fa-gear"></i>
-      <span>設定</span>
     </div>
   </div>
 
-  <!-- Bottom Sheets -->
-
-  <!-- Transaction Sheet -->
-  <div id="sheetTx" class="sheet-overlay">
-    <div class="sheet-content">
-      <div class="sheet-handle"></div>
-      <h2>新增交易</h2>
-
-      <label>日期</label>
+  <!-- MODALS -->
+  <div id="modalOverlay" class="modal-overlay" onclick="if(event.target===this) closeTxModal()">
+    <div class="modal-content">
+      <h3 class="section-title" style="margin-top:0">New Transaction</h3>
       <input type="date" id="tDate">
-
-      <div class="grid-2">
-        <div>
-          <label>類別</label>
-          <select id="tCat">
-            <option>股票</option>
-            <option>加密貨幣</option>
-            <option>現金</option>
-          </select>
-        </div>
-        <div>
-          <label>動作</label>
-          <select id="tType">
-            <option>買入</option>
-            <option>賣出</option>
-            <option>配息</option>
-          </select>
-        </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+        <select id="tType">
+          <option>買入</option>
+          <option>賣出</option>
+          <option>配息</option>
+        </select>
+        <select id="tCat">
+          <option>股票</option>
+          <option>加密貨幣</option>
+          <option>現金</option>
+        </select>
       </div>
-
-      <label>標的代號</label>
-      <input type="text" id="tTicker" placeholder="e.g. 2330" list="tickerList">
+      <input type="text" id="tTicker" placeholder="Ticker (e.g. BTC)" list="tickerList">
       <datalist id="tickerList"></datalist>
-
-      <div class="grid-2">
-        <div><label>數量</label><input type="number" id="tQty" placeholder="0"></div>
-        <div><label>單價</label><input type="number" id="tPrice" placeholder="0"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+        <input type="number" id="tQty" placeholder="Qty">
+        <input type="number" id="tPrice" placeholder="Price">
       </div>
+      <div style="margin-bottom:16px">
+        <label>Currency</label>
+        <select id="tCurrency">
+          <option>TWD</option>
+          <option>USD</option>
+        </select>
+      </div>
+      <button class="btn-gold-pill" style="width:100%" id="btnTx" onclick="subTx()">Confirm Transaction</button>
+    </div>
+  </div>
 
-      <label>幣別</label>
-      <select id="tCurrency">
-        <option>TWD</option>
-        <option>USD</option>
+  <!-- LOAN ACTION MODAL -->
+  <div id="modalLoan" class="modal-overlay"
+    onclick="if(event.target === this) document.getElementById('modalLoan').style.display='none'">
+    <div class="modal-content">
+      <h3 id="lTitle" class="section-title" style="margin-top:0">Loan Action</h3>
+      <input type="hidden" id="lRow">
+      <input type="hidden" id="lSource">
+      <input type="hidden" id="lCurrency">
+
+      <label>Action Type</label>
+      <select id="lType" onchange="updateLoanUI(this.value)">
+        <option value="repay">Repay (還款)</option>
+        <option value="addCol">Add Collateral (補抵押)</option>
+        <option value="increaseLoan">Increase Loan (增貸)</option>
+        <option value="payPeriod">Pay Interest (繳息/繳期)</option>
+        <option value="sell">Sell to Repay (賣出還款)</option>
       </select>
 
-      <button id="btnTx" class="ios-btn" onclick="subTx()">送出交易</button>
-      <button class="ios-btn ios-btn-destructive" style="margin-top:10px;background:none"
-        onclick="closeSheet('sheetTx')">取消</button>
-    </div>
-  </div>
-
-  <!-- Loading / Msg Modal (Special Case) -->
-  <div id="msgModal" class="sheet-overlay" style="z-index:3000">
-    <div class="sheet-content" style="padding-bottom:40px">
-      <div class="sheet-handle"></div>
-      <div style="text-align:center">
-        <div id="msgIcon" style="font-size:40px;margin-bottom:10px">??</div>
-        <h2 id="msgTitle">通知</h2>
-        <p id="msgBody" class="text-sub">Message Body</p>
-        <button class="ios-btn" onclick="closeSheet('msgModal')">我知道了</button>
+      <div id="lInputs">
+        <label>Amount / Qty</label>
+        <input type="number" id="lVal" placeholder="Amount or Qty">
+        <div id="lPriceGroup" class="hidden">
+          <label>Price / Rate</label>
+          <input type="number" id="lPrice" placeholder="Price">
+        </div>
       </div>
+
+      <button class="btn-gold-pill" id="btnLoan" style="width:100%; margin-top:20px" onclick="subLoan()">Submit
+        Action</button>
     </div>
   </div>
 
-  <!-- Dev Console -->
-  <div id="devConsole" style="display:none"></div>
-  <button id="consoleToggle" onclick="toggleConsole()" style="display:none">Log</button>
+  <div id="msgModal" class="modal-overlay" style="z-index:300">
+    <div class="modal-content" style="text-align:center">
+      <h3 id="msgTitle" class="section-title">Notice</h3>
+      <p id="msgBody" style="color:var(--text-secondary); margin-bottom:24px"></p>
+      <button class="btn-outline" style="width:100%; border-radius:99px"
+        onclick="document.getElementById('msgModal').style.display='none'">Close</button>
+    </div>
+  </div>
 
-  <!-- Scripts -->
+  <!-- SCRIPTS -->
+  <?!= include('icons'); ?>
+  <?!= include('constants'); ?>
+
+  <script>
+    function go(id, el) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active', 'hidden'));
+      document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      document.getElementById(id).classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function openTxModal() { document.getElementById('modalOverlay').style.display = 'flex'; document.getElementById('tDate').valueAsDate = new Date(); }
+    function closeTxModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+
+    function updateLoanUI(type) {
+      const lbl = document.querySelector('#lInputs label');
+      const priceGrp = document.getElementById('lPriceGroup');
+      if (type === 'repay') { lbl.innerText = 'Repay Amount'; priceGrp.classList.add('hidden'); }
+      else if (type === 'addCol') { lbl.innerText = 'Collateral Qty'; priceGrp.classList.remove('hidden'); document.querySelector('#lPriceGroup label').innerText = 'New Rate (Optional)'; }
+      else if (type === 'increaseLoan') { lbl.innerText = 'Loan Amount'; priceGrp.classList.remove('hidden'); document.querySelector('#lPriceGroup label').innerText = 'Rate'; }
+      else if (type === 'payPeriod') { lbl.innerText = 'N/A'; document.getElementById('lVal').disabled = true; priceGrp.classList.add('hidden'); }
+      else if (type === 'sell') { lbl.innerText = 'Sell Qty'; priceGrp.classList.remove('hidden'); document.querySelector('#lPriceGroup label').innerText = 'Limit Price'; }
+      if (type !== 'payPeriod') document.getElementById('lVal').disabled = false;
+    }
+  </script>
+
   <?!= include('js'); ?>
 
 </body>

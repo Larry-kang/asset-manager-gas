@@ -1,233 +1,340 @@
-<script>
-  const el = (id) => document.getElementById(id);
-  const val = (id) => el(id).value;
+﻿<script>
+    let CASH = 0;
+    let DATA = {};
 
-  // --- State & Config ---
-  const Store = { data: null, currency: 'TWD', fx: 32.5, inventory: {}, theme: 'light', sort: 'val' };
-
-  // --- iOS UI Components ---
-  const UI = {
-    // List Row
-    row: (icon, title, subtitle, rightVal, rightSub = '', onClick = null) => `
-      <div class="ios-row" ${onClick ? `onclick="${onClick}"` : ''}>
-         <div class="flex-cnt">
-           ${icon ? `<span style="font-size:24px">${icon}</span>` : ''}
-           <div><div class="text-main">${title}</div><div class="text-sub">${subtitle}</div></div>
-         </div>
-         <div style="text-align:right">
-           <div class="text-val">${rightVal}</div><div class="text-sub" style="font-size:12px">${rightSub}</div>
-         </div>
-      </div>`,
-
-    // Section Header
-    header: (text) => `<h3>${text}</h3>`,
-
-    // Badge
-    badge: (text, type = 'safe') => `<span class="badge badge-${type}">${text}</span>`
-  };
-
-  // --- Navigation Stack ---
-  function go(viewId) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-
-    el(viewId).classList.add('active');
-
-    // Update Tab Bar
-    const tab = document.querySelector(`.tab-item[onclick*="'${viewId}'"]`);
-    if (tab) tab.classList.add('active');
-
-    // Update Nav Title
-    const fileMap = { 'dash': '概覽', 'holdings': '持倉', 'loan': '借貸', 'settings': '設定' };
-    el('navTitle').innerText = fileMap[viewId] || '資產管家';
-
-    // Auto refresh data
-    if (viewId === 'dash' || viewId === 'holdings' || viewId === 'loan') load(false);
-  }
-
-  // --- Bottom Sheet ---
-  function openSheet(id) {
-    const overlay = el(id);
-    const content = overlay.querySelector('.sheet-content');
-    overlay.style.display = 'block';
-    setTimeout(() => {
-      overlay.style.opacity = '1';
-      content.style.transform = 'translateY(0)';
-    }, 10);
-  }
-
-  function closeSheet(id) {
-    const overlay = el(id);
-    const content = overlay.querySelector('.sheet-content');
-    content.style.transform = 'translateY(100%)';
-    overlay.style.opacity = '0';
-    setTimeout(() => { overlay.style.display = 'none'; }, 300);
-  }
-
-  // Close sheet when clicking overlay
-  document.querySelectorAll('.sheet-overlay').forEach(ov => {
-    ov.addEventListener('click', (e) => { if (e.target === ov) closeSheet(ov.id); });
-  });
-
-  // --- Theme ---
-  function initTheme() {
-    const saved = localStorage.getItem('theme') || 'light';
-    setTheme(saved);
-  }
-  function toggleTheme() { setTheme(Store.theme === 'light' ? 'dark' : 'light'); }
-  function setTheme(t) {
-    Store.theme = t;
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('theme', t);
-  }
-
-  // --- Render Logic (Adapted for iOS) ---
-  function load(force) {
-    if (force) el('navTitle').innerText = '更新中...';
-    google.script.run.withSuccessHandler(render).getDashboardData(force);
-  }
-
-  function render(payload) {
-    el('navTitle').innerText = '資產管家';
-    if (!payload) return;
-    let d = (typeof payload === 'string') ? JSON.parse(payload) : payload;
-
-    if (d.status === 'error') { alert(d.message); return; }
-
-    Store.data = d; Store.inventory = d.inventory; Store.fx = d.fx;
-
-    // 1. Dashboard Charts
-    renderCharts(d);
-    el('netWorth').innerText = formatMoney(d.netWorthTWD);
-    el('totalAssets').innerText = formatMoney(d.totalAssetsTWD);
-    el('totalDebt').innerText = formatMoney(d.totalDebtTWD);
-
-    // 2. Holdings List
-    renderHoldings(d.holdings);
-
-    // 3. Loans & Risks
-    renderLoans(d.contracts);
-    renderRisks(d.risks);
-
-    // 4. Misc
-    if (d.knownTickers) updateDatalist(d.knownTickers);
-  }
-
-  function renderHoldings(list) {
-    let html = '';
-
-    // Group by Category
-    const cats = { '現金': [], '股票': [], '加密貨幣': [] };
-    list.forEach(h => { if (cats[h.cat]) cats[h.cat].push(h); else cats['股票'].push(h); }); // Fallback
-
-    for (let c in cats) {
-      if (cats[c].length === 0) continue;
-      html += UI.header(c);
-      html += '<div class="ios-list">';
-      cats[c].forEach(h => {
-        if (h.qty <= 0.0001) return;
-        let pnlClass = h.pnl >= 0 ? 'text-red' : 'text-green'; // TW style
-        let subRight = h.cat === '現金' ? '' : `<span class="${pnlClass}">${h.roi.toFixed(2)}%</span>`;
-        let title = h.ticker;
-        html += UI.row(null, title, `${h.qty} • ${formatMoney(h.marketPrice)}`, formatMoney(h.valTWD), subRight, `quickTrade('${h.ticker}', '${h.cat}')`);
-      });
-      html += '</div>';
-    }
-    el('holdingsList').innerHTML = html;
-  }
-
-  function renderLoans(list) {
-    if (!list || list.length === 0) { el('loanList').innerHTML = '<p class="text-sub" style="text-align:center;padding:20px">無借貸合約</p>'; return; }
-
-    let html = '';
-    // Group by Source
-    let groups = {};
-    list.forEach(c => { if (!groups[c.source]) groups[c.source] = []; groups[c.source].push(c); });
-
-    for (let src in groups) {
-      html += UI.header(src);
-      html += '<div class="ios-list">';
-      groups[src].forEach(c => {
-        let title = (c.type === '信用貸款' || c.type === '卡費') ? c.type : c.col;
-        let sub = (c.type === '信用貸款') ? `剩 ${c.totalTerm - c.paidTerm} 期` : `利率 ${c.rate}%`;
-        html += UI.row(null, title, sub, formatMoney(c.debt, c.currency), c.note, `clickLoan('${c.row}')`);
-      });
-      html += '</div>';
-    }
-    el('loanList').innerHTML = html;
-  }
-
-  function renderRisks(list) {
-    if (!list) return;
-    let html = '<div class="chart-scroll">'; // Reuse scroll container for risk cards
-    list.forEach(r => {
-      if (r.status === 'Safe') return; // Only show non-safe risks? Or show all. Let's show all.
-      let badge = r.status === 'Safe' ? 'safe' : (r.status === 'Warning' ? 'warn' : 'dang');
-      html += `<div class="chart-card" style="flex:0 0 160px">
-             <div class="text-sub" style="font-size:12px">${r.source}</div>
-             <div class="text-val" style="margin:5px 0">${r.type}</div>
-             ${UI.badge(r.ratio + '%', badge)}
-             <div class="text-sub" style="font-size:11px;margin-top:5px">${r.label}</div>
-          </div>`;
-    });
-    html += '</div>';
-    el('riskList').innerHTML = html;
-  }
-
-  // --- Chart.js Wrapper ---
-  let chartInstance = null;
-  function renderCharts(d) {
-    const ctx = el('assetChart').getContext('2d');
-    if (chartInstance) chartInstance.destroy();
-
-    // Simple Pie
-    let cats = { '股票': 0, '加密貨幣': 0, '現金': 0 };
-    d.holdings.forEach(h => { if (cats[h.cat] !== undefined) cats[h.cat] += h.valTWD; else cats['股票'] += h.valTWD; });
-
-    chartInstance = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: Object.keys(cats),
-        datasets: [{ data: Object.values(cats), backgroundColor: ['#007AFF', '#FFCC00', '#34C759'], borderWidth: 0 }]
-      },
-      options: { plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } }, cutout: '70%' }
-    });
-  }
-
-  // --- Formatters ---
-  function formatMoney(n, curr = 'TWD') {
-    if (!n) n = 0;
-    if (Store.currency === 'USD' || curr === 'USD') return '$' + Number(n).toLocaleString();
-    return 'NT$' + Math.round(n).toLocaleString();
-  }
-
-  // --- Actions ---
-  function quickTrade(t, c) {
-    openSheet('sheetTx');
-    el('tTicker').value = t;
-    el('tType').value = '買入';
-    el('tCat').value = c;
-  }
-
-  function subTx() {
-    // Collect Data
-    let d = {
-      date: el('tDate').value, type: el('tType').value, ticker: el('tTicker').value,
-      cat: el('tCat').value, qty: el('tQty').value, price: el('tPrice').value, currency: el('tCurrency').value
+    window.onload = () => {
+        const dateInput = document.getElementById('tDate');
+        if (dateInput) dateInput.valueAsDate = new Date();
+        load();
     };
 
-    el('btnTx').disabled = true; el('btnTx').innerText = '處理中...';
-    google.script.run.withSuccessHandler(r => {
-      closeSheet('sheetTx'); load(false); alert(r.message);
-      el('btnTx').disabled = false; el('btnTx').innerText = '送出交易';
-      // Reset form
-      el('tQty').value = ''; el('tPrice').value = '';
-    }).addTx(d);
-  }
+    function load(refresh = false) {
+        if (refresh) setVal('netWorth', 'Loading...');
 
-  window.onload = () => {
-    initTheme();
-    el('tDate').value = new Date().toISOString().split('T')[0];
-    load(false);
-  };
+        google.script.run
+            .withSuccessHandler(res => {
+                let d;
+                try { d = (typeof res === 'string') ? JSON.parse(res) : res; }
+                catch (e) { showMsg('Parse Error', 'Failed to parse server response'); return; }
+
+                if (d.status === 'success' || d.success === true) {
+                    DATA = d;
+                    renderDash(DATA);
+                    renderHoldings(DATA);
+                    renderLoan(DATA);
+                    if (DATA.knownTickers) {
+                        const dl = document.getElementById('tickerList');
+                        if (dl) dl.innerHTML = DATA.knownTickers.map(t => `<option value="${t}">`).join('');
+                    }
+                } else {
+                    showMsg('Error', d.message || 'Unknown error');
+                }
+            })
+            .withFailureHandler(err => showMsg('System Error', err.message || err))
+            .getDashboardData(refresh);
+    }
+
+    function renderDash(d) {
+        setVal('netWorth', fmt(d.netWorthTWD));
+        // setVal('totalAssets', fmt(d.totalAssetsTWD)); // Not present in Gold Grid Layout
+        // setVal('totalDebt', fmt(d.totalDebtTWD));   // Not present in Gold Grid Layout
+
+        let alloc = {};
+        if (d.holdings) {
+            d.holdings.forEach(h => {
+                alloc[h.cat] = (alloc[h.cat] || 0) + h.valTWD;
+            });
+        }
+        renderChart(alloc);
+        renderAssetList(d.holdings);
+        renderRecentTx(d.recentTx);
+    }
+
+    function renderAssetList(holdings) {
+        const el = document.getElementById('assetList');
+        if (!el) return;
+        el.innerHTML = '';
+        if (!holdings) return;
+
+        // Top 3 by Value
+        let sorted = [...holdings].sort((a, b) => b.valTWD - a.valTWD).slice(0, 3);
+
+        sorted.forEach(h => {
+            const row = document.createElement('div');
+            row.className = 'asset-row';
+            row.innerHTML = `
+           <div style="display:flex; align-items:center">
+             <div class="asset-icon"><i class="fa-solid fa-coins" style="color:var(--text-gold)"></i></div>
+             <div>
+               <div style="font-weight:600; font-size:16px">${h.ticker}</div>
+               <div style="font-size:12px; color:var(--text-secondary)">${fmt(h.qty)} units</div>
+             </div>
+           </div>
+           <div style="text-align:right">
+             <div style="font-weight:600; font-size:16px">$${fmt(h.valTWD)}</div>
+             <div style="font-size:12px; color:${h.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)'}">${h.pnl >= 0 ? '+' : ''}${fmt(h.pnl)}</div>
+           </div>
+        `;
+            el.appendChild(row);
+        });
+
+        const more = document.createElement('div');
+        more.style = "text-align:center; padding-top:12px; font-size:13px; color:var(--text-gold); cursor:pointer";
+        more.innerText = "View All Assets";
+        more.onclick = () => go('holdings'); // Fixed link
+        el.appendChild(more);
+    }
+
+    function renderRecentTx(txs) {
+        const el = document.getElementById('recentTxList');
+        if (!el) return;
+        el.innerHTML = '';
+        if (!txs || txs.length === 0) { el.innerHTML = '<div style="padding:16px; color:var(--text-secondary)">No transactions</div>'; return; }
+
+        txs.slice(0, 5).forEach(t => {
+            const row = document.createElement('div');
+            row.className = 'tx-row';
+            const isIn = t.type === '買入' || t.type === '配息';
+            row.innerHTML = `
+            <div style="display:flex; align-items:center; gap:16px">
+               <div style="width:40px; height:40px; border-radius:50%; background:#1A1A1A; display:flex; align-items:center; justify-content:center; color:${isIn ? 'var(--color-green)' : 'var(--text-primary)'}">
+                  <i class="fa-solid ${isIn ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+               </div>
+               <div>
+                  <div style="font-weight:600">${t.ticker}</div>
+                  <div class="tx-date">${new Date(t.date).toLocaleDateString()}</div>
+               </div>
+            </div>
+            <div style="text-align:right">
+               <div style="font-weight:600">${isIn ? '+' : '-'} ${fmt(t.qty * t.price)}</div>
+               <div style="font-size:12px; color:var(--text-secondary)">${t.type}</div>
+            </div>
+         `;
+            el.appendChild(row);
+        });
+    }
+
+    function renderHoldings(d) {
+        const list = document.getElementById('holdingsList');
+        if (!list) return;
+        list.innerHTML = '';
+
+        const cats = { '現金': [], '股票': [], '加密貨幣': [] };
+        if (d.holdings) {
+            d.holdings.forEach(h => {
+                if (cats[h.cat]) cats[h.cat].push(h);
+                else { if (!cats['股票']) cats['股票'] = []; cats['股票'].push(h); }
+            });
+        }
+
+        for (let c in cats) {
+            if (cats[c].length === 0) continue;
+            const hdr = document.createElement('div');
+            hdr.className = 'section-title';
+            hdr.style.fontSize = '16px';
+            hdr.style.marginTop = '24px'; css: 'color: var(--text-gold) !important';
+            hdr.innerText = c;
+            list.appendChild(hdr);
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.padding = "0 16px";
+
+            cats[c].forEach(h => {
+                if (h.qty <= 0.0001 && h.cat !== '現金') return;
+                const isCash = h.cat === '現金';
+                const pnlColor = h.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)';
+                const pnlText = isCash ? '' : `${h.pnl >= 0 ? '+' : ''}${fmt(h.pnl)} (${h.roi.toFixed(2)}%)`;
+
+                const row = document.createElement('div');
+                row.className = 'asset-row';
+                row.onclick = () => quickTrade(h.ticker, h.cat);
+
+                row.innerHTML = `
+               <div style="display:flex; align-items:center">
+                 <div>
+                   <div style="font-weight:600; font-size:15px; display:flex; align-items:center; gap:8px">
+                      ${h.ticker} 
+                      ${h.isUsd ? `<span style="font-size:10px; background:#333; padding:2px 4px; border-radius:4px">USD</span>` : ''}
+                   </div>
+                   <div style="font-size:12px; color:var(--text-secondary)">${h.qty} @ ${fmt(h.qty > 0 ? (h.marketValue / h.qty) : 0)}</div> 
+                 </div>
+               </div>
+               <div style="text-align:right">
+                 <div style="font-weight:600; font-size:15px">${fmt(h.valTWD)}</div>
+                 <div style="font-size:12px; color:${pnlColor}">${pnlText}</div>
+               </div>
+             `;
+                card.appendChild(row);
+            });
+            list.appendChild(card);
+        }
+    }
+
+    function renderLoan(d) {
+        const lList = document.getElementById('loanList');
+        const rList = document.getElementById('riskList');
+        if (!lList) return;
+        lList.innerHTML = ''; rList.innerHTML = '';
+
+        if (d.risks) {
+            d.risks.forEach(r => {
+                const riskColor = r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)');
+                const ratio = r.ratio === '-' ? 0 : parseFloat(r.ratio);
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+             <div class="card-label">${r.source} Risk</div>
+             <div style="display:flex; justify-content:space-between; align-items:center">
+                 <div class="card-value" style="font-size:24px">${r.ratio}${r.ratio === '-' ? '' : '%'}</div>
+                 <div class="bg-success" style="background:${riskColor}; color:#111; opacity:0.8">${r.status}</div>
+             </div>
+             <div class="card-sub">${r.label}</div>
+             <div style="height:4px; width:100%; background:#333; margin-top:12px; border-radius:2px; overflow:hidden">
+                 <div style="height:100%; width:${Math.min(ratio, 100)}%; background:${riskColor}"></div>
+             </div>
+             <div style="margin-top:12px; font-size:13px; color:var(--text-secondary); display:flex; justify-content:space-between">
+                 <span>Col: ${fmt(r.colValTWD)}</span><span>Debt: ${fmt(r.debtTWD)}</span>
+             </div>
+             `;
+                rList.appendChild(card);
+            });
+        }
+
+        const groups = {};
+        if (d.contracts) {
+            d.contracts.forEach(l => { if (!groups[l.source]) groups[l.source] = []; groups[l.source].push(l); });
+        }
+
+        for (let src in groups) {
+            const hdr = document.createElement('div');
+            hdr.className = 'section-title';
+            hdr.style.fontSize = '16px';
+            hdr.style.marginTop = '24px';
+            hdr.innerText = src;
+            lList.appendChild(hdr);
+
+            const listContainer = document.createElement('div');
+            listContainer.className = 'data-list';
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.padding = "0 16px";
+
+            groups[src].forEach(l => {
+                const row = document.createElement('div');
+                row.className = 'asset-row';
+
+                const safeL = {
+                    row: l.row, source: l.source, currency: l.currency,
+                    collateral: l.col, loanAmount: l.principal,
+                    type: l.type, rate: l.rate, debt: l.debt, note: l.note
+                };
+                const jsonStr = btoa(unescape(encodeURIComponent(JSON.stringify(safeL))));
+                row.onclick = function () { clickLoan(jsonStr); };
+
+                row.innerHTML = `
+               <div>
+                  <div style="font-weight:600">${l.col} <i class="fa-solid fa-arrow-right" style="font-size:10px; color:var(--text-secondary)"></i> ${fmt(l.principal)} <span style="font-size:10px">${l.currency}</span></div>
+                  <div style="font-size:12px; color:var(--text-secondary)">${l.type} • Rate: ${l.rate}%</div>
+               </div>
+               <div style="text-align:right">
+                  <div style="font-weight:600; color:var(--text-primary)">${fmt(l.debt * (l.currency === 'USD' ? d.fx : 1))} TWD</div>
+                  <div style="font-size:11px; color:var(--text-secondary)">${l.note || ''}</div>
+               </div>
+            `;
+                card.appendChild(row);
+            });
+            lList.appendChild(card);
+        }
+    }
+
+    let myChart = null;
+    function renderChart(alloc) {
+        const ctx = document.getElementById('assetChart');
+        if (!ctx) return;
+        if (myChart) myChart.destroy();
+        const labels = Object.keys(alloc);
+        const data = Object.values(alloc);
+        const colors = ['#D4B483', '#3F3F46', '#71717A', '#A1A1AA', '#52525B'];
+        myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '85%',
+            }
+        });
+    }
+
+    function fmt(n) { return new Intl.NumberFormat('en-US').format(Math.round(n)); }
+    function setVal(id, v) { const el = document.getElementById(id); if (el) el.innerText = v; }
+    function showMsg(title, body) { document.getElementById('msgTitle').innerText = title; document.getElementById('msgBody').innerText = body; document.getElementById('msgModal').style.display = 'flex'; }
+
+    function quickTrade(ticker, cat) {
+        document.getElementById('modalOverlay').style.display = 'flex';
+        document.getElementById('tTicker').value = ticker;
+        document.getElementById('tCat').value = cat;
+        document.getElementById('tType').value = '買入';
+        document.getElementById('tDate').valueAsDate = new Date();
+        setTimeout(() => document.getElementById('tQty').focus(), 100);
+    }
+
+    function clickLoan(jsonStr) {
+        const l = JSON.parse(decodeURIComponent(escape(atob(jsonStr))));
+        document.getElementById('modalLoan').style.display = 'flex';
+        document.getElementById('lTitle').innerText = `Manage: ${l.collateral} (${l.source})`;
+        document.getElementById('lRow').value = l.row;
+        document.getElementById('lSource').value = l.source;
+        document.getElementById('lCurrency').value = l.currency;
+        document.getElementById('lType').value = 'repay';
+        updateLoanUI('repay');
+    }
+
+    function subTx() {
+        const tx = {
+            date: document.getElementById('tDate').value,
+            type: document.getElementById('tType').value,
+            category: document.getElementById('tCat').value,
+            ticker: document.getElementById('tTicker').value,
+            qty: document.getElementById('tQty').value,
+            price: document.getElementById('tPrice').value,
+            currency: document.getElementById('tCurrency').value
+        };
+        if (!tx.date || !tx.ticker || !tx.qty || !tx.price) { showMsg("Error", "Missing required fields"); return; }
+
+        const btn = document.getElementById('btnTx');
+        const originalText = btn.innerText; btn.innerText = 'Signing...'; btn.disabled = true;
+
+        google.script.run
+            .withSuccessHandler(res => {
+                btn.innerText = originalText; btn.disabled = false; closeTxModal();
+                res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
+            })
+            .withFailureHandler(err => { btn.innerText = originalText; btn.disabled = false; showMsg('System Error', err.message); })
+            .addTx(tx);
+    }
+
+    function subLoan() {
+        const d = {
+            row: document.getElementById('lRow').value,
+            source: document.getElementById('lSource').value,
+            type: document.getElementById('lType').value,
+            val: document.getElementById('lVal').value,
+            price: document.getElementById('lPrice').value,
+        };
+        if (d.type !== 'payPeriod' && !d.val) { showMsg('Error', 'Please enter Amount/Qty'); return; }
+
+        const btn = document.getElementById('btnLoan');
+        const originalText = btn.innerText; btn.innerText = 'Processing...'; btn.disabled = true;
+        google.script.run
+            .withSuccessHandler(res => {
+                btn.innerText = originalText; btn.disabled = false; document.getElementById('modalLoan').style.display = 'none';
+                res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
+            })
+            .withFailureHandler(err => { btn.innerText = originalText; btn.disabled = false; showMsg('System Error', err.message); })
+            .processContractAction(d);
+    }
 </script>
