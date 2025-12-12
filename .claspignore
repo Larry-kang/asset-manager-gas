@@ -11,3 +11,5 @@ jsconfig.json
 local_server.js
 mock_api.js
 .agent/**
+*.js
+ci_debug_log*.txt
