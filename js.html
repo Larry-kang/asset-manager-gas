@@ -1,49 +1,247 @@
 ﻿<script>
-    let CASH = 0;
-    let DATA = {};
+    const { createApp, reactive, onMounted, computed, nextTick } = Vue;
 
-    window.onload = () => {
-        const dateInput = document.getElementById('tDate');
-        if (dateInput) dateInput.valueAsDate = new Date();
-        load();
-    };
+    createApp({
+        setup() {
+            // --- STATE (Reactive Data Source) ---
+            const state = reactive({
+                // Core Data
+                netWorth: 'Loading...',
+                dailyChange: 0,
+                holdings: [],
+                recentTx: [],
+                risks: [],
+                contracts: [],
+                knownTickers: [],
 
-    function load(refresh = false) {
-        if (refresh) setVal('netWorth', 'Loading...');
+                // Settings & UI
+                lang: localStorage.getItem('app_lang') || 'zh',
+                theme: localStorage.getItem('app_theme') || 'dark',
+                currentView: 'dash',
+                isLoading: false,
 
-        google.script.run
-            .withSuccessHandler(res => {
+                // Modals
+                msg: { show: false, title: '', body: '' },
+                txModal: { show: false, date: new Date().toISOString().split('T')[0], type: '買入', cat: '股票', ticker: '', qty: '', price: '', currency: 'TWD' },
+                loanModal: { show: false, title: '', row: '', source: '', currency: '', type: 'repay', val: '', price: '' }
+            });
+
+            // --- COMPUTED (Reserved for Template Migration) ---
+            const displayedHoldings = computed(() => {
+                return [...state.holdings].sort((a, b) => b.valTWD - a.valTWD).slice(0, 3);
+            });
+
+            // --- I18N DICTIONARY ---
+            const I18N = {
+                'en': {
+                    'Dash': 'Dashboard', 'Port': 'Portfolio', 'Vault': 'Vault', 'Sett': 'Settings',
+                    'NetWarning': 'Total Vault Balance', 'Assets': 'Assets', 'Tx': 'Transactions',
+                    'AddF': 'Add Funds', 'ViewAll': 'View All Assets', 'RunDig': 'Run Diagnostics',
+                    'SysStat': 'System Status', 'Oper': 'Operational', 'Theme': 'Light Mode', 'Lang': 'Language'
+                },
+                'zh': {
+                    'Dash': '儀表板', 'Port': '投資組合', 'Vault': '借貸金庫', 'Sett': '設定',
+                    'NetWarning': '總資產餘額', 'Assets': '資產分佈', 'Tx': '近期交易',
+                    'AddF': '新增資金', 'ViewAll': '查看所有資產', 'RunDig': '執行系統診斷',
+                    'SysStat': '系統狀態', 'Oper': '運作正常', 'Theme': '亮色模式', 'Lang': '語言切換'
+                }
+            };
+
+            // --- CORE LOGIC ---
+            function load(refresh = false) {
+                if (refresh) state.netWorth = 'Loading...';
+
+                // [LEGACY] Update DOM ID if exists (until template migration)
+                const nwEl = document.getElementById('netWorth');
+                if (nwEl) nwEl.innerText = 'Loading...';
+
+                state.isLoading = true;
+                google.script.run
+                    .withSuccessHandler(res => {
+                        handleResponse(res);
+                        state.isLoading = false;
+                    })
+                    .withFailureHandler(err => {
+                        showMsg('System Error', err.message);
+                        state.isLoading = false;
+                    })
+                    .getDashboardData(refresh);
+            }
+
+            function handleResponse(res) {
                 let d;
                 try { d = (typeof res === 'string') ? JSON.parse(res) : res; }
                 catch (e) { showMsg('Parse Error', 'Failed to parse server response'); return; }
 
                 if (d.status === 'success' || d.success === true) {
-                    DATA = d;
-                    renderDash(DATA);
-                    renderHoldings(DATA);
-                    renderLoan(DATA);
-                    if (DATA.knownTickers) {
-                        const dl = document.getElementById('tickerList');
-                        if (dl) dl.innerHTML = DATA.knownTickers.map(t => `<option value="${t}">`).join('');
-                    }
+                    // Update Reactive State
+                    state.netWorth = fmt(d.netWorthTWD);
+                    state.dailyChange = d.dailyChange || 0;
+                    state.holdings = d.holdings || [];
+                    state.recentTx = d.recentTx || [];
+                    state.risks = d.risks || [];
+                    state.contracts = d.contracts || [];
+                    state.knownTickers = d.knownTickers || [];
+
+                    // [LEGACY] Trigger original render functions
+                    nextTick(() => {
+                        renderDash(d);
+                        renderHoldings(d);
+                        renderLoan(d);
+                        if (d.knownTickers) {
+                            const dl = document.getElementById('tickerList');
+                            if (dl) dl.innerHTML = d.knownTickers.map(t => `<option value="${t}">`).join('');
+                        }
+                    });
                 } else {
                     showMsg('Error', d.message || 'Unknown error');
                 }
-            })
-            .withFailureHandler(err => showMsg('System Error', err.message || err))
-            .getDashboardData(refresh);
-    }
+            }
+
+            function setLang(l) {
+                state.lang = l;
+                localStorage.setItem('app_lang', l);
+                // [LEGACY] Manual DOM update
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (I18N[l][key]) el.innerText = I18N[l][key];
+                });
+            }
+
+            function toggleTheme() {
+                state.theme = state.theme === 'light' ? 'dark' : 'light';
+                const body = document.body;
+                state.theme === 'light' ? body.classList.add('light-mode') : body.classList.remove('light-mode');
+                localStorage.setItem('app_theme', state.theme);
+            }
+
+            function go(view, el) {
+                state.currentView = view;
+
+                // [LEGACY] Manual visibility toggle
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active', 'hidden'));
+                document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+
+                const target = document.getElementById(view);
+                if (target) { target.classList.remove('hidden'); target.classList.add('active'); }
+
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                if (el) el.classList.add('active');
+            }
+
+            function showMsg(title, body) {
+                state.msg = { show: true, title, body };
+                // [LEGACY]
+                document.getElementById('msgTitle').innerText = title;
+                document.getElementById('msgBody').innerText = body;
+                document.getElementById('msgModal').style.display = 'flex';
+            }
+
+            function fmt(n) { return new Intl.NumberFormat('en-US').format(Math.round(n)); }
+
+            // --- EXPOSE TO WINDOW (Compatibility) ---
+            window.load = load;
+            window.setLang = setLang;
+            window.toggleTheme = toggleTheme;
+            window.go = go;
+
+            // Submissions
+            window.openTxModal = () => { document.getElementById('modalOverlay').style.display = 'flex'; document.getElementById('tDate').valueAsDate = new Date(); };
+            window.closeTxModal = () => { document.getElementById('modalOverlay').style.display = 'none'; };
+
+            window.subTx = function () {
+                const tx = {
+                    date: document.getElementById('tDate').value,
+                    type: document.getElementById('tType').value,
+                    category: document.getElementById('tCat').value,
+                    ticker: document.getElementById('tTicker').value,
+                    qty: document.getElementById('tQty').value,
+                    price: document.getElementById('tPrice').value,
+                    currency: document.getElementById('tCurrency').value
+                };
+                if (!tx.date || !tx.ticker || !tx.qty || !tx.price) { showMsg("Error", "Missing required fields"); return; }
+
+                const btn = document.getElementById('btnTx');
+                const originalText = btn.innerText; btn.innerText = 'Signing...'; btn.disabled = true;
+
+                google.script.run
+                    .withSuccessHandler(res => {
+                        btn.innerText = originalText; btn.disabled = false; window.closeTxModal();
+                        res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
+                    })
+                    .withFailureHandler(err => { btn.innerText = originalText; btn.disabled = false; showMsg('System Error', err.message); })
+                    .addTx(tx);
+            };
+
+            window.subLoan = function () {
+                const d = {
+                    row: document.getElementById('lRow').value,
+                    source: document.getElementById('lSource').value,
+                    type: document.getElementById('lType').value,
+                    val: document.getElementById('lVal').value,
+                    price: document.getElementById('lPrice').value,
+                };
+                if (d.type !== 'payPeriod' && !d.val) { showMsg('Error', 'Please enter Amount/Qty'); return; }
+
+                const btn = document.getElementById('btnLoan');
+                const originalText = btn.innerText; btn.innerText = 'Processing...'; btn.disabled = true;
+                google.script.run
+                    .withSuccessHandler(res => {
+                        btn.innerText = originalText; btn.disabled = false; document.getElementById('modalLoan').style.display = 'none';
+                        res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
+                    })
+                    .withFailureHandler(err => { btn.innerText = originalText; btn.disabled = false; showMsg('System Error', err.message); })
+                    .processContractAction(d);
+            };
+
+            window.quickTrade = function (ticker, cat) {
+                document.getElementById('modalOverlay').style.display = 'flex';
+                document.getElementById('tTicker').value = ticker;
+                document.getElementById('tCat').value = cat;
+                document.getElementById('tType').value = '買入';
+                document.getElementById('tDate').valueAsDate = new Date();
+                setTimeout(() => document.getElementById('tQty').focus(), 100);
+            };
+
+            window.clickLoan = function (jsonStr) {
+                const l = JSON.parse(decodeURIComponent(escape(atob(jsonStr))));
+                document.getElementById('modalLoan').style.display = 'flex';
+                document.getElementById('lTitle').innerText = `Manage: ${l.collateral} (${l.source})`;
+                document.getElementById('lRow').value = l.row;
+                document.getElementById('lSource').value = l.source;
+                document.getElementById('lCurrency').value = l.currency;
+                document.getElementById('lType').value = 'repay';
+                if (window.updateLoanUI) window.updateLoanUI('repay');
+            };
+
+            // --- MOUNT HANDLER ---
+            onMounted(() => {
+                const savedTheme = localStorage.getItem('app_theme');
+                if (savedTheme === 'light') document.body.classList.add('light-mode');
+
+                // Initialize I18N
+                setTimeout(() => setLang(state.lang), 100);
+
+                load();
+            });
+
+            return { state };
+        }
+    }).mount('#app');
+
+    // --- LEGACY RENDER FUNCTIONS (OUTSIDE VUE SCOPE FOR NOW) ---
+    // These need access to state or args. Since they are called by load() with 'd', they are fine.
 
     function renderDash(d) {
-        setVal('netWorth', fmt(d.netWorthTWD));
+        const nw = document.getElementById('netWorth');
+        if (nw) nw.innerText = new Intl.NumberFormat('en-US').format(Math.round(d.netWorthTWD));  // inline fmt
 
-        // Daily Change
         const dcEl = document.getElementById('dailyChange');
         if (dcEl) {
             let dc = d.dailyChange || 0;
             let color = dc >= 0 ? 'var(--color-green)' : 'var(--color-red)';
             let sign = dc >= 0 ? '+' : '';
-            dcEl.innerHTML = `<span style="color:${color}">${sign}${fmt(dc)}</span> <span style="font-size:12px; color:var(--text-secondary)">Today</span>`;
+            dcEl.innerHTML = `<span style="color:${color}">${sign}${new Intl.NumberFormat('en-US').format(Math.round(dc))}</span> <span style="font-size:12px; color:var(--text-secondary)">Today</span>`;
         }
 
         let alloc = {};
@@ -57,48 +255,20 @@
         renderRecentTx(d.recentTx);
     }
 
-    // --- i18n & Theme ---
-    const I18N = {
-        'en': {
-            'Dash': 'Dashboard', 'Port': 'Portfolio', 'Vault': 'Vault', 'Sett': 'Settings',
-            'NetWarning': 'Total Vault Balance', 'Assets': 'Assets', 'Tx': 'Transactions',
-            'AddF': 'Add Funds', 'ViewAll': 'View All Assets', 'RunDig': 'Run Diagnostics',
-            'SysStat': 'System Status', 'Oper': 'Operational', 'Theme': 'Light Mode', 'Lang': 'Language'
-        },
-        'zh': {
-            'Dash': '儀表板', 'Port': '投資組合', 'Vault': '借貸金庫', 'Sett': '設定',
-            'NetWarning': '總資產餘額', 'Assets': '資產分佈', 'Tx': '近期交易',
-            'AddF': '新增資金', 'ViewAll': '查看所有資產', 'RunDig': '執行系統診斷',
-            'SysStat': '系統狀態', 'Oper': '運作正常', 'Theme': '亮色模式', 'Lang': '語言切換'
-        }
-    };
-
-    let curLang = localStorage.getItem('app_lang') || 'zh'; // Default ZH
-
-    function setLang(lang) {
-        curLang = lang;
-        localStorage.setItem('app_lang', lang);
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (I18N[lang][key]) el.innerText = I18N[lang][key];
+    let myChart = null;
+    function renderChart(alloc) {
+        const ctx = document.getElementById('assetChart');
+        if (!ctx) return;
+        if (myChart) myChart.destroy();
+        const labels = Object.keys(alloc);
+        const data = Object.values(alloc);
+        const colors = ['#D4B483', '#3F3F46', '#71717A', '#A1A1AA', '#52525B'];
+        myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '85%' }
         });
     }
-
-    function toggleTheme() {
-        document.body.classList.toggle('light-mode');
-        localStorage.setItem('app_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-    }
-
-    // Init Theme & Lang
-    (function () {
-        // Theme
-        const savedTheme = localStorage.getItem('app_theme');
-        if (savedTheme === 'light') document.body.classList.add('light-mode');
-        else if (savedTheme === 'dark') document.body.classList.remove('light-mode');
-
-        // Lang
-        setTimeout(() => setLang(curLang), 100);
-    })();
 
     function renderAssetList(holdings) {
         const el = document.getElementById('assetList');
@@ -106,8 +276,8 @@
         el.innerHTML = '';
         if (!holdings) return;
 
-        // Top 3 by Value
         let sorted = [...holdings].sort((a, b) => b.valTWD - a.valTWD).slice(0, 3);
+        const fmt = (n) => new Intl.NumberFormat('en-US').format(Math.round(n));
 
         sorted.forEach(h => {
             const row = document.createElement('div');
@@ -131,7 +301,7 @@
         const more = document.createElement('div');
         more.style = "text-align:center; padding-top:12px; font-size:13px; color:var(--text-gold); cursor:pointer";
         more.innerText = "View All Assets";
-        more.onclick = () => go('holdings'); // Fixed link
+        more.onclick = () => window.go('holdings');
         el.appendChild(more);
     }
 
@@ -140,6 +310,8 @@
         if (!el) return;
         el.innerHTML = '';
         if (!txs || txs.length === 0) { el.innerHTML = '<div style="padding:16px; color:var(--text-secondary)">No transactions</div>'; return; }
+
+        const fmt = (n) => new Intl.NumberFormat('en-US').format(Math.round(n));
 
         txs.slice(0, 5).forEach(t => {
             const row = document.createElement('div');
@@ -168,6 +340,8 @@
         const list = document.getElementById('holdingsList');
         if (!list) return;
         list.innerHTML = '';
+
+        const fmt = (n) => new Intl.NumberFormat('en-US').format(Math.round(n));
 
         const cats = { '現金': [], '股票': [], '加密貨幣': [] };
         if (d.holdings) {
@@ -198,7 +372,7 @@
 
                 const row = document.createElement('div');
                 row.className = 'asset-row';
-                row.onclick = () => quickTrade(h.ticker, h.cat);
+                row.onclick = () => window.quickTrade(h.ticker, h.cat);
 
                 row.innerHTML = `
                <div style="display:flex; align-items:center">
@@ -227,6 +401,8 @@
         if (!lList) return;
         lList.innerHTML = ''; rList.innerHTML = '';
 
+        const fmt = (n) => new Intl.NumberFormat('en-US').format(Math.round(n));
+
         if (d.risks) {
             d.risks.forEach(r => {
                 const riskColor = r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)');
@@ -251,6 +427,9 @@
                 rList.appendChild(card);
             });
         }
+        // Add grid stack class here or verify it persists. It was in index.html, not here. 
+        // Wait, index.html has div#riskList class="grid-stack". 
+        // Here we are appending children, so the class remains on the container. Correct.
 
         const groups = {};
         if (d.contracts) {
@@ -282,7 +461,7 @@
                     type: l.type, rate: l.rate, debt: l.debt, note: l.note
                 };
                 const jsonStr = btoa(unescape(encodeURIComponent(JSON.stringify(safeL))));
-                row.onclick = function () { clickLoan(jsonStr); };
+                row.onclick = function () { window.clickLoan(jsonStr); };
 
                 row.innerHTML = `
                <div>
@@ -290,101 +469,13 @@
                   <div style="font-size:12px; color:var(--text-secondary)">${l.type} • Rate: ${l.rate}%</div>
                </div>
                <div style="text-align:right">
-                  <div style="font-weight:600; color:var(--text-primary)">${fmt(l.debt * (l.currency === 'USD' ? d.fx : 1))} TWD</div>
-                  <div style="font-size:11px; color:var(--text-secondary)">${l.note || ''}</div>
+                   <div style="font-weight:600; color:var(--text-primary)">${fmt(l.debt * (l.currency === 'USD' ? d.fx : 1))} TWD</div>
+                   <div style="font-size:11px; color:var(--text-secondary)">${l.note || ''}</div>
                </div>
             `;
                 card.appendChild(row);
             });
             lList.appendChild(card);
         }
-    }
-
-    let myChart = null;
-    function renderChart(alloc) {
-        const ctx = document.getElementById('assetChart');
-        if (!ctx) return;
-        if (myChart) myChart.destroy();
-        const labels = Object.keys(alloc);
-        const data = Object.values(alloc);
-        const colors = ['#D4B483', '#3F3F46', '#71717A', '#A1A1AA', '#52525B'];
-        myChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                cutout: '85%',
-            }
-        });
-    }
-
-    function fmt(n) { return new Intl.NumberFormat('en-US').format(Math.round(n)); }
-    function setVal(id, v) { const el = document.getElementById(id); if (el) el.innerText = v; }
-    function showMsg(title, body) { document.getElementById('msgTitle').innerText = title; document.getElementById('msgBody').innerText = body; document.getElementById('msgModal').style.display = 'flex'; }
-
-    function quickTrade(ticker, cat) {
-        document.getElementById('modalOverlay').style.display = 'flex';
-        document.getElementById('tTicker').value = ticker;
-        document.getElementById('tCat').value = cat;
-        document.getElementById('tType').value = '買入';
-        document.getElementById('tDate').valueAsDate = new Date();
-        setTimeout(() => document.getElementById('tQty').focus(), 100);
-    }
-
-    function clickLoan(jsonStr) {
-        const l = JSON.parse(decodeURIComponent(escape(atob(jsonStr))));
-        document.getElementById('modalLoan').style.display = 'flex';
-        document.getElementById('lTitle').innerText = `Manage: ${l.collateral} (${l.source})`;
-        document.getElementById('lRow').value = l.row;
-        document.getElementById('lSource').value = l.source;
-        document.getElementById('lCurrency').value = l.currency;
-        document.getElementById('lType').value = 'repay';
-        updateLoanUI('repay');
-    }
-
-    function subTx() {
-        const tx = {
-            date: document.getElementById('tDate').value,
-            type: document.getElementById('tType').value,
-            category: document.getElementById('tCat').value,
-            ticker: document.getElementById('tTicker').value,
-            qty: document.getElementById('tQty').value,
-            price: document.getElementById('tPrice').value,
-            currency: document.getElementById('tCurrency').value
-        };
-        if (!tx.date || !tx.ticker || !tx.qty || !tx.price) { showMsg("Error", "Missing required fields"); return; }
-
-        const btn = document.getElementById('btnTx');
-        const originalText = btn.innerText; btn.innerText = 'Signing...'; btn.disabled = true;
-
-        google.script.run
-            .withSuccessHandler(res => {
-                btn.innerText = originalText; btn.disabled = false; closeTxModal();
-                res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
-            })
-            .withFailureHandler(err => { btn.innerText = originalText; btn.disabled = false; showMsg('System Error', err.message); })
-            .addTx(tx);
-    }
-
-    function subLoan() {
-        const d = {
-            row: document.getElementById('lRow').value,
-            source: document.getElementById('lSource').value,
-            type: document.getElementById('lType').value,
-            val: document.getElementById('lVal').value,
-            price: document.getElementById('lPrice').value,
-        };
-        if (d.type !== 'payPeriod' && !d.val) { showMsg('Error', 'Please enter Amount/Qty'); return; }
-
-        const btn = document.getElementById('btnLoan');
-        const originalText = btn.innerText; btn.innerText = 'Processing...'; btn.disabled = true;
-        google.script.run
-            .withSuccessHandler(res => {
-                btn.innerText = originalText; btn.disabled = false; document.getElementById('modalLoan').style.display = 'none';
-                res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
-            })
-            .withFailureHandler(err => { btn.innerText = originalText; btn.disabled = false; showMsg('System Error', err.message); })
-            .processContractAction(d);
     }
 </script>
