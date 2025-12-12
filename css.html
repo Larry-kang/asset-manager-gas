@@ -238,6 +238,45 @@
     color: var(--text-gold);
   }
 
+  /* Rectangular Buttons for Modals/Forms */
+  .btn-gold-block,
+  .btn-outline-block {
+    height: 48px;
+    border-radius: 99px;
+    /* Pill shape match */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-sans);
+  }
+
+  .btn-gold-block {
+    background: var(--text-gold);
+    color: #000;
+    border: none;
+  }
+
+  .btn-gold-block:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 180, 131, 0.2);
+  }
+
+  .btn-outline-block {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-outline-block:hover {
+    border-color: var(--text-gold);
+    color: var(--text-gold);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
   /* GRID */
   .grid-stack {
     display: flex;
@@ -428,5 +467,36 @@
   select:focus {
     border-color: var(--text-gold);
     outline: none;
+  }
+
+  /* Added for New Loan UI */
+  .top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    /* Fix spacing issue */
+  }
+
+  .tag {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 99px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+  }
+
+  .tag:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+  }
+
+  .tag.active {
+    background: rgba(212, 180, 131, 0.2);
+    border-color: var(--text-gold);
+    color: var(--text-gold);
   }
 </style>

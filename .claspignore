@@ -8,3 +8,6 @@ package-lock.json
 .clasp.json
 .claspignore
 jsconfig.json
+local_server.js
+mock_api.js
+.agent/**

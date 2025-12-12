@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Google Apps Script Asset Manager",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "dev": "node local_server.js"
   },
   "devDependencies": {
     "jest": "^29.7.0"

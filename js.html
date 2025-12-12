@@ -23,7 +23,8 @@
                 // Modals
                 msg: { show: false, title: '', body: '' },
                 txModal: { show: false, date: new Date().toISOString().split('T')[0], type: '買入', cat: '股票', ticker: '', qty: '', price: '', currency: 'TWD' },
-                loanModal: { show: false, title: '', row: '', source: '', currency: '', type: 'repay', val: '', price: '' }
+                loanModal: { show: false, title: '', row: '', source: '', currency: '', type: 'repay', val: '', price: '' },
+                newLoanModal: { show: false, source: '', date: new Date().toISOString().split('T')[0], amount: '', rate: '', col: '', colQty: '', type: '加密貨幣', currency: 'USD' }
             });
 
             // --- COMPUTED ---
@@ -52,13 +53,33 @@
                     'Dash': 'Dashboard', 'Port': 'Portfolio', 'Vault': 'Vault', 'Sett': 'Settings',
                     'NetWarning': 'Total Vault Balance', 'Assets': 'Assets', 'Tx': 'Transactions',
                     'AddF': 'Add Funds', 'ViewAll': 'View All Assets', 'RunDig': 'Run Diagnostics',
-                    'SysStat': 'System Status', 'Oper': 'Operational', 'Theme': 'Light Mode', 'Lang': 'Language'
+                    'SysStat': 'System Status', 'Oper': 'Operational', 'Theme': 'Light Mode', 'Lang': 'Language',
+                    // New Loan
+                    'NewLoan': 'New Loan Contract', 'Source': 'Source', 'Amt': 'Loan Amount', 'Rate': 'Rate %',
+                    'ColInfo': 'Collateral Info', 'Ticker': 'Ticker', 'ColQty': 'Col Qty',
+                    'Create': 'Create', 'Cancel': 'Cancel', 'Submit': 'Submit',
+                    'Stock': 'Stock', 'Crypto': 'Crypto', 'Credit': 'Credit Loan',
+                    // Tx & Loan Actions
+                    'NewTx': 'New Transaction', 'Currency': 'Currency', 'ConfirmTx': 'Confirm Transaction',
+                    'ActionType': 'Action Type', 'RepayAmt': 'Repay Amount', 'LoanAmt': 'Loan Amount',
+                    'SellQty': 'Sell Qty', 'NewRate': 'New Rate (Optional)', 'LimitPrice': 'Limit Price',
+                    'SubAction': 'Submit Action', 'Close': 'Close', 'Manage': 'Manage'
                 },
                 'zh': {
                     'Dash': '儀表板', 'Port': '投資組合', 'Vault': '借貸金庫', 'Sett': '設定',
                     'NetWarning': '總資產餘額', 'Assets': '資產分佈', 'Tx': '近期交易',
                     'AddF': '新增資金', 'ViewAll': '查看所有資產', 'RunDig': '執行系統診斷',
-                    'SysStat': '系統狀態', 'Oper': '運作正常', 'Theme': '亮色模式', 'Lang': '語言切換'
+                    'SysStat': '系統狀態', 'Oper': '運作正常', 'Theme': '亮色模式', 'Lang': '語言切換',
+                    // New Loan
+                    'NewLoan': '建立新借貸合約', 'Source': '來源', 'Amt': '借款金額', 'Rate': '利率 %',
+                    'ColInfo': '抵押品資訊', 'Ticker': '代號 (e.g. ETH)', 'ColQty': '抵押數量',
+                    'Create': '建立', 'Cancel': '取消', 'Submit': '送出',
+                    'Stock': '股票', 'Crypto': '加密貨幣', 'Credit': '信用貸款',
+                    // Tx & Loan Actions
+                    'NewTx': '新增交易', 'Currency': '幣別', 'ConfirmTx': '確認交易',
+                    'ActionType': '操作項目', 'RepayAmt': '還款金額', 'LoanAmt': '借款金額',
+                    'SellQty': '賣出數量', 'NewRate': '新利率 (選填)', 'LimitPrice': '限價',
+                    'SubAction': '提交操作', 'Close': '關閉', 'Manage': '管理'
                 }
             };
 
@@ -100,35 +121,20 @@
                 }
             }
 
-            function setLang(l) {
-                state.lang = l;
-                localStorage.setItem('app_lang', l);
-            }
-
+            function setLang(l) { state.lang = l; localStorage.setItem('app_lang', l); }
             function toggleTheme() {
-                state.theme = state.theme === 'light' ? 'dark' : 'light';
-                const body = document.body;
-                state.theme === 'light' ? body.classList.add('light-mode') : body.classList.remove('light-mode');
+                state.theme = state.theme === 'dark' ? 'light' : 'dark';
                 localStorage.setItem('app_theme', state.theme);
+                document.body.classList.toggle('light-mode', state.theme === 'light');
             }
-
-            function go(view) {
-                state.currentView = view;
-            }
-
-            function showMsg(title, body) {
-                state.msg = { show: true, title, body };
-            }
-
-            function fmt(n) { return new Intl.NumberFormat('en-US').format(Math.round(n)); }
+            function go(page) { state.currentView = page; }
+            function showMsg(title, body) { state.msg.title = title; state.msg.body = body; state.msg.show = true; }
+            function fmt(n) { return (n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
 
             // --- SUBMISSIONS ---
             function subTx() {
-                const tx = { ...state.txModal };
-                if (!tx.date || !tx.ticker || !tx.qty || !tx.price) { showMsg("Error", "Missing required fields"); return; }
-
-                const btn = document.getElementById('btnTx');
-                const originalText = btn.innerText; btn.innerText = 'Signing...'; btn.disabled = true;
+                const btn = document.getElementById('txBtn');
+                btn.disabled = true; const originalText = btn.innerText; btn.innerText = 'Processing...';
 
                 google.script.run
                     .withSuccessHandler(res => {
@@ -136,15 +142,40 @@
                         res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
                     })
                     .withFailureHandler(err => { btn.innerText = originalText; btn.disabled = false; showMsg('System Error', err.message); })
-                    .addTx(tx);
+                    .addTx(JSON.parse(JSON.stringify(state.txModal)));
+            }
+
+            function subNewLoan() {
+                const btn = document.getElementById('newLoanBtn');
+                if (btn) { btn.disabled = true; btn.innerText = 'Processing...'; }
+
+                google.script.run
+                    .withSuccessHandler(res => {
+                        if (btn) { btn.disabled = false; btn.innerText = 'Submit'; }
+                        state.newLoanModal.show = false;
+                        res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
+                    })
+                    .withFailureHandler(err => {
+                        if (btn) { btn.disabled = false; btn.innerText = 'Submit'; }
+                        showMsg('Error', err.message);
+                    })
+                    .addLoan(JSON.parse(JSON.stringify(state.newLoanModal)));
             }
 
             function subLoan() {
-                const d = { ...state.loanModal };
-                if (d.type !== 'payPeriod' && !d.val) { showMsg('Error', 'Please enter Amount/Qty'); return; }
+                // Determine action type from modal state or inferred
+                // For now, reusing existing structure where clickLoan sets up state.loanModal
+                const d = {
+                    row: state.loanModal.row,
+                    source: state.loanModal.source,
+                    type: state.loanModal.type,
+                    val: state.loanModal.val,
+                    price: state.loanModal.price
+                };
 
-                const btn = document.getElementById('btnLoan');
-                const originalText = btn.innerText; btn.innerText = 'Processing...'; btn.disabled = true;
+                const btn = document.getElementById('loanBtn');
+                btn.disabled = true; const originalText = btn.innerText; btn.innerText = 'Running...';
+
                 google.script.run
                     .withSuccessHandler(res => {
                         btn.innerText = originalText; btn.disabled = false; state.loanModal.show = false;
@@ -171,7 +202,8 @@
                 let l = (typeof jsonStrOrObj === 'string') ? JSON.parse(jsonStrOrObj) : jsonStrOrObj;
 
                 state.loanModal.show = true;
-                state.loanModal.title = `Manage: ${l.col || l.collateral} (${l.source})`;
+                const manageText = I18N[state.lang]['Manage'] || 'Manage';
+                state.loanModal.title = `${manageText}: ${l.col || l.collateral} (${l.source})`;
                 state.loanModal.row = l.row;
                 state.loanModal.source = l.source;
                 state.loanModal.currency = l.currency;
