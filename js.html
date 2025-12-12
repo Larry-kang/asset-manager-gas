@@ -2,395 +2,232 @@
   const el = (id) => document.getElementById(id);
   const val = (id) => el(id).value;
 
-  // State Management
-  const Store = {
-    data: null,
-    currency: 'TWD',
-    fx: 32.5,
-    inventory: {},
-    theme: 'light',
-    sort: 'val' // val, roi, name
-  };
+  // --- State & Config ---
+  const Store = { data: null, currency: 'TWD', fx: 32.5, inventory: {}, theme: 'light', sort: 'val' };
 
-  // --- UI Components (New) ---
+  // --- iOS UI Components ---
   const UI = {
-    badge: (text, cls) => text ? `<span class="badge ${cls}">${text}</span>` : '',
+    // List Row
+    row: (icon, title, subtitle, rightVal, rightSub = '', onClick = null) => `
+      <div class="ios-row" ${onClick ? `onclick="${onClick}"` : ''}>
+         <div class="flex-cnt">
+           ${icon ? `<span style="font-size:24px">${icon}</span>` : ''}
+           <div><div class="text-main">${title}</div><div class="text-sub">${subtitle}</div></div>
+         </div>
+         <div style="text-align:right">
+           <div class="text-val">${rightVal}</div><div class="text-sub" style="font-size:12px">${rightSub}</div>
+         </div>
+      </div>`,
 
-    metric: (lbl, val, sub = '', style = '') =>
-      `<div class="metric" style="${style}"><div class="metric-lbl">${lbl}</div><div class="metric-val">${val}</div>${sub}</div>`,
+    // Section Header
+    header: (text) => `<h3>${text}</h3>`,
 
-    card: (cls, titleIcon, titleText, badge, content) =>
-      `<div class="card ${cls}"><h2><span class="type-icon">${titleIcon}</span> ${titleText} ${badge}</h2><div class="grid" style="margin-bottom:5px">${content}</div></div>`,
-
-    btn: (lbl, act, data = {}, cls = 'btn-outline') => {
-      let attrs = Object.entries(data).map(([k, v]) => `data-${k}="${v}"`).join(' ');
-      return `<button class="btn btn-sm ${cls}" data-act="${act}" ${attrs} onclick="clickAction(this)">${lbl}</button>`;
-    },
-
-    contractRow: (icon, content, buttons) =>
-      `<div class="group-item"><div style="display:flex;justify-content:space-between;align-items:center"><div>${icon} ${content}</div></div><div style="margin-top:5px;text-align:right">${buttons}</div></div>`
+    // Badge
+    badge: (text, type = 'safe') => `<span class="badge badge-${type}">${text}</span>`
   };
 
-  // --- Theme Manager ---
+  // --- Navigation Stack ---
+  function go(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+
+    el(viewId).classList.add('active');
+
+    // Update Tab Bar
+    const tab = document.querySelector(`.tab-item[onclick*="'${viewId}'"]`);
+    if (tab) tab.classList.add('active');
+
+    // Update Nav Title
+    const fileMap = { 'dash': '概覽', 'holdings': '持倉', 'loan': '借貸', 'settings': '設定' };
+    el('navTitle').innerText = fileMap[viewId] || '資產管家';
+
+    // Auto refresh data
+    if (viewId === 'dash' || viewId === 'holdings' || viewId === 'loan') load(false);
+  }
+
+  // --- Bottom Sheet ---
+  function openSheet(id) {
+    const overlay = el(id);
+    const content = overlay.querySelector('.sheet-content');
+    overlay.style.display = 'block';
+    setTimeout(() => {
+      overlay.style.opacity = '1';
+      content.style.transform = 'translateY(0)';
+    }, 10);
+  }
+
+  function closeSheet(id) {
+    const overlay = el(id);
+    const content = overlay.querySelector('.sheet-content');
+    content.style.transform = 'translateY(100%)';
+    overlay.style.opacity = '0';
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+  }
+
+  // Close sheet when clicking overlay
+  document.querySelectorAll('.sheet-overlay').forEach(ov => {
+    ov.addEventListener('click', (e) => { if (e.target === ov) closeSheet(ov.id); });
+  });
+
+  // --- Theme ---
   function initTheme() {
     const saved = localStorage.getItem('theme') || 'light';
     setTheme(saved);
   }
-
-  function toggleTheme() {
-    const newTheme = Store.theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
+  function toggleTheme() { setTheme(Store.theme === 'light' ? 'dark' : 'light'); }
+  function setTheme(t) {
+    Store.theme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
   }
 
-  function setTheme(theme) {
-    Store.theme = theme;
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-    const btn = el('themeBtn');
-    if (btn) btn.innerText = theme === 'light' ? Icons.THEME_DARK : Icons.THEME_LIGHT;
+  // --- Render Logic (Adapted for iOS) ---
+  function load(force) {
+    if (force) el('navTitle').innerText = '更新中...';
+    google.script.run.withSuccessHandler(render).getDashboardData(force);
   }
 
-  // --- Logger & UI Utils ---
-  function logger(msg, type = 'info') {
-    const c = el('devConsole');
-    const time = new Date().toLocaleTimeString().split(' ')[0];
-    let cls = msg.includes('Error') || msg.includes('失敗') ? 'log-err' : (msg.includes('Success') || msg.includes('完成') || msg.includes('成功') ? 'log-ok' : (msg.includes('Fetching') ? 'log-api' : ''));
-    c.innerHTML += `<div class="log-line"><span class="log-time">[${time}]</span> <span class="${cls}">${msg}</span></div>`;
-    c.scrollTop = c.scrollHeight;
+  function render(payload) {
+    el('navTitle').innerText = '資產管家';
+    if (!payload) return;
+    let d = (typeof payload === 'string') ? JSON.parse(payload) : payload;
+
+    if (d.status === 'error') { alert(d.message); return; }
+
+    Store.data = d; Store.inventory = d.inventory; Store.fx = d.fx;
+
+    // 1. Dashboard Charts
+    renderCharts(d);
+    el('netWorth').innerText = formatMoney(d.netWorthTWD);
+    el('totalAssets').innerText = formatMoney(d.totalAssetsTWD);
+    el('totalDebt').innerText = formatMoney(d.totalDebtTWD);
+
+    // 2. Holdings List
+    renderHoldings(d.holdings);
+
+    // 3. Loans & Risks
+    renderLoans(d.contracts);
+    renderRisks(d.risks);
+
+    // 4. Misc
+    if (d.knownTickers) updateDatalist(d.knownTickers);
   }
 
-  function showMsg(text, type = 'info') {
-    el('msgModal').style.display = 'flex';
-    let title = '通知', icon = '??';
-    if (text.includes('錯誤') || text.includes('不足') || text.includes('失敗') || type === 'err') { title = '錯誤'; icon = '?'; }
-    else if (text.includes('成功') || text.includes('完成') || text.includes('已')) { title = '成功'; icon = '?'; }
-    el('msgIcon').innerText = icon; el('msgTitle').innerText = title; el('msgBody').innerText = text;
-  }
+  function renderHoldings(list) {
+    let html = '';
 
-  function toggleConsole() { const c = el('devConsole'); if (c.style.display === 'none') { c.style.display = 'block'; el('consoleToggle').innerText = '隱藏 Log'; document.body.style.paddingBottom = '220px'; } else { c.style.display = 'none'; el('consoleToggle').innerText = '顯示 Log'; document.body.style.paddingBottom = '20px'; } }
+    // Group by Category
+    const cats = { '現金': [], '股票': [], '加密貨幣': [] };
+    list.forEach(h => { if (cats[h.cat]) cats[h.cat].push(h); else cats['股票'].push(h); }); // Fallback
 
-  function go(id, btn) {
-    document.querySelectorAll('.view').forEach(d => d.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    el(id).classList.add('active');
-    if (btn) btn.classList.add('active');
-    else {
-      // Auto-highlight nav button if triggered programmatically
-      const navBtn = document.querySelector(`.nav-btn[onclick*="'${id}'"]`);
-      if (navBtn) navBtn.classList.add('active');
+    for (let c in cats) {
+      if (cats[c].length === 0) continue;
+      html += UI.header(c);
+      html += '<div class="ios-list">';
+      cats[c].forEach(h => {
+        if (h.qty <= 0.0001) return;
+        let pnlClass = h.pnl >= 0 ? 'text-red' : 'text-green'; // TW style
+        let subRight = h.cat === '現金' ? '' : `<span class="${pnlClass}">${h.roi.toFixed(2)}%</span>`;
+        let title = h.ticker;
+        html += UI.row(null, title, `${h.qty} • ${formatMoney(h.marketPrice)}`, formatMoney(h.valTWD), subRight, `quickTrade('${h.ticker}', '${h.cat}')`);
+      });
+      html += '</div>';
     }
-    if (id === 'dash' || id === 'loan') load();
+    el('holdingsList').innerHTML = html;
   }
 
-  function quickTrade(ticker, cat) {
-    go('tx');
-    el('tType').value = '買入';
-    el('tCat').value = cat;
-    checkCat(); // Trigger UI update
-    el('tTicker').value = ticker;
-    el('tQty').value = '';
-    el('tPrice').value = '';
-    el('tQty').focus();
-    showMsg(`已為您準備交易: ${ticker}`, 'info');
+  function renderLoans(list) {
+    if (!list || list.length === 0) { el('loanList').innerHTML = '<p class="text-sub" style="text-align:center;padding:20px">無借貸合約</p>'; return; }
+
+    let html = '';
+    // Group by Source
+    let groups = {};
+    list.forEach(c => { if (!groups[c.source]) groups[c.source] = []; groups[c.source].push(c); });
+
+    for (let src in groups) {
+      html += UI.header(src);
+      html += '<div class="ios-list">';
+      groups[src].forEach(c => {
+        let title = (c.type === '信用貸款' || c.type === '卡費') ? c.type : c.col;
+        let sub = (c.type === '信用貸款') ? `剩 ${c.totalTerm - c.paidTerm} 期` : `利率 ${c.rate}%`;
+        html += UI.row(null, title, sub, formatMoney(c.debt, c.currency), c.note, `clickLoan('${c.row}')`);
+      });
+      html += '</div>';
+    }
+    el('loanList').innerHTML = html;
   }
 
-  function setSort(s) {
-    Store.sort = s;
-    if (Store.data) renderHoldings(Store.data.holdings);
+  function renderRisks(list) {
+    if (!list) return;
+    let html = '<div class="chart-scroll">'; // Reuse scroll container for risk cards
+    list.forEach(r => {
+      if (r.status === 'Safe') return; // Only show non-safe risks? Or show all. Let's show all.
+      let badge = r.status === 'Safe' ? 'safe' : (r.status === 'Warning' ? 'warn' : 'dang');
+      html += `<div class="chart-card" style="flex:0 0 160px">
+             <div class="text-sub" style="font-size:12px">${r.source}</div>
+             <div class="text-val" style="margin:5px 0">${r.type}</div>
+             ${UI.badge(r.ratio + '%', badge)}
+             <div class="text-sub" style="font-size:11px;margin-top:5px">${r.label}</div>
+          </div>`;
+    });
+    html += '</div>';
+    el('riskList').innerHTML = html;
   }
 
-  function setCurrency(curr) {
-    Store.currency = curr;
-    el('btnTWD').classList.toggle('active', curr === 'TWD');
-    el('btnUSD').classList.toggle('active', curr === 'USD');
-    if (Store.data) render(Store.data, false);
+  // --- Chart.js Wrapper ---
+  let chartInstance = null;
+  function renderCharts(d) {
+    const ctx = el('assetChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    // Simple Pie
+    let cats = { '股票': 0, '加密貨幣': 0, '現金': 0 };
+    d.holdings.forEach(h => { if (cats[h.cat] !== undefined) cats[h.cat] += h.valTWD; else cats['股票'] += h.valTWD; });
+
+    chartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(cats),
+        datasets: [{ data: Object.values(cats), backgroundColor: ['#007AFF', '#FFCC00', '#34C759'], borderWidth: 0 }]
+      },
+      options: { plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } }, cutout: '70%' }
+    });
   }
 
   // --- Formatters ---
-  function formatMoney(val) {
-    if (isNaN(val) || val === null) val = 0;
-    if (Store.currency === 'USD') return '$ ' + Math.round(val / Store.fx).toLocaleString();
-    return 'NT$ ' + Math.round(val).toLocaleString();
-  }
-  function formatLoan(val, curr) {
-    if (isNaN(val) || val === null) val = 0;
-    if (curr === 'USD') return '$' + Number(val).toFixed(2);
-    return 'NT$' + Math.round(val).toLocaleString();
-  }
-  function getColorClass(value) { if (value > 0) return Store.currency === 'TWD' ? 'color-red' : 'color-green'; if (value < 0) return Store.currency === 'TWD' ? 'color-green' : 'color-red'; return ''; }
-  function getBgClass(value) { if (value > 0) return Store.currency === 'TWD' ? 'bg-red' : 'bg-green'; if (value < 0) return Store.currency === 'TWD' ? 'bg-green' : 'bg-red'; return ''; }
-
-  // --- Data Loading ---
-  function load(f) {
-    logger(f ? '強制更新...' : '讀取中...', 'sys');
-    google.script.run.withSuccessHandler(render).withFailureHandler(e => { logger('失敗: ' + e, 'err'); showMsg('讀取失敗: ' + e) }).getDashboardData(f);
+  function formatMoney(n, curr = 'TWD') {
+    if (!n) n = 0;
+    if (Store.currency === 'USD' || curr === 'USD') return '$' + Number(n).toLocaleString();
+    return 'NT$' + Math.round(n).toLocaleString();
   }
 
-  // --- Rendering Logic (Refactored) ---
-  function render(payload, showLogs = true) {
-    if (!payload) {
-      showMsg("錯誤：後端回傳資料為空 (null)", 'err');
-      logger("Render Error: Data is null", 'err');
-      return;
-    }
-
-    let d;
-    if (typeof payload === 'string') {
-      try {
-        d = JSON.parse(payload);
-      } catch (e) {
-        showMsg("資料解析錯誤", 'err');
-        logger("JSON Parse Error: " + e.message, 'err');
-        return;
-      }
-    } else {
-      d = payload;
-    }
-
-    if (d.status === 'error') {
-      showMsg("後端錯誤：\n" + d.message, 'err');
-      logger("Backend Error: " + d.message + " | Debug: " + (d.debug ? d.debug.join(' -> ') : ''), 'err');
-      return;
-    }
-
-    try {
-      Store.data = d; Store.fx = d.fx; Store.inventory = d.inventory;
-
-      if (d.knownTickers) updateTickerDatalist(d.knownTickers);
-
-      if (showLogs) {
-        if (d.logs) d.logs.forEach(l => logger(l));
-        logger('資料更新完成', 'sys');
-      }
-
-      updateInventorySelects(val('lType'));
-      renderDashboard(d);
-      if (d.recentTx) renderRecentTx(d.recentTx);
-      renderCharts(d);
-      renderHoldings(d.holdings);
-      renderRisks(d.risks);
-      renderContracts(d.contracts);
-
-    } catch (err) {
-      showMsg("介面渲染錯誤：\n" + err.message, 'err');
-      logger("Render Error: " + err.stack, 'err');
-    }
+  // --- Actions ---
+  function quickTrade(t, c) {
+    openSheet('sheetTx');
+    el('tTicker').value = t;
+    el('tType').value = '買入';
+    el('tCat').value = c;
   }
 
-  function updateInventorySelects(filterType) {
-    const selL = el('lCol');
-    const selM = el('mTicker');
-
-    // Default to current Loan Form selection if not provided
-    if (!filterType) filterType = val('lType');
-
-    let opts = '<option value="" disabled selected>請選擇抵押品</option>';
-    let catMap = {};
-    if (Store.data && Store.data.holdings) {
-      Store.data.holdings.forEach(h => catMap[h.ticker] = h.cat);
-    }
-
-    let hasItems = false;
-    for (let t in Store.inventory) {
-      let qty = Store.inventory[t];
-      if (qty <= 0) continue;
-
-      let itemCat = catMap[t];
-      // Filter: Only show items matching the requested type (Stock/Crypto)
-      if (filterType === '股票' && itemCat !== '股票') continue;
-      if (filterType === '加密貨幣' && itemCat !== '加密貨幣') continue;
-
-      opts += `<option value="${t}">${t} (餘: ${Number(qty).toFixed(4)})</option>`;
-      hasItems = true;
-    }
-
-    if (!hasItems) opts = '<option value="" disabled selected>無可用庫存</option>';
-
-    if (selL) selL.innerHTML = opts;
-    if (selM) selM.innerHTML = opts;
-  }
-
-  function updateTickerDatalist(tickers) {
-    const dl = el('tickerList');
-    if (!dl) return;
-    // Sort tickers alphabetically
-    tickers.sort();
-    let opts = '';
-    tickers.forEach(t => {
-      opts += `<option value="${t}">`;
-    });
-    dl.innerHTML = opts;
-  }
-
-  function renderRecentTx(list) {
-    if (!list || list.length === 0) {
-      el('recentTxList').innerHTML = '<p style="text-align:center;color:var(--text-sub);padding:20px">無近期交易</p>';
-      return;
-    }
-
-    let html = '<table style="width:100%;font-size:13px;border-collapse:collapse">';
-    html += '<tr style="color:var(--text-sub);text-align:left"><th>日期</th><th>動作</th><th>代號</th><th>數量</th><th>操作</th></tr>';
-
-    list.forEach(tx => {
-      let date = tx.date.split('T')[0];
-      let color = tx.type === '買入' ? 'var(--red)' : (tx.type === '賣出' ? 'var(--green)' : '');
-      // Escape single quotes in JSON string for onclick
-      let txJson = JSON.stringify(tx).replace(/'/g, "&#39;");
-
-      html += `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 0">${date}</td>
-        <td style="color:${color}">${tx.type}</td>
-        <td>${tx.ticker}</td>
-        <td>${Number(tx.qty).toFixed(2)}</td>
-        <td style="text-align:right">
-          <button class="btn-sm btn-outline" onclick='clickEditTx(${txJson})'>修改</button>
-          <button class="btn-sm btn-outline" style="color:var(--red);border-color:var(--red)" onclick="clickDeleteTx(${tx.row})">刪除</button>
-        </td>
-      </tr>`;
-    });
-    html += '</table>';
-    el('recentTxList').innerHTML = html;
-  }
-
-  function clickEditTx(tx) {
-    el('tRow').value = tx.row;
-    el('tDate').value = tx.date.split('T')[0];
-    el('tType').value = tx.type;
-    el('tCat').value = tx.cat;
-    el('tTicker').value = tx.ticker;
-    el('tQty').value = tx.qty;
-    el('tPrice').value = tx.price;
-    el('tCurrency').value = tx.currency;
-
-    checkCat(); // Update UI state
-
-    el('txTitle').innerText = '修改交易 (Row ' + tx.row + ')';
-    el('btnTxSubmit').innerText = '更新交易';
-    el('btnTxCancel').style.display = 'inline-block';
-
-    // Scroll to top of form
-    el('tx').scrollTop = 0;
-  }
-
-  function resetTxForm() {
-    el('tRow').value = '';
-    el('tDate').value = new Date().toISOString().split('T')[0];
-    el('tType').selectedIndex = 0;
-    el('tCat').selectedIndex = 0;
-    el('tTicker').value = '';
-    el('tQty').value = '';
-    el('tPrice').value = '';
-    el('tCurrency').selectedIndex = 0;
-
-    checkCat();
-
-    el('txTitle').innerText = '新增交易';
-    el('btnTxSubmit').innerText = '儲存交易';
-    el('btnTxCancel').style.display = 'none';
-  }
-
-  function showConfirm(msg, callback, btnText = '確定', btnColor = 'var(--primary)', icon = '??') {
-    el('confirmBody').innerText = msg;
-    el('confirmIcon').innerText = icon;
-    el('confirmModal').style.display = 'flex';
-
-    let oldBtn = el('confirmBtn');
-    let newBtn = oldBtn.cloneNode(true);
-    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-
-    newBtn.innerText = btnText;
-    newBtn.style.background = btnColor;
-
-    newBtn.onclick = () => {
-      closeModal('confirmModal');
-      callback();
-    };
-  }
-
-  function handleActionResponse(r, callback) {
-    if (r && r.success) {
-      showMsg(r.message);
-      if (callback) callback();
-    } else {
-      showMsg(r ? r.message : "未知錯誤", 'err');
-    }
-  }
-
-  function clickDeleteTx(row) {
-    showConfirm('確定要刪除此筆交易紀錄嗎？(Row ' + row + ')', () => {
-      logger('刪除交易中...', 'sys');
-      google.script.run.withSuccessHandler((r) => {
-        handleActionResponse(r, load);
-      }).deleteTx(row);
-    }, '刪除', 'var(--red)', '??');
-  }
-
-  // ... (render functions removed for brevity in this replace block, ensuring context matches)
-
-  function subTx(btn) {
-    if (!val('tTicker')) return showMsg('請輸入代號', 'err');
-    btn.disabled = true;
-
+  function subTx() {
+    // Collect Data
     let d = {
-      row: val('tRow'),
-      date: val('tDate'),
-      type: val('tType'),
-      ticker: val('tTicker'),
-      cat: val('tCat'),
-      qty: val('tQty'),
-      price: val('tPrice'),
-      currency: val('tCurrency')
+      date: el('tDate').value, type: el('tType').value, ticker: el('tTicker').value,
+      cat: el('tCat').value, qty: el('tQty').value, price: el('tPrice').value, currency: el('tCurrency').value
     };
 
-    const handler = (r) => {
-      handleActionResponse(r, () => {
-        if (!d.row) resetTxForm(); // Only reset on add
-        load();
-      });
-      btn.disabled = false;
-    };
-
-    if (d.row) {
-      google.script.run.withSuccessHandler(handler).editTx(d);
-    } else {
-      google.script.run.withSuccessHandler(handler).addTx(d);
-    }
+    el('btnTx').disabled = true; el('btnTx').innerText = '處理中...';
+    google.script.run.withSuccessHandler(r => {
+      closeSheet('sheetTx'); load(false); alert(r.message);
+      el('btnTx').disabled = false; el('btnTx').innerText = '送出交易';
+      // Reset form
+      el('tQty').value = ''; el('tPrice').value = '';
+    }).addTx(d);
   }
 
-  function subLoan(btn) {
-    let type = val('lType');
-    if (type !== Const.TYPE_CREDIT && type !== Const.TYPE_CARD && el('invMsg').innerText.includes('不足')) return showMsg('庫存不足', 'err');
-    if (!val('lSource')) return showMsg('請輸入來源', 'err');
-    let d = { source: val('lSource'), date: new Date().toISOString().split('T')[0], amount: val('lAmount'), rate: val('lRate'), col: val('lCol'), colQty: val('lQty'), type: val('lType'), totalTerm: val('lTerm'), monthlyPay: val('lMonthPay'), currency: val('lCurrency') };
-    btn.disabled = true;
-    google.script.run.withSuccessHandler((r) => {
-      handleActionResponse(r, load);
-      btn.disabled = false;
-    }).addLoan(d);
-  }
-
-  function subAction(btn) {
-    let d = { row: val('mRow'), type: val('mType'), val: val('mVal'), price: (val('mType') === 'increaseLoan' || val('mType') === 'addCol' ? val('mRate') : val('mPrice')), repayAmt: val('mRepayAmt'), addTicker: val('mTicker'), source: val('mSource'), col: val('mCol') };
-    btn.disabled = true;
-    google.script.run.withSuccessHandler((r) => {
-      handleActionResponse(r, () => {
-        closeModal('actionModal');
-        load();
-      });
-      btn.disabled = false;
-    }).processContractAction(d);
-  }
-
-  function initIcons() {
-    if (el('btnReload')) el('btnReload').innerText = Icons.REFRESH + ' 強制更新';
-  }
-
-  // Init
   window.onload = () => {
-    console.log("App Version: v3.1.1 (Check Enabled)");
-    initIcons();
     initTheme();
     el('tDate').value = new Date().toISOString().split('T')[0];
-    load();
+    load(false);
   };
 </script>
