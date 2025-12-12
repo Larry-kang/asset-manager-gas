@@ -1,0 +1,16 @@
+# Ignore these files when pushing to Google Apps Script
+.git/
+.vscode/
+node_modules/
+
+# Config Files
+.gitignore
+.claspignore
+package.json
+package-lock.json
+jsconfig.json
+tsconfig.json
+
+# Documentation & Artifacts
+*.md
+**/*.md

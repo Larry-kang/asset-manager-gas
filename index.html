@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>資產管家 v3.0.0</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <?!= include('css'); ?>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <button class="nav-btn active" onclick="go('dash', this)">資產看板</button>
+      <button class="nav-btn" onclick="go('tx', this)">交易登錄</button>
+      <button class="nav-btn" onclick="go('loan', this)">負債管理</button>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()"></button>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="dash" class="view active">
+      <div class="card">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+           <button class="btn btn-sm btn-outline" id="btnReload" onclick="load(true)">強制更新</button>
+           <div class="currency-toggle">
+             <div class="currency-opt active" id="btnTWD" onclick="setCurrency('TWD')">TWD</div>
+             <div class="currency-opt" id="btnUSD" onclick="setCurrency('USD')">USD</div>
+           </div>
+        </div>
+        <div class="grid">
+          <div class="metric"><div class="metric-lbl">淨資產</div><div class="metric-val" id="netWorth">...</div></div>
+          <div class="metric"><div class="metric-lbl">總資產</div><div class="metric-val" id="assets">...</div></div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="chart-container">
+          <div class="chart-box"><canvas id="pieChart"></canvas></div>
+          <div class="chart-box"><canvas id="lineChart"></canvas></div>
+        </div>
+
+      </div>
+      <div id="riskList"></div>
+      <div class="card"><h2>持倉明細 (含損益)</h2><div id="holdings">...</div></div>
+    </div>
+
+    <!-- Transaction View -->
+    <div id="tx" class="view">
+      <div class="card">
+        <h2 id="txTitle">新增交易</h2>
+        <input type="hidden" id="tRow">
+        <div class="form-group"><label>日期</label><input type="date" id="tDate"></div>
+        <div class="form-group"><label>動作</label><select id="tType"><option>買入</option><option>賣出</option><option>配息</option></select></div>
+        <div class="form-group"><label>資產類別</label><select id="tCat" onchange="checkCat()"><option value="股票">股票</option><option value="加密貨幣">加密貨幣</option><option value="現金">現金</option></select></div>
+        <div class="form-group"><label>代號</label><input type="text" id="tTicker" list="tickerList" placeholder="00713 / BTC"></div>
+        <div class="form-group"><label>數量</label><input type="number" id="tQty" step="any"></div>
+        <div class="form-group"><label>單價/幣別</label><div style="display:flex;gap:10px"><input type="number" id="tPrice" step="any" placeholder="單價"><select id="tCurrency" style="width:100px" onchange="checkCat()"><option value="TWD">TWD</option><option value="USD">USD</option></select></div></div>
+        <div style="display:flex;gap:10px">
+            <button class="btn" id="btnTxSubmit" onclick="subTx(this)">儲存交易</button>
+            <button class="btn btn-outline" id="btnTxCancel" style="display:none" onclick="resetTxForm()">取消編輯</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>近期交易紀錄</h2>
+        <div id="recentTxList">載入中...</div>
+      </div>
+    </div>
+
+    <!-- Loan View -->
+    <div id="loan" class="view">
+      <div class="card">
+        <h2>建立借貸合約</h2>
+        <div class="form-group"><label>借貸類型</label><select id="lType" onchange="updLoanForm()"><option value="股票">股票 (維持率)</option><option value="加密貨幣">加密貨幣 (LTV)</option><option value="信用貸款">信用貸款 (無抵押)</option><option value="卡費">卡費 (無抵押)</option></select></div>
+        <div class="form-group"><label>來源 (券商/交易所)</label><input type="text" id="lSource" placeholder="例如: 元大 / 中信"></div>
+        
+        <div id="collateralGroup">
+          <div class="form-group"><label>抵押品</label><div style="display:flex;gap:10px">
+            <select id="lCol" onchange="checkInv()"><option value="" disabled selected>請選擇抵押品</option></select>
+            <input type="number" id="lQty" placeholder="數量" onblur="checkInv()">
+          </div><div id="invMsg" style="font-size:12px;margin-top:5px;height:18px"></div></div>
+        </div>
+        
+        <div id="creditGroup" style="display:none">
+          <div class="form-group"><label>貸款期數 (月)</label><input type="number" id="lTerm" placeholder="例如: 24"></div>
+          <div class="form-group"><label>每月還款金額 (本+息)</label><input type="number" id="lMonthPay" placeholder="例如: 5000"></div>
+        </div>
+
+        <div class="form-group"><label>借款金額</label>
+          <div style="display:flex;gap:10px">
+            <input type="number" id="lAmount">
+            <select id="lCurrency" style="width:100px"><option value="TWD">TWD</option><option value="USD">USD</option></select>
+          </div>
+        </div>
+        <div class="form-group"><label>年利率 (%)</label><input type="number" id="lRate" placeholder="2.5" step="0.01"></div>
+        <button class="btn" id="btnLoanSubmit" onclick="subLoan(this)">建立合約</button>
+      </div>
+      <div id="contractList"></div>
+    </div>
+  </div>
+
+  <!-- Action Modal -->
+  <div id="actionModal" class="modal">
+    <div class="modal-content">
+      <h2 id="mTitle" style="margin-top:0">合約操作</h2>
+      <input type="hidden" id="mRow"> <input type="hidden" id="mType"> <input type="hidden" id="mSource"> <input type="hidden" id="mCol">
+      <div class="form-group" id="mAmountGroup"><label id="lblAmount">金額/數量</label><input type="number" id="mVal" step="any"></div>
+      <div class="form-group" id="mTickerGroup" style="display:none"><label>抵押品代號</label><select id="mTicker" onchange="checkModalInv()"><option value="" disabled selected>請選擇抵押品</option></select><div id="mInvMsg" style="font-size:12px;margin-top:5px;color:var(--red)"></div></div>
+      <div class="form-group" id="mRateGroup" style="display:none"><label>利率 (%)</label><input type="number" id="mRate" step="0.01"></div>
+      <div id="mSellGroup" style="display:none"><div class="form-group"><label>賣出單價</label><input type="number" id="mPrice" step="any"></div><div class="form-group"><label>還款金額</label><input type="number" id="mRepayAmt"></div></div>
+      <p id="mText" style="display:none;color:var(--text-sub);margin-bottom:15px;text-align:center"></p>
+      <div style="display:flex;gap:10px;margin-top:20px"><button class="btn" style="background:var(--border);color:var(--text-main)" onclick="closeModal('actionModal')">取消</button><button class="btn" id="mSubmit" onclick="subAction(this)">確認</button></div>
+    </div>
+  </div>
+
+  <!-- Message Modal -->
+  <div id="msgModal" class="modal" style="z-index:9999">
+    <div class="modal-content" style="max-width:320px;padding:30px">
+       <div id="msgIcon" class="msg-icon"></div>
+       <div id="msgTitle" class="msg-title"></div>
+       <div id="msgBody" class="msg-body"></div>
+       <button class="msg-btn" onclick="closeModal('msgModal')">確定</button>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal" style="z-index:9999">
+    <div class="modal-content" style="max-width:320px;padding:30px">
+       <div id="confirmIcon" class="msg-icon">??</div>
+       <div class="msg-title">確認操作</div>
+       <div id="confirmBody" class="msg-body" style="margin-bottom:20px"></div>
+       <div style="display:flex;gap:10px">
+         <button class="btn btn-outline" onclick="closeModal('confirmModal')" style="margin-top:0">取消</button>
+         <button class="btn" id="confirmBtn" style="background:var(--red);margin-top:0">刪除</button>
+       </div>
+    </div>
+  </div>
+
+  <button id="consoleToggle" onclick="toggleConsole()">隱藏 Log</button>
+  <div id="devConsole"><div class="log-line"><span class="log-time">System</span> <span>Dev Console Ready...</span></div></div>
+
+  <datalist id="tickerList"></datalist>
+
+  <?!= include('icons'); ?>
+  <?!= include('constants'); ?>
+  <?!= include('js'); ?>
+</body>
+</html>
