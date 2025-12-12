@@ -33,11 +33,26 @@ jobs:
             try {
               const secret = process.env.CLASP_SECRET;
               let json = JSON.parse(secret);
-              // Normalize: If nested (clasp v2.4+), extract the inner token
-              if (json.tokens && json.tokens.default && json.tokens.default.token) {
-                console.log('Detected nested token structure (v2.4+). Flattening...');
-                json = { token: json.tokens.default.token };
+              // Normalize: Handle v2.4+ structures
+              let finalToken = json.token;
+              if (json.tokens && json.tokens.default) {
+                if (json.tokens.default.token) {
+                  finalToken = json.tokens.default.token;
+                } else {
+                  // Fallback: sometimes the default object IS the token
+                  finalToken = json.tokens.default;
+                }
               }
+              
+              if (!finalToken) {
+                 console.error('Could not find token in secret!');
+                 // Don't exit yet, let it try writing what it has, or maybe log keys
+                 console.log('Keys:', Object.keys(json));
+              } else {
+                 json = { token: finalToken };
+                 console.log('Normalized to legacy structure.');
+              }
+              
               const rcPath = path.join(os.homedir(), '.clasprc.json');
               fs.writeFileSync(rcPath, JSON.stringify(json));
               console.log('Wrote .clasprc.json to', rcPath);
