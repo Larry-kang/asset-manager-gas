@@ -36,8 +36,15 @@
 
     function renderDash(d) {
         setVal('netWorth', fmt(d.netWorthTWD));
-        // setVal('totalAssets', fmt(d.totalAssetsTWD)); // Not present in Gold Grid Layout
-        // setVal('totalDebt', fmt(d.totalDebtTWD));   // Not present in Gold Grid Layout
+
+        // Daily Change
+        const dcEl = document.getElementById('dailyChange');
+        if (dcEl) {
+            let dc = d.dailyChange || 0;
+            let color = dc >= 0 ? 'var(--color-green)' : 'var(--color-red)';
+            let sign = dc >= 0 ? '+' : '';
+            dcEl.innerHTML = `<span style="color:${color}">${sign}${fmt(dc)}</span> <span style="font-size:12px; color:var(--text-secondary)">Today</span>`;
+        }
 
         let alloc = {};
         if (d.holdings) {
@@ -49,6 +56,49 @@
         renderAssetList(d.holdings);
         renderRecentTx(d.recentTx);
     }
+
+    // --- i18n & Theme ---
+    const I18N = {
+        'en': {
+            'Dash': 'Dashboard', 'Port': 'Portfolio', 'Vault': 'Vault', 'Sett': 'Settings',
+            'NetWarning': 'Total Vault Balance', 'Assets': 'Assets', 'Tx': 'Transactions',
+            'AddF': 'Add Funds', 'ViewAll': 'View All Assets', 'RunDig': 'Run Diagnostics',
+            'SysStat': 'System Status', 'Oper': 'Operational', 'Theme': 'Light Mode', 'Lang': 'Language'
+        },
+        'zh': {
+            'Dash': '儀表板', 'Port': '投資組合', 'Vault': '借貸金庫', 'Sett': '設定',
+            'NetWarning': '總資產餘額', 'Assets': '資產分佈', 'Tx': '近期交易',
+            'AddF': '新增資金', 'ViewAll': '查看所有資產', 'RunDig': '執行系統診斷',
+            'SysStat': '系統狀態', 'Oper': '運作正常', 'Theme': '亮色模式', 'Lang': '語言切換'
+        }
+    };
+
+    let curLang = localStorage.getItem('app_lang') || 'zh'; // Default ZH
+
+    function setLang(lang) {
+        curLang = lang;
+        localStorage.setItem('app_lang', lang);
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (I18N[lang][key]) el.innerText = I18N[lang][key];
+        });
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        localStorage.setItem('app_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    }
+
+    // Init Theme & Lang
+    (function () {
+        // Theme
+        const savedTheme = localStorage.getItem('app_theme');
+        if (savedTheme === 'light') document.body.classList.add('light-mode');
+        else if (savedTheme === 'dark') document.body.classList.remove('light-mode');
+
+        // Lang
+        setTimeout(() => setLang(curLang), 100);
+    })();
 
     function renderAssetList(holdings) {
         const el = document.getElementById('assetList');

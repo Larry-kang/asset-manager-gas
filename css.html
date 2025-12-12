@@ -30,6 +30,31 @@
     --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
   }
 
+  /* LIGHT MODE OVERRIDES */
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg-dark: #F9FAFB;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F3F4F6;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --text-primary: #111827;
+      --text-secondary: #6B7280;
+      /* Gold remains, maybe slightly darker for contrast */
+      --text-gold: #B45309;
+    }
+  }
+
+  /* Manual Light Mode Toggle Class */
+  body.light-mode {
+    --bg-dark: #F9FAFB;
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #F3F4F6;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --text-gold: #B45309;
+  }
+
   body {
     background-color: var(--bg-dark);
     font-family: var(--font-sans);

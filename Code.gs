@@ -122,11 +122,36 @@ function getDashboardData(forceRefresh) {
 
     // 4. Transform Result
     const safeNum = (n) => (isNaN(n) || n === null || n === undefined) ? 0 : Number(n);
+    const netWorth = safeNum(portfolio.totalAssetsTWD - loanData.totalDebtTWD);
+
+    // --- Daily Change Logic ---
+    const props = PropertiesService.getScriptProperties();
+    const today = new Date().toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' });
+    let lastDate = props.getProperty('LAST_DATE');
+    let prevClose = parseFloat(props.getProperty('PREV_CLOSE') || 0);
+    // If first time or new day, update reference
+    if (lastDate !== today) {
+      // If we have a stored current value from yesterday, that becomes today's previous close
+      // If completely new, we might just use current net worth effectively 0 change, or wait for next update
+      let lastKnown = parseFloat(props.getProperty('LAST_KNOWN_VAL') || netWorth);
+      prevClose = lastKnown;
+      props.setProperties({
+        'LAST_DATE': today,
+        'PREV_CLOSE': String(prevClose),
+        'LAST_KNOWN_VAL': String(netWorth)
+      });
+    } else {
+      // Update last known value for today
+      props.setProperty('LAST_KNOWN_VAL', String(netWorth));
+    }
+    const dailyChange = netWorth - prevClose;
+    // ---------------------------
 
     const result = {
       status: "success",
       fx: safeNum(marketData.fx),
-      netWorthTWD: safeNum(portfolio.totalAssetsTWD - loanData.totalDebtTWD),
+      netWorthTWD: netWorth,
+      dailyChange: dailyChange,
       totalAssetsTWD: safeNum(portfolio.totalAssetsTWD),
       totalDebtTWD: safeNum(loanData.totalDebtTWD),
       holdings: portfolio.list,

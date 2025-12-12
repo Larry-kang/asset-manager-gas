@@ -23,19 +23,19 @@
       <div class="nav-menu">
         <div class="nav-item active" onclick="go('dash', this)">
           <i class="fa-solid fa-chart-pie"></i>
-          <span>Dashboard</span>
+          <span data-i18n="Dash">Dashboard</span>
         </div>
         <div class="nav-item" onclick="go('holdings', this)">
           <i class="fa-solid fa-layer-group"></i>
-          <span>Portfolio</span>
+          <span data-i18n="Port">Portfolio</span>
         </div>
         <div class="nav-item" onclick="go('loan', this)">
           <i class="fa-solid fa-landmark"></i>
-          <span>Vault</span>
+          <span data-i18n="Vault">Vault</span>
         </div>
         <div class="nav-item" onclick="go('settings', this)">
           <i class="fa-solid fa-gear"></i>
-          <span>Settings</span>
+          <span data-i18n="Sett">Settings</span>
         </div>
       </div>
 
@@ -55,13 +55,14 @@
 
         <!-- Centered Balance Header -->
         <div class="dash-header">
-          <div class="dash-label">Total Vault Balance <i class="fa-regular fa-circle-question"
-              style="font-size:12px"></i></div>
+          <div class="dash-label" data-i18n="NetWarning">Total Vault Balance</div>
           <div class="dash-balance" id="netWorth">...</div>
+          <div id="dailyChange"
+            style="margin-top:-16px; margin-bottom:24px; font-family:var(--font-sans); font-weight:500"></div>
 
           <div class="dash-actions">
             <button class="btn-gold-pill" onclick="openTxModal()"><i class="fa-solid fa-plus"
-                style="margin-right:8px"></i> Add Funds</button>
+                style="margin-right:8px"></i> <span data-i18n="AddF">Add Funds</span></button>
             <button class="btn-outline" onclick="openTxModal()"><i class="fa-solid fa-arrow-up"></i></button>
             <button class="btn-outline" onclick="load(true)"><i class="fa-solid fa-rotate"></i></button>
           </div>
@@ -71,7 +72,7 @@
 
           <!-- Assets Section -->
           <div>
-            <div class="section-title">Assets</div>
+            <div class="section-title" data-i18n="Assets">Assets</div>
             <div class="card">
               <!-- Chart + List Layout -->
               <div style="display:flex; gap:32px; align-items:center; flex-wrap:wrap">
@@ -89,7 +90,7 @@
 
           <!-- Transactions Section -->
           <div>
-            <div class="section-title">Transactions</div>
+            <div class="section-title" data-i18n="Tx">Transactions</div>
             <div class="card" id="recentTxList">
               <!-- Injected by JS -->
             </div>
@@ -101,7 +102,7 @@
       <!-- PORTFOLIO / HOLDINGS -->
       <div id="holdings" class="view hidden">
         <div class="top-header">
-          <div class="section-title">Portfolio Holdings</div>
+          <div class="section-title" data-i18n="Port">Portfolio Holdings</div>
           <button class="btn-gold-pill" onclick="openTxModal()">+ Trade</button>
         </div>
         <div id="holdingsList"></div>
@@ -109,26 +110,37 @@
 
       <!-- VAULT / LOANS -->
       <div id="loan" class="view hidden">
-        <div class="section-title">Vault (Loans)</div>
+        <div class="section-title" data-i18n="Vault">Vault (Loans)</div>
         <div id="riskList" style="margin-bottom:24px"></div>
         <div id="loanList"></div>
       </div>
 
       <!-- SETTINGS -->
       <div id="settings" class="view hidden">
-        <div class="section-title">Settings</div>
+        <div class="section-title" data-i18n="Sett">Settings</div>
         <div class="card">
           <div class="asset-row">
-            <div>System Status</div>
-            <div class="bg-success">Operational</div>
+            <div data-i18n="SysStat">System Status</div>
+            <div class="bg-success" data-i18n="Oper">Operational</div>
           </div>
           <div class="asset-row" onclick="google.script.run.runSystemCheck()">
-            <div>Run Diagnostics</div>
+            <div data-i18n="RunDig">Run Diagnostics</div>
             <div style="color:var(--text-secondary)"><i class="fa-solid fa-chevron-right"></i></div>
           </div>
+
+          <!-- New Toggles -->
+          <div class="asset-row" onclick="toggleTheme()">
+            <div data-i18n="Theme">Light Mode</div>
+            <div style="color:var(--text-gold)"><i class="fa-solid fa-circle-half-stroke"></i></div>
+          </div>
+          <div class="asset-row" onclick="setLang(curLang==='zh'?'en':'zh')">
+            <div data-i18n="Lang">Language</div>
+            <div style="color:var(--text-gold)">EN / 中</div>
+          </div>
+
           <div class="asset-row">
             <div>Version</div>
-            <div style="color:var(--text-secondary)">v4.0.2</div>
+            <div style="color:var(--text-secondary)">v4.1.0</div>
           </div>
         </div>
       </div>
