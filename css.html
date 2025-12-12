@@ -354,18 +354,20 @@
   }
 
   /* UTILS */
+  [v-cloak] {
+    display: none !important;
+  }
+
   .hidden {
     display: none !important;
   }
 
   .view {
-    display: none;
+    /* display: none; Removed for Vue v-show compatibility */
     animation: fadeIn 0.4s;
   }
 
-  .view.active {
-    display: block;
-  }
+  /* .view.active removed as Vue handles display */
 
   @keyframes fadeIn {
     from {
