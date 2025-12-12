@@ -266,3 +266,30 @@ function normalizeTicker(t) {
   }
   return t;
 }
+
+// Export for Node.js Testing (Jest)
+if (typeof module !== 'undefined' && module.exports) {
+  // Define literals exactly as they appear in the file
+  const TEST_LITERALS = {
+    ACT_BUY: '買入',
+    ACT_SELL: '賣出',
+    ACT_DIVIDEND: '配息',
+    TYPE_STOCK: '股票',
+    TYPE_CRYPTO: '加密貨幣',
+    TYPE_CREDIT: '信用貸款'
+  };
+
+  module.exports = {
+    getInventoryMap,
+    processMarketData,
+    calculatePortfolio,
+    calculateLoans,
+    normalizeTicker,
+    TEST_LITERALS
+  };
+
+  // Set Globals for the module scope
+  global.ACT_BUY = TEST_LITERALS.ACT_BUY;
+  global.ACT_SELL = TEST_LITERALS.ACT_SELL;
+  global.ACT_DIVIDEND = TEST_LITERALS.ACT_DIVIDEND;
+}

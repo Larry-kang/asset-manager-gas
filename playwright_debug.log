@@ -1,0 +1,52 @@
+
+Running 3 tests using 1 worker
+
+  ✓  1 tests\frontend\e2e.spec.js:11:5 › Asset Manager Frontend › Dashboard should load with correct title (1.0s)
+  ✘  2 tests\frontend\e2e.spec.js:16:5 › Asset Manager Frontend › New Loan UI should operate correctly (30.0s)
+  ✘  3 tests\frontend\e2e.spec.js:42:5 › Asset Manager Frontend › I18N Switching (30.0s)
+
+
+  1) tests\frontend\e2e.spec.js:16:5 › Asset Manager Frontend › New Loan UI should operate correctly 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.nav-item:has-text("Vault")')[22m
+
+
+      16 |     test('New Loan UI should operate correctly', async ({ page }) => {
+      17 |         // 1. Navigate to Vault
+    > 18 |         await page.click('.nav-item:has-text("Vault")');
+         |                    ^
+      19 |
+      20 |         // 2. Open New Loan Modal
+      21 |         await page.click('button:has-text("+ New Loan")');
+        at C:\Users\kqazk\OneDrive\文件\資產管理程式\tests\frontend\e2e.spec.js:18:20
+
+    Error Context: test-results\tests-frontend-e2e-Asset-M-5e44c-UI-should-operate-correctly\error-context.md
+
+  2) tests\frontend\e2e.spec.js:42:5 › Asset Manager Frontend › I18N Switching ─────────────────────
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: page.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.nav-item:has-text("Settings")')[22m
+
+
+      42 |     test('I18N Switching', async ({ page }) => {
+      43 |         // 1. Navigate to Settings
+    > 44 |         await page.click('.nav-item:has-text("Settings")');
+         |                    ^
+      45 |
+      46 |         // 2. Toggle Language
+      47 |         // Current: English (default) -> Check text "Dashboard"
+        at C:\Users\kqazk\OneDrive\文件\資產管理程式\tests\frontend\e2e.spec.js:44:20
+
+    Error Context: test-results\tests-frontend-e2e-Asset-Manager-Frontend-I18N-Switching\error-context.md
+
+  2 failed
+    tests\frontend\e2e.spec.js:16:5 › Asset Manager Frontend › New Loan UI should operate correctly 
+    tests\frontend\e2e.spec.js:42:5 › Asset Manager Frontend › I18N Switching ──────────────────────
+  1 passed (1.1m)

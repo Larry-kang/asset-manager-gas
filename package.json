@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "Google Apps Script Asset Manager",
   "scripts": {
-    "test": "jest",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "jest tests/backend",
+    "test:frontend": "playwright test tests/frontend",
     "dev": "node local_server.js"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "jest": "^29.7.0"
   }
 }

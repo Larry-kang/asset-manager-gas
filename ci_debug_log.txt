@@ -1,0 +1,305 @@
+deploy	Set up job	﻿2025-12-12T15:57:40.7174286Z Current runner version: '2.329.0'
+deploy	Set up job	2025-12-12T15:57:40.7199689Z ##[group]Runner Image Provisioner
+deploy	Set up job	2025-12-12T15:57:40.7200851Z Hosted Compute Agent
+deploy	Set up job	2025-12-12T15:57:40.7201826Z Version: 20251202.455
+deploy	Set up job	2025-12-12T15:57:40.7203077Z Commit: 6c10caca4910e198df60de23adf20ad317c474e3
+deploy	Set up job	2025-12-12T15:57:40.7204048Z Build Date: 2025-12-02T15:56:59Z
+deploy	Set up job	2025-12-12T15:57:40.7205026Z Worker ID: ***b6c731bf-cf8b-424e-a596-37d5ca591146***
+deploy	Set up job	2025-12-12T15:57:40.7205949Z ##[endgroup]
+deploy	Set up job	2025-12-12T15:57:40.7206732Z ##[group]Operating System
+deploy	Set up job	2025-12-12T15:57:40.7207506Z Ubuntu
+deploy	Set up job	2025-12-12T15:57:40.7208203Z 24.04.3
+deploy	Set up job	2025-12-12T15:57:40.7208872Z LTS
+deploy	Set up job	2025-12-12T15:57:40.7209691Z ##[endgroup]
+deploy	Set up job	2025-12-12T15:57:40.7210394Z ##[group]Runner Image
+deploy	Set up job	2025-12-12T15:57:40.7211160Z Image: ubuntu-24.04
+deploy	Set up job	2025-12-12T15:57:40.7212419Z Version: 20251208.163.1
+deploy	Set up job	2025-12-12T15:57:40.7213761Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20251208.163/images/ubuntu/Ubuntu2404-Readme.md
+deploy	Set up job	2025-12-12T15:57:40.7215417Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20251208.163
+deploy	Set up job	2025-12-12T15:57:40.7216916Z ##[endgroup]
+deploy	Set up job	2025-12-12T15:57:40.7218467Z ##[group]GITHUB_TOKEN Permissions
+deploy	Set up job	2025-12-12T15:57:40.7220736Z Contents: read
+deploy	Set up job	2025-12-12T15:57:40.7222134Z Metadata: read
+deploy	Set up job	2025-12-12T15:57:40.7222863Z Packages: read
+deploy	Set up job	2025-12-12T15:57:40.7223600Z ##[endgroup]
+deploy	Set up job	2025-12-12T15:57:40.7225816Z Secret source: Actions
+deploy	Set up job	2025-12-12T15:57:40.7226813Z Prepare workflow directory
+deploy	Set up job	2025-12-12T15:57:40.7554207Z Prepare all required actions
+deploy	Set up job	2025-12-12T15:57:40.7595387Z Getting action download info
+deploy	Set up job	2025-12-12T15:57:41.1995771Z Download action repository 'actions/checkout@v3' (SHA:f43a0e5ff2bd294095638e18286ca9a3d1956744)
+deploy	Set up job	2025-12-12T15:57:41.3159200Z Download action repository 'actions/setup-node@v3' (SHA:3235b876344d2a9aa001b8d1453c930bba69e610)
+deploy	Set up job	2025-12-12T15:57:41.4988602Z Complete job name: deploy
+deploy	Checkout code	﻿2025-12-12T15:57:41.5721882Z ##[group]Run actions/checkout@v3
+deploy	Checkout code	2025-12-12T15:57:41.5722956Z with:
+deploy	Checkout code	2025-12-12T15:57:41.5723560Z   repository: Larry-kang/asset-manager-gas
+deploy	Checkout code	2025-12-12T15:57:41.5724518Z   token: ***
+deploy	Checkout code	2025-12-12T15:57:41.5725054Z   ssh-strict: true
+deploy	Checkout code	2025-12-12T15:57:41.5725621Z   persist-credentials: true
+deploy	Checkout code	2025-12-12T15:57:41.5726213Z   clean: true
+deploy	Checkout code	2025-12-12T15:57:41.5726785Z   sparse-checkout-cone-mode: true
+deploy	Checkout code	2025-12-12T15:57:41.5727416Z   fetch-depth: 1
+deploy	Checkout code	2025-12-12T15:57:41.5727955Z   fetch-tags: false
+deploy	Checkout code	2025-12-12T15:57:41.5728494Z   lfs: false
+deploy	Checkout code	2025-12-12T15:57:41.5729001Z   submodules: false
+deploy	Checkout code	2025-12-12T15:57:41.5729556Z   set-safe-directory: true
+deploy	Checkout code	2025-12-12T15:57:41.5730409Z ##[endgroup]
+deploy	Checkout code	2025-12-12T15:57:41.6591155Z Syncing repository: Larry-kang/asset-manager-gas
+deploy	Checkout code	2025-12-12T15:57:41.6593686Z ##[group]Getting Git version info
+deploy	Checkout code	2025-12-12T15:57:41.6594687Z Working directory is '/home/runner/work/asset-manager-gas/asset-manager-gas'
+deploy	Checkout code	2025-12-12T15:57:41.6595971Z [command]/usr/bin/git version
+deploy	Checkout code	2025-12-12T15:57:41.6689496Z git version 2.52.0
+deploy	Checkout code	2025-12-12T15:57:41.6718007Z ##[endgroup]
+deploy	Checkout code	2025-12-12T15:57:41.6735180Z Temporarily overriding HOME='/home/runner/work/_temp/0448b15a-247c-48e7-89d2-ff471cb9d38d' before making global git config changes
+deploy	Checkout code	2025-12-12T15:57:41.6737896Z Adding repository directory to the temporary git global config as a safe directory
+deploy	Checkout code	2025-12-12T15:57:41.6740378Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/asset-manager-gas/asset-manager-gas
+deploy	Checkout code	2025-12-12T15:57:41.6780382Z Deleting the contents of '/home/runner/work/asset-manager-gas/asset-manager-gas'
+deploy	Checkout code	2025-12-12T15:57:41.6783994Z ##[group]Initializing the repository
+deploy	Checkout code	2025-12-12T15:57:41.6787030Z [command]/usr/bin/git init /home/runner/work/asset-manager-gas/asset-manager-gas
+deploy	Checkout code	2025-12-12T15:57:41.6945955Z hint: Using 'master' as the name for the initial branch. This default branch name
+deploy	Checkout code	2025-12-12T15:57:41.6947902Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+deploy	Checkout code	2025-12-12T15:57:41.6949753Z hint: to use in all of your new repositories, which will suppress this warning,
+deploy	Checkout code	2025-12-12T15:57:41.6951525Z hint: call:
+deploy	Checkout code	2025-12-12T15:57:41.6952858Z hint:
+deploy	Checkout code	2025-12-12T15:57:41.6953967Z hint: 	git config --global init.defaultBranch <name>
+deploy	Checkout code	2025-12-12T15:57:41.6955257Z hint:
+deploy	Checkout code	2025-12-12T15:57:41.6956486Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+deploy	Checkout code	2025-12-12T15:57:41.6958314Z hint: 'development'. The just-created branch can be renamed via this command:
+deploy	Checkout code	2025-12-12T15:57:41.6959760Z hint:
+deploy	Checkout code	2025-12-12T15:57:41.6960654Z hint: 	git branch -m <name>
+deploy	Checkout code	2025-12-12T15:57:41.6961887Z hint:
+deploy	Checkout code	2025-12-12T15:57:41.6963259Z hint: Disable this message with "git config set advice.defaultBranchName false"
+deploy	Checkout code	2025-12-12T15:57:41.6965321Z Initialized empty Git repository in /home/runner/work/asset-manager-gas/asset-manager-gas/.git/
+deploy	Checkout code	2025-12-12T15:57:41.6968478Z [command]/usr/bin/git remote add origin https://github.com/Larry-kang/asset-manager-gas
+deploy	Checkout code	2025-12-12T15:57:41.7000047Z ##[endgroup]
+deploy	Checkout code	2025-12-12T15:57:41.7001903Z ##[group]Disabling automatic garbage collection
+deploy	Checkout code	2025-12-12T15:57:41.7003365Z [command]/usr/bin/git config --local gc.auto 0
+deploy	Checkout code	2025-12-12T15:57:41.7032330Z ##[endgroup]
+deploy	Checkout code	2025-12-12T15:57:41.7033954Z ##[group]Setting up auth
+deploy	Checkout code	2025-12-12T15:57:41.7038613Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+deploy	Checkout code	2025-12-12T15:57:41.7067411Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+deploy	Checkout code	2025-12-12T15:57:41.7446538Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+deploy	Checkout code	2025-12-12T15:57:41.7478176Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+deploy	Checkout code	2025-12-12T15:57:41.7709857Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+deploy	Checkout code	2025-12-12T15:57:41.7747549Z ##[endgroup]
+deploy	Checkout code	2025-12-12T15:57:41.7748568Z ##[group]Fetching the repository
+deploy	Checkout code	2025-12-12T15:57:41.7760000Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +5ce06e694622c9b45042e0697bcb381a34bea61b:refs/remotes/origin/refactor/vue-migration
+deploy	Checkout code	2025-12-12T15:57:42.1411417Z remote: Enumerating objects: 39, done.        
+deploy	Checkout code	2025-12-12T15:57:42.1412674Z remote: Counting objects:   2% (1/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1413638Z remote: Counting objects:   5% (2/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1414598Z remote: Counting objects:   7% (3/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1415534Z remote: Counting objects:  10% (4/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1416467Z remote: Counting objects:  12% (5/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1417405Z remote: Counting objects:  15% (6/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1418275Z remote: Counting objects:  17% (7/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1422870Z remote: Counting objects:  20% (8/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1423990Z remote: Counting objects:  23% (9/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1424882Z remote: Counting objects:  25% (10/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1425784Z remote: Counting objects:  28% (11/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1426661Z remote: Counting objects:  30% (12/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1427546Z remote: Counting objects:  33% (13/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1428362Z remote: Counting objects:  35% (14/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1429117Z remote: Counting objects:  38% (15/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1429868Z remote: Counting objects:  41% (16/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1430619Z remote: Counting objects:  43% (17/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1431592Z remote: Counting objects:  46% (18/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1432360Z remote: Counting objects:  48% (19/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1433103Z remote: Counting objects:  51% (20/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1433857Z remote: Counting objects:  53% (21/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1434599Z remote: Counting objects:  56% (22/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1435343Z remote: Counting objects:  58% (23/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1436341Z remote: Counting objects:  61% (24/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1437088Z remote: Counting objects:  64% (25/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1437815Z remote: Counting objects:  66% (26/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1438522Z remote: Counting objects:  69% (27/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1439242Z remote: Counting objects:  71% (28/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1439943Z remote: Counting objects:  74% (29/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1440643Z remote: Counting objects:  76% (30/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1441518Z remote: Counting objects:  79% (31/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1442234Z remote: Counting objects:  82% (32/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1442941Z remote: Counting objects:  84% (33/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1443659Z remote: Counting objects:  87% (34/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1444360Z remote: Counting objects:  89% (35/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1445072Z remote: Counting objects:  92% (36/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1445775Z remote: Counting objects:  94% (37/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1446487Z remote: Counting objects:  97% (38/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1447192Z remote: Counting objects: 100% (39/39)        
+deploy	Checkout code	2025-12-12T15:57:42.1447921Z remote: Counting objects: 100% (39/39), done.        
+deploy	Checkout code	2025-12-12T15:57:42.1448685Z remote: Compressing objects:   2% (1/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1449477Z remote: Compressing objects:   5% (2/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1450217Z remote: Compressing objects:   8% (3/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1450943Z remote: Compressing objects:  11% (4/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1451914Z remote: Compressing objects:  13% (5/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1452644Z remote: Compressing objects:  16% (6/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1453367Z remote: Compressing objects:  19% (7/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1454090Z remote: Compressing objects:  22% (8/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1455002Z remote: Compressing objects:  25% (9/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1455734Z remote: Compressing objects:  27% (10/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1456470Z remote: Compressing objects:  30% (11/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1469714Z remote: Compressing objects:  33% (12/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1471395Z remote: Compressing objects:  36% (13/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1472646Z remote: Compressing objects:  38% (14/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1473561Z remote: Compressing objects:  41% (15/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1474307Z remote: Compressing objects:  44% (16/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1475051Z remote: Compressing objects:  47% (17/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1475778Z remote: Compressing objects:  50% (18/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1476566Z remote: Compressing objects:  52% (19/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1477466Z remote: Compressing objects:  55% (20/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1478207Z remote: Compressing objects:  58% (21/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1478950Z remote: Compressing objects:  61% (22/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1479686Z remote: Compressing objects:  63% (23/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1480425Z remote: Compressing objects:  66% (24/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1481159Z remote: Compressing objects:  69% (25/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1482117Z remote: Compressing objects:  72% (26/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1482845Z remote: Compressing objects:  75% (27/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1483567Z remote: Compressing objects:  77% (28/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1484290Z remote: Compressing objects:  80% (29/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1485008Z remote: Compressing objects:  83% (30/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1485740Z remote: Compressing objects:  86% (31/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1486460Z remote: Compressing objects:  88% (32/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1487181Z remote: Compressing objects:  91% (33/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1487957Z remote: Compressing objects:  94% (34/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1488697Z remote: Compressing objects:  97% (35/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1489425Z remote: Compressing objects: 100% (36/36)        
+deploy	Checkout code	2025-12-12T15:57:42.1490393Z remote: Compressing objects: 100% (36/36), done.        
+deploy	Checkout code	2025-12-12T15:57:42.1852130Z remote: Total 39 (delta 0), reused 26 (delta 0), pack-reused 0 (from 0)        
+deploy	Checkout code	2025-12-12T15:57:42.1940632Z From https://github.com/Larry-kang/asset-manager-gas
+deploy	Checkout code	2025-12-12T15:57:42.1942193Z  * [new ref]         5ce06e694622c9b45042e0697bcb381a34bea61b -> origin/refactor/vue-migration
+deploy	Checkout code	2025-12-12T15:57:42.1975523Z ##[endgroup]
+deploy	Checkout code	2025-12-12T15:57:42.1976993Z ##[group]Determining the checkout info
+deploy	Checkout code	2025-12-12T15:57:42.1978567Z ##[endgroup]
+deploy	Checkout code	2025-12-12T15:57:42.1979753Z ##[group]Checking out the ref
+deploy	Checkout code	2025-12-12T15:57:42.1981596Z [command]/usr/bin/git checkout --progress --force -B refactor/vue-migration refs/remotes/origin/refactor/vue-migration
+deploy	Checkout code	2025-12-12T15:57:42.2063328Z Switched to a new branch 'refactor/vue-migration'
+deploy	Checkout code	2025-12-12T15:57:42.2065357Z branch 'refactor/vue-migration' set up to track 'origin/refactor/vue-migration'.
+deploy	Checkout code	2025-12-12T15:57:42.2072713Z ##[endgroup]
+deploy	Checkout code	2025-12-12T15:57:42.2109332Z [command]/usr/bin/git log -1 --format='%H'
+deploy	Checkout code	2025-12-12T15:57:42.2132794Z '5ce06e694622c9b45042e0697bcb381a34bea61b'
+deploy	Setup Node.js	﻿2025-12-12T15:57:42.2458248Z ##[group]Run actions/setup-node@v3
+deploy	Setup Node.js	2025-12-12T15:57:42.2458975Z with:
+deploy	Setup Node.js	2025-12-12T15:57:42.2459488Z   node-version: 18
+deploy	Setup Node.js	2025-12-12T15:57:42.2460031Z   always-auth: false
+deploy	Setup Node.js	2025-12-12T15:57:42.2460584Z   check-latest: false
+deploy	Setup Node.js	2025-12-12T15:57:42.2461913Z   token: ***
+deploy	Setup Node.js	2025-12-12T15:57:42.2462456Z ##[endgroup]
+deploy	Setup Node.js	2025-12-12T15:57:42.4474162Z Attempting to download 18...
+deploy	Setup Node.js	2025-12-12T15:57:43.1613469Z Acquiring 18.20.8 - x64 from https://github.com/actions/node-versions/releases/download/18.20.8-14110393767/node-18.20.8-linux-x64.tar.gz
+deploy	Setup Node.js	2025-12-12T15:57:43.6548022Z Extracting ...
+deploy	Setup Node.js	2025-12-12T15:57:43.6686364Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword -C /home/runner/work/_temp/941a746c-2bd5-4d22-9631-1a26ec3b043d -f /home/runner/work/_temp/9c07e481-a423-4ee2-813d-cdbd34b8a631
+deploy	Setup Node.js	2025-12-12T15:57:44.6157952Z Adding to the cache ...
+deploy	Setup Node.js	2025-12-12T15:57:46.3010919Z ##[group]Environment details
+deploy	Setup Node.js	2025-12-12T15:57:46.5369911Z node: v18.20.8
+deploy	Setup Node.js	2025-12-12T15:57:46.5370902Z npm: 10.8.2
+deploy	Setup Node.js	2025-12-12T15:57:46.5371836Z yarn: 1.22.22
+deploy	Setup Node.js	2025-12-12T15:57:46.5373052Z ##[endgroup]
+deploy	Install Clasp	﻿2025-12-12T15:57:46.5544091Z ##[group]Run npm install -g @google/clasp
+deploy	Install Clasp	2025-12-12T15:57:46.5544702Z [36;1mnpm install -g @google/clasp[0m
+deploy	Install Clasp	2025-12-12T15:57:46.5585396Z shell: /usr/bin/bash -e ***0***
+deploy	Install Clasp	2025-12-12T15:57:46.5585831Z ##[endgroup]
+deploy	Install Clasp	2025-12-12T15:57:53.2725600Z npm warn deprecated google-p12-pem@3.1.4: Package is no longer maintained
+deploy	Install Clasp	2025-12-12T15:57:55.7674809Z 
+deploy	Install Clasp	2025-12-12T15:57:55.7675694Z added 269 packages in 9s
+deploy	Install Clasp	2025-12-12T15:57:55.7676152Z 
+deploy	Install Clasp	2025-12-12T15:57:55.7676601Z 87 packages are looking for funding
+deploy	Install Clasp	2025-12-12T15:57:55.7677090Z   run `npm fund` for details
+deploy	Generate Config Files	﻿2025-12-12T15:57:55.7944312Z ##[group]Run echo "$CLASP_CONFIG" > .clasp.json
+deploy	Generate Config Files	2025-12-12T15:57:55.7944782Z [36;1mecho "$CLASP_CONFIG" > .clasp.json[0m
+deploy	Generate Config Files	2025-12-12T15:57:55.7945143Z [36;1mecho "$CLASP_SECRET" > ~/.clasprc.json[0m
+deploy	Generate Config Files	2025-12-12T15:57:55.7979972Z shell: /usr/bin/bash -e ***0***
+deploy	Generate Config Files	2025-12-12T15:57:55.7980306Z env:
+deploy	Generate Config Files	2025-12-12T15:57:55.7980791Z   CLASP_CONFIG: ***
+deploy	Generate Config Files	2025-12-12T15:57:55.7984890Z   CLASP_SECRET: ***
+deploy	Generate Config Files	2025-12-12T15:57:55.7985170Z ##[endgroup]
+deploy	Debug - Check Files	﻿2025-12-12T15:57:55.8075754Z ##[group]Run ls -la
+deploy	Debug - Check Files	2025-12-12T15:57:55.8076103Z [36;1mls -la[0m
+deploy	Debug - Check Files	2025-12-12T15:57:55.8076394Z [36;1mls -la ~/[0m
+deploy	Debug - Check Files	2025-12-12T15:57:55.8076685Z [36;1mecho "Checking .clasp.json content:"[0m
+deploy	Debug - Check Files	2025-12-12T15:57:55.8077038Z [36;1mcat .clasp.json[0m
+deploy	Debug - Check Files	2025-12-12T15:57:55.8077376Z [36;1mecho "Checking .clasprc.json structure (masked):"[0m
+deploy	Debug - Check Files	2025-12-12T15:57:55.8077948Z [36;1msed 's/"access_token": ".*"/"access_token": "***/' ~/.clasprc.json | sed 's/"refresh_token": ".*"/"refresh_token": "***/'[0m
+deploy	Debug - Check Files	2025-12-12T15:57:55.8110631Z shell: /usr/bin/bash -e ***0***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8110965Z ##[endgroup]
+deploy	Debug - Check Files	2025-12-12T15:57:55.8181739Z total 348
+deploy	Debug - Check Files	2025-12-12T15:57:55.8182506Z drwxr-xr-x 6 runner runner   4096 Dec 12 15:57 .
+deploy	Debug - Check Files	2025-12-12T15:57:55.8183429Z drwxr-xr-x 3 runner runner   4096 Dec 12 15:57 ..
+deploy	Debug - Check Files	2025-12-12T15:57:55.8183922Z drwxr-xr-x 3 runner runner   4096 Dec 12 15:57 .agent
+deploy	Debug - Check Files	2025-12-12T15:57:55.8184443Z -rw-r--r-- 1 runner runner     87 Dec 12 15:57 .clasp.json
+deploy	Debug - Check Files	2025-12-12T15:57:55.8184978Z -rw-r--r-- 1 runner runner    172 Dec 12 15:57 .claspignore
+deploy	Debug - Check Files	2025-12-12T15:57:55.8185486Z drwxr-xr-x 7 runner runner   4096 Dec 12 15:57 .git
+deploy	Debug - Check Files	2025-12-12T15:57:55.8185939Z drwxr-xr-x 3 runner runner   4096 Dec 12 15:57 .github
+deploy	Debug - Check Files	2025-12-12T15:57:55.8186398Z -rw-r--r-- 1 runner runner    312 Dec 12 15:57 .gitignore
+deploy	Debug - Check Files	2025-12-12T15:57:55.8186863Z -rw-r--r-- 1 runner runner  10940 Dec 12 15:57 Actions.gs
+deploy	Debug - Check Files	2025-12-12T15:57:55.8187300Z -rw-r--r-- 1 runner runner   9653 Dec 12 15:57 Code.gs
+deploy	Debug - Check Files	2025-12-12T15:57:55.8187737Z -rw-r--r-- 1 runner runner   9183 Dec 12 15:57 Logic.gs
+deploy	Debug - Check Files	2025-12-12T15:57:55.8188176Z -rw-r--r-- 1 runner runner   6956 Dec 12 15:57 README.md
+deploy	Debug - Check Files	2025-12-12T15:57:55.8188629Z -rw-r--r-- 1 runner runner   8405 Dec 12 15:57 ROADMAP.md
+deploy	Debug - Check Files	2025-12-12T15:57:55.8189143Z -rw-r--r-- 1 runner runner   3529 Dec 12 15:57 Spec_Current_v3.1.1.md
+deploy	Debug - Check Files	2025-12-12T15:57:55.8189721Z -rw-r--r-- 1 runner runner   1659 Dec 12 15:57 Spec_Rebalance.md
+deploy	Debug - Check Files	2025-12-12T15:57:55.8190208Z -rw-r--r-- 1 runner runner   4624 Dec 12 15:57 Tests.gs
+deploy	Debug - Check Files	2025-12-12T15:57:55.8190689Z -rw-r--r-- 1 runner runner   2569 Dec 12 15:57 Triggers.gs
+deploy	Debug - Check Files	2025-12-12T15:57:55.8191380Z -rw-r--r-- 1 runner runner    213 Dec 12 15:57 appsscript.json
+deploy	Debug - Check Files	2025-12-12T15:57:55.8191960Z -rw-r--r-- 1 runner runner    491 Dec 12 15:57 constants.html
+deploy	Debug - Check Files	2025-12-12T15:57:55.8192428Z -rw-r--r-- 1 runner runner   9980 Dec 12 15:57 css.html
+deploy	Debug - Check Files	2025-12-12T15:57:55.8192873Z -rw-r--r-- 1 runner runner    442 Dec 12 15:57 icons.html
+deploy	Debug - Check Files	2025-12-12T15:57:55.8193314Z -rw-r--r-- 1 runner runner  19560 Dec 12 15:57 index.html
+deploy	Debug - Check Files	2025-12-12T15:57:55.8193748Z -rw-r--r-- 1 runner runner  12706 Dec 12 15:57 js.html
+deploy	Debug - Check Files	2025-12-12T15:57:55.8194207Z -rw-r--r-- 1 runner runner    276 Dec 12 15:57 jsconfig.json
+deploy	Debug - Check Files	2025-12-12T15:57:55.8194686Z -rw-r--r-- 1 runner runner   2518 Dec 12 15:57 local_server.js
+deploy	Debug - Check Files	2025-12-12T15:57:55.8195208Z -rw-r--r-- 1 runner runner   6869 Dec 12 15:57 mock_api.js
+deploy	Debug - Check Files	2025-12-12T15:57:55.8195728Z -rw-r--r-- 1 runner runner 159542 Dec 12 15:57 package-lock.json
+deploy	Debug - Check Files	2025-12-12T15:57:55.8196222Z -rw-r--r-- 1 runner runner    232 Dec 12 15:57 package.json
+deploy	Debug - Check Files	2025-12-12T15:57:55.8196682Z drwxr-xr-x 2 runner runner   4096 Dec 12 15:57 tests
+deploy	Debug - Check Files	2025-12-12T15:57:55.8197417Z total 68
+deploy	Debug - Check Files	2025-12-12T15:57:55.8198019Z drwxr-x---  12 runner runner 4096 Dec 12 15:57 .
+deploy	Debug - Check Files	2025-12-12T15:57:55.8198750Z drwxr-xr-x+  5 root   root   4096 Dec  8 22:01 ..
+deploy	Debug - Check Files	2025-12-12T15:57:55.8199219Z -rw-r--r--   1 runner runner  220 Dec  8 22:02 .bash_logout
+deploy	Debug - Check Files	2025-12-12T15:57:55.8199901Z -rw-r--r--   1 runner runner   67 Dec  8 22:02 .bash_profile
+deploy	Debug - Check Files	2025-12-12T15:57:55.8200447Z -rw-r--r--   1 runner runner 3771 Dec  8 22:02 .bashrc
+deploy	Debug - Check Files	2025-12-12T15:57:55.8200887Z drwxr-xr-x   3 runner runner 4096 Dec  8 22:01 .cargo
+deploy	Debug - Check Files	2025-12-12T15:57:55.8201605Z -rw-r--r--   1 runner runner  976 Dec 12 15:57 .clasprc.json
+deploy	Debug - Check Files	2025-12-12T15:57:55.8202119Z drwxr-xr-x   2 runner runner 4096 Dec  8 22:02 .composer
+deploy	Debug - Check Files	2025-12-12T15:57:55.8202565Z drwxr-xr-x   3 runner runner 4096 Dec  8 22:02 .config
+deploy	Debug - Check Files	2025-12-12T15:57:55.8203006Z drwxr-xr-x   2 runner docker 4096 Dec  8 22:06 .docker
+deploy	Debug - Check Files	2025-12-12T15:57:55.8203428Z drwxr-xr-x   3 runner runner 4096 Dec  8 22:01 .dotnet
+deploy	Debug - Check Files	2025-12-12T15:57:55.8204226Z lrwxrwxrwx   1 runner runner   17 Dec  8 22:02 .ghcup -> /usr/local/.ghcup
+deploy	Debug - Check Files	2025-12-12T15:57:55.8204753Z drwxr-xr-x   4 runner runner 4096 Dec 12 15:57 .npm
+deploy	Debug - Check Files	2025-12-12T15:57:55.8205185Z drwxr-xr-x   6 runner runner 4096 Dec  8 22:02 .nvm
+deploy	Debug - Check Files	2025-12-12T15:57:55.8205622Z -rw-r--r--   1 runner runner  807 Dec  8 22:02 .profile
+deploy	Debug - Check Files	2025-12-12T15:57:55.8206088Z drwxr-xr-x   6 runner runner 4096 Dec  8 22:02 .rustup
+deploy	Debug - Check Files	2025-12-12T15:57:55.8206570Z drwxrwxr-x   3 runner runner 4096 Dec 12 15:57 actions-runner
+deploy	Debug - Check Files	2025-12-12T15:57:55.8207026Z drwxr-xr-x   6 runner runner 4096 Dec 12 15:57 work
+deploy	Debug - Check Files	2025-12-12T15:57:55.8207391Z Checking .clasp.json content:
+deploy	Debug - Check Files	2025-12-12T15:57:55.8209500Z ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8211414Z Checking .clasprc.json structure (masked):
+deploy	Debug - Check Files	2025-12-12T15:57:55.8225840Z ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8226344Z   ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8226807Z     ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8227727Z       ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8228307Z       ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8228798Z       ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8229200Z       "refresh_token": "***,
+deploy	Debug - Check Files	2025-12-12T15:57:55.8229888Z       "access_token": "***,
+deploy	Debug - Check Files	2025-12-12T15:57:55.8230401Z       ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8230878Z       ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8232571Z       ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8232834Z     ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8233070Z   ***
+deploy	Debug - Check Files	2025-12-12T15:57:55.8233339Z ***
+deploy	Deploy	﻿2025-12-12T15:57:55.8259432Z ##[group]Run clasp push -f
+deploy	Deploy	2025-12-12T15:57:55.8259774Z [36;1mclasp push -f[0m
+deploy	Deploy	2025-12-12T15:57:55.8292418Z shell: /usr/bin/bash -e ***0***
+deploy	Deploy	2025-12-12T15:57:55.8292752Z ##[endgroup]
+deploy	Deploy	2025-12-12T15:57:56.9938664Z Error retrieving access token: TypeError: Cannot read properties of undefined (reading 'access_token')
+deploy	Deploy	2025-12-12T15:57:57.0116436Z ##[error]Process completed with exit code 1.
+deploy	Post Checkout code	﻿2025-12-12T15:57:57.0215334Z Post job cleanup.
+deploy	Post Checkout code	2025-12-12T15:57:57.0969494Z [command]/usr/bin/git version
+deploy	Post Checkout code	2025-12-12T15:57:57.1005546Z git version 2.52.0
+deploy	Post Checkout code	2025-12-12T15:57:57.1050909Z Temporarily overriding HOME='/home/runner/work/_temp/f68b1396-ae63-40b1-b3f1-abdeab39e729' before making global git config changes
+deploy	Post Checkout code	2025-12-12T15:57:57.1052845Z Adding repository directory to the temporary git global config as a safe directory
+deploy	Post Checkout code	2025-12-12T15:57:57.1056080Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/asset-manager-gas/asset-manager-gas
+deploy	Post Checkout code	2025-12-12T15:57:57.1089654Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+deploy	Post Checkout code	2025-12-12T15:57:57.1120751Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+deploy	Post Checkout code	2025-12-12T15:57:57.1356315Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+deploy	Post Checkout code	2025-12-12T15:57:57.1376725Z http.https://github.com/.extraheader
+deploy	Post Checkout code	2025-12-12T15:57:57.1388683Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+deploy	Post Checkout code	2025-12-12T15:57:57.1419099Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+deploy	Complete job	﻿2025-12-12T15:57:57.1760689Z Cleaning up orphan processes

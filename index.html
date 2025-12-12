@@ -9,33 +9,45 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
   <?!= include('css'); ?>
+  <title>Asset Manager</title>
 </head>
 
 <body>
 
   <div id="app" class="app-root" v-cloak>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
+    <!-- MOBILE HEADER -->
+    <div class="mobile-header">
+      <i class="fa-solid fa-bars" @click="state.menuOpen = true" style="font-size:20px; color:var(--text-primary)"></i>
+      <div class="logo-text" style="font-size:16px">ASSET MANAGER</div>
+      <div style="width:20px"></div><!-- Spacer -->
+    </div>
+
+    <!-- SIDEBAR (Drawer Mode on Mobile) -->
+    <div class="sidebar" :class="{ 'open': state.menuOpen }">
       <div class="sidebar-logo">
         <i class="fa-solid fa-gem" style="color:var(--text-gold)"></i>
         <div class="logo-text">ASSET MANAGER</div>
       </div>
 
       <div class="nav-menu">
-        <div class="nav-item" :class="{ active: state.currentView === 'dash' }" @click="go('dash')">
+        <div class="nav-item" :class="{ active: state.currentView === 'dash' }"
+          @click="go('dash'); state.menuOpen=false">
           <i class="fa-solid fa-chart-pie"></i>
           <span>{{ t('Dash') }}</span>
         </div>
-        <div class="nav-item" :class="{ active: state.currentView === 'holdings' }" @click="go('holdings')">
+        <div class="nav-item" :class="{ active: state.currentView === 'holdings' }"
+          @click="go('holdings'); state.menuOpen=false">
           <i class="fa-solid fa-layer-group"></i>
           <span>{{ t('Port') }}</span>
         </div>
-        <div class="nav-item" :class="{ active: state.currentView === 'loan' }" @click="go('loan')">
+        <div class="nav-item" :class="{ active: state.currentView === 'loan' }"
+          @click="go('loan'); state.menuOpen=false" data-testid="nav-vault">
           <i class="fa-solid fa-landmark"></i>
           <span>{{ t('Vault') }}</span>
         </div>
-        <div class="nav-item" :class="{ active: state.currentView === 'settings' }" @click="go('settings')">
+        <div class="nav-item" :class="{ active: state.currentView === 'settings' }"
+          @click="go('settings'); state.menuOpen=false" data-testid="nav-settings">
           <i class="fa-solid fa-gear"></i>
           <span>{{ t('Sett') }}</span>
         </div>
@@ -51,6 +63,9 @@
 
     <!-- MAIN -->
     <div class="main-content">
+
+      <!-- Mobile Drawer Overlay -->
+      <div v-if="state.menuOpen" class="drawer-overlay" @click="state.menuOpen = false"></div>
 
       <!-- DASHBOARD -->
       <!-- DASHBOARD -->
@@ -188,7 +203,8 @@
       <div v-show="state.currentView === 'loan'" class="view">
         <div class="top-header">
           <div class="section-title">{{ t('Vault') }}</div>
-          <button class="btn-gold-pill" @click="state.newLoanModal.show = true">+ New Loan</button>
+          <button class="btn-gold-pill" @click="state.newLoanModal.show = true" data-testid="btn-new-loan">+ New
+            Loan</button>
         </div>
 
         <!-- RISKS -->
@@ -257,7 +273,7 @@
             <div>{{ t('Theme') }}</div>
             <div style="color:var(--text-gold)"><i class="fa-solid fa-circle-half-stroke"></i></div>
           </div>
-          <div class="asset-row" @click="setLang(state.lang==='zh'?'en':'zh')">
+          <div class="asset-row" @click="setLang(state.lang==='zh'?'en':'zh')" data-testid="btn-lang">
             <div>{{ t('Lang') }}</div>
             <div style="color:var(--text-gold)">EN / 中</div>
           </div>
@@ -322,9 +338,10 @@
           <input type="date" v-model="state.newLoanModal.date">
         </div>
 
-        <input type="number" v-model="state.newLoanModal.amount" :placeholder="t('Amt') + ' (e.g. 1000)'">
+        <input type="number" v-model="state.newLoanModal.amount" :placeholder="t('Amt') + ' (e.g. 1000)'"
+          data-testid="input-amt">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-          <input type="number" v-model="state.newLoanModal.rate" :placeholder="t('Rate')">
+          <input type="number" v-model="state.newLoanModal.rate" :placeholder="t('Rate')" data-testid="input-rate">
           <select v-model="state.newLoanModal.currency">
             <option value="USD">USD</option>
             <option value="TWD">TWD</option>

@@ -1,0 +1,28 @@
+FAIL tests/backend/logic.test.js
+  Logic.gs Unit Tests
+    √ normalizeTicker should format tickers correctly (2 ms)
+    √ getInventoryMap should calculate inventory correctly
+    × calculateLoans should compute interest and health factor (2 ms)
+
+  ● Logic.gs Unit Tests › calculateLoans should compute interest and health factor
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 49
+    Received:   2.16
+
+    [0m [90m 58 |[39m         [90m// Risk Check[39m
+     [90m 59 |[39m         [36mconst[39m risk [33m=[39m result[33m.[39mrisks[33m.[39mfind(r [33m=>[39m r[33m.[39msource [33m===[39m [32m'Compound'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 60 |[39m         expect(parseFloat(risk[33m.[39mratio))[33m.[39mtoBeGreaterThan([35m49[39m)[33m;[39m
+     [90m    |[39m                                        [31m[1m^[22m[39m
+     [90m 61 |[39m         expect(risk[33m.[39mstatus)[33m.[39mtoBe([32m'Safe'[39m)[33m;[39m
+     [90m 62 |[39m     })[33m;[39m
+     [90m 63 |[39m[0m
+
+      at Object.toBeGreaterThan (tests/backend/logic.test.js:60:40)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 2 passed, 3 total
+Snapshots:   0 total
+Time:        0.464 s, estimated 1 s
+Ran all test suites matching /tests\\backend\\logic.test.js/i.

@@ -1,0 +1,57 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: 
+      - generic [ref=e6]: ASSET MANAGER
+    - generic [ref=e7]:
+      - generic [ref=e8] [cursor=pointer]:
+        - generic [ref=e9]: 
+        - generic [ref=e10]: 儀表板
+      - generic [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: 
+        - generic [ref=e13]: 投資組合
+      - generic [ref=e14] [cursor=pointer]:
+        - generic [ref=e15]: 
+        - generic [ref=e16]: 借貸金庫
+      - generic [ref=e17] [cursor=pointer]:
+        - generic [ref=e18]: 
+        - generic [ref=e19]: 設定
+    - generic [ref=e20]:
+      - generic [ref=e21]: MK
+      - generic [ref=e22]: Ming-Hao
+  - generic [ref=e23]:
+    - text: +  
+    - generic [ref=e25]:
+      - generic [ref=e26]: 借貸金庫
+      - button "+ New Loan" [active] [ref=e27] [cursor=pointer]
+    - text:  
+  - generic [ref=e29]:
+    - generic [ref=e30]: 建立新借貸合約
+    - generic [ref=e31]:
+      - combobox [ref=e32]:
+        - option "來源" [disabled] [selected]
+        - option "Aave"
+        - option "Compound"
+        - option "Binance"
+      - textbox [ref=e33]: 2025-12-12
+    - spinbutton [ref=e34]
+    - generic [ref=e35]:
+      - spinbutton [ref=e36]
+      - combobox [ref=e37]:
+        - option "USD" [selected]
+        - option "TWD"
+    - generic [ref=e38]: 抵押品資訊
+    - generic [ref=e39]:
+      - textbox "代號 (e.g. ETH)" [ref=e40]
+      - spinbutton [ref=e41]
+    - generic [ref=e43]:
+      - generic [ref=e44] [cursor=pointer]: 股票
+      - generic [ref=e45] [cursor=pointer]: 加密貨幣
+      - generic [ref=e46] [cursor=pointer]: 信用貸款
+    - generic [ref=e47]:
+      - button "建立" [ref=e48] [cursor=pointer]
+      - button "取消" [ref=e49] [cursor=pointer]
+```

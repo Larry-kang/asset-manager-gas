@@ -1,0 +1,45 @@
+FAIL tests/backend/logic.test.js
+  Logic.gs Unit Tests
+    √ normalizeTicker should format tickers correctly (4 ms)
+    × getInventoryMap should calculate inventory correctly (2 ms)
+    × calculateLoans should compute interest and health factor (2 ms)
+
+  ● Logic.gs Unit Tests › getInventoryMap should calculate inventory correctly
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 7
+    Received: undefined
+
+    [0m [90m 34 |[39m         [90m// Locked in Loan: 5[39m
+     [90m 35 |[39m         [90m// Free Inventory: 12 - 5 = 7[39m
+    [31m[1m>[22m[39m[90m 36 |[39m         expect(result[33m.[39minventory[[32m'AAPL'[39m])[33m.[39mtoBe([35m7[39m)[33m;[39m
+     [90m    |[39m                                          [31m[1m^[22m[39m
+     [90m 37 |[39m
+     [90m 38 |[39m         [90m// TSLA: 10 (Total) - 0 (Locked)[39m
+     [90m 39 |[39m         expect(result[33m.[39minventory[[32m'TSLA'[39m])[33m.[39mtoBe([35m10[39m)[33m;[39m[0m
+
+      at Object.toBe (tests/backend/logic.test.js:36:42)
+
+  ● Logic.gs Unit Tests › calculateLoans should compute interest and health factor
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 60000
+    Received: 2000
+
+    [0m [90m 63 |[39m         expect(contract[33m.[39msource)[33m.[39mtoBe([32m'Compound'[39m)[33m;[39m
+     [90m 64 |[39m         expect(contract[33m.[39mdebt)[33m.[39mtoBeGreaterThan([35m1000[39m)[33m;[39m [90m// Interest accrued[39m
+    [31m[1m>[22m[39m[90m 65 |[39m         expect(contract[33m.[39mcolValTWD)[33m.[39mtoBe([35m10[39m [33m*[39m [35m200[39m [33m*[39m [35m30[39m)[33m;[39m [90m// 10 ETH * $200 * 30 TWD[39m
+     [90m    |[39m                                    [31m[1m^[22m[39m
+     [90m 66 |[39m
+     [90m 67 |[39m         [90m// Risk Check[39m
+     [90m 68 |[39m         [90m// ColValTWD = 60,000[39m[0m
+
+      at Object.toBe (tests/backend/logic.test.js:65:36)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 1 passed, 3 total
+Snapshots:   0 total
+Time:        1.839 s
+Ran all test suites matching /tests\\backend\\logic.test.js/i.
