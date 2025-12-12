@@ -171,7 +171,7 @@
                 let l = (typeof jsonStrOrObj === 'string') ? JSON.parse(jsonStrOrObj) : jsonStrOrObj;
 
                 state.loanModal.show = true;
-                state.loanModal.title = `Manage: ${l.collateral} (${l.source})`;
+                state.loanModal.title = `Manage: ${l.col || l.collateral} (${l.source})`;
                 state.loanModal.row = l.row;
                 state.loanModal.source = l.source;
                 state.loanModal.currency = l.currency;
