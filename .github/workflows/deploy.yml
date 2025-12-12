@@ -26,7 +26,26 @@ jobs:
       - name: Generate Config Files
         run: |
           echo "$CLASP_CONFIG" > .clasp.json
-          echo "$CLASP_SECRET" > ~/.clasprc.json
+          node -e "
+            const fs = require('fs');
+            const os = require('os');
+            const path = require('path');
+            try {
+              const secret = process.env.CLASP_SECRET;
+              let json = JSON.parse(secret);
+              // Normalize: If nested (clasp v2.4+), extract the inner token
+              if (json.tokens && json.tokens.default && json.tokens.default.token) {
+                console.log('Detected nested token structure (v2.4+). Flattening...');
+                json = { token: json.tokens.default.token };
+              }
+              const rcPath = path.join(os.homedir(), '.clasprc.json');
+              fs.writeFileSync(rcPath, JSON.stringify(json));
+              console.log('Wrote .clasprc.json to', rcPath);
+            } catch (e) {
+              console.error('Error processing CLASP_SECRET:', e);
+              process.exit(1);
+            }
+          "
         env:
           CLASP_CONFIG: ${{ secrets.CLASP_CONFIG }}
           CLASP_SECRET: ${{ secrets.CLASP_SECRET }}
@@ -37,8 +56,8 @@ jobs:
           ls -la ~/
           echo "Checking .clasp.json content:"
           cat .clasp.json
-          echo "Checking .clasprc.json structure (masked):"
-          sed 's/"access_token": ".*"/"access_token": "***/' ~/.clasprc.json | sed 's/"refresh_token": ".*"/"refresh_token": "***/'
+          echo "Checking .clasprc.json keys:"
+          grep -oE '"(\w+)":' ~/.clasprc.json
 
       - name: Deploy
         run: clasp push -f
