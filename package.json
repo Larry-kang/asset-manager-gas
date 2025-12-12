@@ -1,0 +1,11 @@
+{
+  "name": "asset-manager-gas",
+  "version": "1.0.0",
+  "description": "Google Apps Script Asset Manager",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

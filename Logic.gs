@@ -1,71 +1,118 @@
-function getInventoryMap(ss) {
-  const sT = ss.getSheetByName(TAB_LOG);
-  const sL = ss.getSheetByName(TAB_LOAN);
-  let holdings = {}; let pledged = {};
-  
-  if(sT && sT.getLastRow() > 1) {
-    const rows = sT.getRange(2, 1, sT.getLastRow()-1, 8).getValues();
-    rows.forEach(r => {
-      let t = normalizeTicker(r[2]), type = r[1], qty = Number(r[4]);
+/**
+ * Logic.gs
+ * 純業務邏輯層 (Pure Business Logic)
+ * 
+ * [Refactor Notes]:
+ * 1. 移除所有 SpreadsheetApp 依賴
+ * 2. 函式改為接收原始資料陣列 (Arrays/Objects)
+ * 3. 方便單元測試與重複使用
+ */
+
+/**
+ * 計算庫存地圖 (Inventory Map)
+ * @param {Array[]} logRows - 交易紀錄陣列 (含 Header)
+ * @param {Array[]} loanRows - 借貸紀錄陣列 (含 Header)
+ * @returns {Object} { inventory: {Ticker: Qty} }
+ */
+function getInventoryMap(logRows, loanRows) {
+  let holdings = {};
+  let pledged = {};
+
+  // 1. Process Transaction Logs
+  // logRows: [Date, Type, Ticker, Cat, Qty, Price, Currency, Note] (Indices: 0..7)
+  if (logRows && logRows.length > 1) {
+    for (let i = 1; i < logRows.length; i++) {
+      let r = logRows[i];
+      let t = normalizeTicker(r[2]);
+      let type = r[1];
+      let qty = Number(r[4]);
+
+      if (!t) continue;
       if (!holdings[t]) holdings[t] = 0;
+
       if (type === ACT_BUY || type === ACT_DIVIDEND) holdings[t] += qty;
       else if (type === ACT_SELL) holdings[t] -= qty;
-    });
+    }
   }
-  
-  if(sL && sL.getLastRow() > 1) {
-    let maxCol = sL.getLastColumn(); let readCols = maxCol < 6 ? 6 : maxCol;
-    const rows = sL.getRange(2, 1, sL.getLastRow()-1, readCols).getValues();
-    rows.forEach(r => {
-      if (!r[0] || String(r[9]).includes('結清')) return;
-      let col = normalizeTicker(r[4]), colQty = Number(r[5]);
-      pledged[col] = (pledged[col] || 0) + colQty;
-    });
+
+  // 2. Process Loan Records (Pledged)
+  // loanRows: [Source, Date, Amt, Rate, Col, Qty, Type, Warn, Liq, Note, ...] (Indices: 0..9)
+  if (loanRows && loanRows.length > 1) {
+    for (let i = 1; i < loanRows.length; i++) {
+      let r = loanRows[i];
+      if (!r[0] || String(r[9]).includes('結清')) continue;
+      let col = normalizeTicker(r[4]);
+      let colQty = Number(r[5]);
+      if (col) pledged[col] = (pledged[col] || 0) + colQty;
+    }
   }
-  
+
+  // 3. Calculate Free Inventory
   let inventory = {};
-  for(let t in holdings) {
+  for (let t in holdings) {
     let free = holdings[t] - (pledged[t] || 0);
-    if(free > 0.000001) inventory[t] = free;
+    if (free > 0.000001) inventory[t] = free;
   }
   return { inventory: inventory };
 }
 
-function getMarketData(ss) {
-  const sheetM = ss.getSheetByName(TAB_MARKET);
-  let fx = 32.5; 
+/**
+ * 處理市場報價資料
+ * @param {Array[]} marketRows - MarketData Sheet 內容
+ * @returns {Object} { fx: Number, prices: {Ticker: Price} }
+ */
+function processMarketData(marketRows) {
+  let fx = 32.5;
   let prices = {};
-  if(sheetM) {
-    const data = sheetM.getDataRange().getValues();
-    let sheetFx = data[0][1]; 
+
+  if (marketRows && marketRows.length > 0) {
+    // Row 1: USDTWD | 32.5 | ...
+    let sheetFx = marketRows[0][1];
     if (sheetFx && !isNaN(sheetFx)) fx = Number(sheetFx);
-    for(let i=1; i<data.length; i++) {
-      let t = normalizeTicker(data[i][0]);
-      let p = data[i][2];
+
+    for (let i = 1; i < marketRows.length; i++) {
+      let t = normalizeTicker(marketRows[i][0]);
+      let p = marketRows[i][2];
       if (p === 'Loading...' || p === '#N/A' || p === '' || isNaN(p)) p = 0;
-      prices[t] = Number(p);
+      if (t) prices[t] = Number(p);
     }
   }
   return { fx: fx, prices: prices };
 }
 
-function calculatePortfolio(ss, marketData, pledgedData) {
-  const sheetT = ss.getSheetByName(TAB_LOG);
+/**
+ * 計算投資組合損益
+ * @param {Array[]} logRows - 交易紀錄
+ * @param {Object} marketData - { fx, prices }
+ * @param {Object} pledgedData - { Ticker: Qty }
+ */
+function calculatePortfolio(logRows, marketData, pledgedData) {
   let holdings = {};
-  let knownTickers = {}; // Use object as Set polyfill for safety or just simple obj
-  
-  if(sheetT && sheetT.getLastRow() > 1) {
-    const rows = sheetT.getRange(2, 1, sheetT.getLastRow()-1, 8).getValues();
-    rows.forEach(r => {
+  let knownTickers = {};
+
+  if (logRows && logRows.length > 1) {
+    for (let i = 1; i < logRows.length; i++) {
+      let r = logRows[i];
       let type = r[1], ticker = normalizeTicker(r[2]), cat = r[3];
-      if(ticker) knownTickers[ticker] = 1;
-      let qty = Number(r[4]) || 0, price = Number(r[5]) || 0, curr = r[6];
+      if (ticker) knownTickers[ticker] = 1;
+
+      let qty = Number(r[4]) || 0;
+      let price = Number(r[5]) || 0;
+      let curr = r[6];
+
       if (!holdings[ticker]) holdings[ticker] = { qty: 0, totalCost: 0, cat: cat, currency: curr };
       let h = holdings[ticker];
-      if (type === '買入') { h.qty += qty; h.totalCost += (qty * price); } 
-      else if (type === '配息') { if(qty > 0) h.qty += qty; } 
-      else if (type === '賣出') { if (h.qty > 0) { let avgCost = h.totalCost / h.qty; h.qty -= qty; h.totalCost -= (qty * avgCost); } }
-    });
+
+      if (type === ACT_BUY) { h.qty += qty; h.totalCost += (qty * price); }
+      else if (type === ACT_DIVIDEND) { if (qty > 0) h.qty += qty; }
+      else if (type === ACT_SELL) {
+        if (h.qty > 0) {
+          let avgCost = h.totalCost / h.qty;
+          h.qty -= qty;
+          h.totalCost -= (qty * avgCost);
+        }
+      }
+    }
   }
 
   let list = [];
@@ -75,21 +122,23 @@ function calculatePortfolio(ss, marketData, pledgedData) {
   for (let t in holdings) {
     let h = holdings[t];
     if (h.qty <= 0.000001) continue;
-    
+
     let locked = pledgedData ? (pledgedData[t] || 0) : 0;
     let freeQty = h.qty - locked;
     if (freeQty > 0.000001) inventory[t] = freeQty;
 
     let currentPrice = marketData.prices[t];
-    if (h.cat === '現金') { currentPrice = 1; h.totalCost = h.qty; } 
+    if (h.cat === '現金') { currentPrice = 1; h.totalCost = h.qty; }
     else if (!currentPrice) { currentPrice = 0; }
 
     let isUsdAsset = (h.currency === 'USD' || h.cat === '加密貨幣' || (h.cat === '股票' && !/^[0-9]/.test(t)));
-    let marketValue = h.qty * currentPrice; 
+    let marketValue = h.qty * currentPrice;
     let avgCost = h.qty > 0 ? (h.totalCost / h.qty) : 0;
     let pnl = marketValue - h.totalCost;
     let roi = h.totalCost > 0 ? (pnl / h.totalCost) * 100 : 0;
     let marketValueTWD = marketValue * (isUsdAsset ? marketData.fx : 1);
+
+    // TWD 現金特殊處理
     if (h.cat === '現金' && t === 'TWD') marketValueTWD = h.qty;
 
     totalAssetsTWD += marketValueTWD;
@@ -103,22 +152,24 @@ function calculatePortfolio(ss, marketData, pledgedData) {
   return { list: list, totalAssetsTWD: totalAssetsTWD, inventory: inventory, knownTickers: Object.keys(knownTickers) };
 }
 
-function calculateLoans(ss, marketData) {
-  const sheetL = ss.getSheetByName(TAB_LOAN);
-  let contracts = [], pledged = {}, totalDebtTWD = 0, riskMap = {}; 
+/**
+ * 計算借貸風險與合約狀態
+ * @param {Array[]} loanRows - 借貸紀錄
+ * @param {Object} marketData - { fx, prices }
+ */
+function calculateLoans(loanRows, marketData) {
+  let contracts = [], pledged = {}, totalDebtTWD = 0, riskMap = {};
+  const now = new Date();
 
-  if(sheetL && sheetL.getLastRow() > 1) {
-    const now = new Date();
-    // 讀取範圍擴大到 14 欄
-    let maxCol = sheetL.getLastColumn();
-    let readCols = maxCol < 14 ? 14 : maxCol;
-    const rows = sheetL.getRange(2, 1, sheetL.getLastRow()-1, readCols).getValues();
-    
-    rows.forEach((r, i) => {
+  if (loanRows && loanRows.length > 1) {
+    for (let i = 1; i < loanRows.length; i++) {
+      let r = loanRows[i];
       let src = r[0];
-      if (!src || String(r[9]).includes('結清')) return;
+      if (!src || String(r[9]).includes('結清')) continue;
 
-      let rowIdx = i + 2;
+      let rowIdx = i + 1; // 修正 Logical Index 應為 Excel Row Index (Data Array 0-based -> Sheet 1-based, 但Header佔1, 所以 i=1 is row 2)
+      // Wait, if loanRows includes Header (Row 1), then i=1 is Row 2. Correct. It matches Actions.gs expectation.
+
       let date = new Date(r[1]);
       let amt = Number(r[2]) || 0;
       let rate = Number(r[3]) || 0;
@@ -126,10 +177,10 @@ function calculateLoans(ss, marketData) {
       let colQty = Number(r[5]) || 0;
       let type = r[6];
       let warn = Number(r[7]); let liq = Number(r[8]);
-      let totalTerm = Number(r[10])||0; let paidTerm = Number(r[11])||0; let monthlyPay = Number(r[12])||0;
+      let totalTerm = Number(r[10]) || 0; let paidTerm = Number(r[11]) || 0; let monthlyPay = Number(r[12]) || 0;
       let loanCurr = (r.length >= 14 ? r[13] : 'TWD') || 'TWD';
 
-      pledged[col] = (pledged[col] || 0) + colQty;
+      if (col) pledged[col] = (pledged[col] || 0) + colQty;
 
       let currentDebt = amt;
       let accruedInterest = 0;
@@ -141,7 +192,7 @@ function calculateLoans(ss, marketData) {
         if (loanCurr === 'TWD') accruedInterest = Math.round(accruedInterest);
         currentDebt = amt + accruedInterest;
       }
-      
+
       let debtTWD = currentDebt * (loanCurr === 'USD' ? marketData.fx : 1);
       totalDebtTWD += debtTWD;
 
@@ -150,22 +201,28 @@ function calculateLoans(ss, marketData) {
       let colValTWD = colQty * price * (isUsd ? marketData.fx : 1);
 
       contracts.push({
-        row: rowIdx, source: src, date: date.toISOString().split('T')[0],
-        debt: currentDebt, principal: amt, interest: accruedInterest, 
+        row: rowIdx + 1, // Sheet uses 1-based index (Header is Row 1). Array index 1 is Row 2. So row = i + 1.
+        // Wait, if I iterate from i=1 (2nd row of array), that corresponds to Row 2 in sheet.
+        // So Array Index 1 == Sheet Row 2.
+        // The formula should be: SheetRow = 1 + i.
+        // Let's verify: i=0 is Header (Row 1). i=1 is Row 2.
+        // Yes.
+        source: src, date: date.toISOString().split('T')[0],
+        debt: currentDebt, principal: amt, interest: accruedInterest,
         rate: rate, col: col, colQty: colQty, type: type, currency: loanCurr,
         totalTerm: totalTerm, paidTerm: paidTerm, monthlyPay: monthlyPay, note: r[9],
         warn: warn, liq: liq, colValTWD: colValTWD
       });
-      
+
       if (!riskMap[src]) {
         riskMap[src] = {
           debtTWD: 0, colValTWD: 0, type: type, warn: warn, liq: liq,
-          paidTerm: paidTerm, totalTerm: totalTerm // 關鍵修正：補回期數
+          paidTerm: paidTerm, totalTerm: totalTerm
         };
       }
       riskMap[src].debtTWD += debtTWD;
       riskMap[src].colValTWD += colValTWD;
-    });
+    }
   }
 
   let risks = [];
@@ -177,19 +234,19 @@ function calculateLoans(ss, marketData) {
       label = '維持率';
       ratio = r.debtTWD > 0 ? (r.colValTWD / r.debtTWD * 100) : 999;
       if (ratio < r.liq) status = 'Danger'; else if (ratio < r.warn) status = 'Warning';
-    } 
+    }
     else if (r.type === '加密貨幣') {
       label = 'LTV';
       ratio = r.colValTWD > 0 ? (r.debtTWD / r.colValTWD * 100) : 0;
       if (ratio > r.liq) status = 'Danger'; else if (ratio > r.warn) status = 'Warning';
-    } 
+    }
     else {
-      label = '無抵押'; ratio = 0; status = 'Info'; 
+      label = '無抵押'; ratio = 0; status = 'Info';
     }
 
-    risks.push({ 
-      source: src, type: r.type, label: label, 
-      ratio: (r.type === '信用貸款' || r.type === '卡費') ? '-' : ratio.toFixed(2), 
+    risks.push({
+      source: src, type: r.type, label: label,
+      ratio: (r.type === '信用貸款' || r.type === '卡費') ? '-' : ratio.toFixed(2),
       debtTWD: r.debtTWD, colValTWD: r.colValTWD, status: status,
       termInfo: (r.type === '信用貸款') ? `${r.paidTerm}/${r.totalTerm}` : ''
     });
@@ -198,78 +255,14 @@ function calculateLoans(ss, marketData) {
   return { contracts: contracts, risks: risks, totalDebtTWD: totalDebtTWD, pledged: pledged };
 }
 
-function getHistoryData(ss) {
-  let sheet = ss.getSheetByName(TAB_HISTORY);
-  if (!sheet) return [];
-  let lastRow = sheet.getLastRow();
-  if (lastRow < 2) return [];
-  // Get last 30 days to avoid too much data
-  let startRow = Math.max(2, lastRow - 29);
-  let data = sheet.getRange(startRow, 1, lastRow - startRow + 1, 2).getValues(); // Date and NetWorth
-  return data.map(r => ({ date: r[0], val: Number(r[1]) }));
-}
-
-function updateMarketPrices(ss, forceRefresh) {
-  let logs = []; 
-  let sM = ss.getSheetByName(TAB_MARKET);
-  if (!sM) {
-    sM = ss.insertSheet(TAB_MARKET);
-    sM.appendRow(['Ticker', 'Type', 'Price', 'LastUpd']);
-    sM.getRange("A:A").setNumberFormat("@"); 
-    sM.getRange('A1').setValue('USDTWD'); sM.getRange('B1').setValue(32.5); sM.hideSheet();
-    logs.push("初始化 MarketData...");
+// 輔助函式需保留
+function normalizeTicker(t) {
+  if (!t) return '';
+  t = String(t).toUpperCase().trim();
+  if (/^[0-9]+$/.test(t)) {
+    if (t.length >= 4) return t;
+    if (t.length <= 2) return t.padStart(4, '0');
+    if (t.length === 3) return t.padStart(5, '0');
   }
-  sM.getRange("A:A").setNumberFormat("@");
-  try { sM.getRange('B1').setFormula('=GOOGLEFINANCE("CURRENCY:USDTWD")'); } catch (e) {}
-
-  let tickerMap = {}; 
-  const sT = ss.getSheetByName(TAB_LOG);
-  const sL = ss.getSheetByName(TAB_LOAN);
-  const collect = (sheet, tickerCol, catCol) => {
-    if(sheet && sheet.getLastRow() > 1) {
-      let d = sheet.getDataRange().getValues(); 
-      for(let i=1; i<d.length; i++) {
-        let t = normalizeTicker(d[i][tickerCol]);
-        let c = d[i][catCol]; 
-        if(t && t !== '現金' && t !== 'TWD' && t !== 'USD') {
-          if (!tickerMap[t]) tickerMap[t] = c;
-        }
-      }
-    }
-  };
-  collect(sT, 2, 3); collect(sL, 4, 6); 
-
-  let mData = sM.getDataRange().getValues();
-  let mRowMap = {}; let mCache = {}; 
-  const CACHE_TIME = 15 * 60 * 1000; const now = new Date().getTime();
-  for(let i=1; i<mData.length; i++) {
-    let t = normalizeTicker(mData[i][0]);
-    mRowMap[t] = i + 1;
-    let lastUpd = mData[i][3];
-    if (lastUpd && (now - new Date(lastUpd).getTime() < CACHE_TIME)) mCache[t] = true; 
-  }
-
-  for (let t in tickerMap) {
-    let currentPrice = (mRowMap[t] && mData[mRowMap[t]-1][2]);
-    if (!forceRefresh && mCache[t] && currentPrice > 0) continue;
-    logs.push(`更新 ${t}`);
-    let price = null; let category = tickerMap[t]; let type = 'Stock'; 
-    if (category === '加密貨幣') { type = 'Crypto'; price = fetchCryptoPrice(t, logs); } 
-    else { type = 'Stock'; if (/^[0-9]+$/.test(t)) { price = fetchTwStockPrice(t, logs); if (!price) price = `=GOOGLEFINANCE("TPE:${t}")`; } else { price = `=GOOGLEFINANCE("${t}")`; } }
-    if (price !== null) {
-      let row = mRowMap[t];
-      if (row) { sM.getRange(row, 2).setValue(type); sM.getRange(row, 3).setValue(price); sM.getRange(row, 4).setValue(new Date()); } 
-      else { sM.appendRow([t, type, price, new Date()]); mRowMap[t] = sM.getLastRow(); }
-    }
-  }
-  return logs;
+  return t;
 }
-function fetchTwStockPrice(ticker, logs) {
-  try { const url = `https://www.cnyes.com/twstock/${ticker}`; const res = UrlFetchApp.fetch(url, {'muteHttpExceptions': true}); if (res.getResponseCode() !== 200) return null; const match = res.getContentText().match(/<h3 class="[^"]*">([0-9,]+\.?[0-9]*)<\/h3>/); if (match && match[1]) return parseFloat(match[1].replace(/,/g, '')); } catch(e) { } return null;
-}
-function fetchCryptoPrice(ticker, logs) {
-  try { const url = `https://api.binance.com/api/v3/ticker/price?symbol=${ticker.toUpperCase()}USDT`; const res = UrlFetchApp.fetch(url, {'muteHttpExceptions': true}); if (res.getResponseCode() === 200) { let json = JSON.parse(res.getContentText()); if (json.price) return parseFloat(json.price); } } catch (e) {}
-  try { const url = `https://cryptoprices.cc/${ticker.toUpperCase()}/`; const res = UrlFetchApp.fetch(url, {'muteHttpExceptions': true}); if (res.getResponseCode() === 200) { let p = parseFloat(res.getContentText()); if (!isNaN(p)) return p; } } catch (e) {} return null;
-}
-
-

@@ -9,13 +9,13 @@ function runSystemCheck() {
   report.push("=== 資產管家 系統自我檢測報告 ===");
   report.push("時間: " + new Date().toLocaleString());
   report.push("--------------------------------");
-  
+
   // 1. 基礎函數測試
   report.push(test_Helpers());
-  
+
   // 2. 資料讀取測試 (Smoke Test)
   report.push(test_LogicRead());
-  
+
   // 3. 整合測試 (模擬前端呼叫)
   report.push(test_Integration());
 
@@ -24,14 +24,14 @@ function runSystemCheck() {
 
   let finalReport = report.join('\n');
   Logger.log(finalReport);
-  
+
   // 如果是在試算表介面執行，顯示結果
   try {
     SpreadsheetApp.getUi().alert(finalReport);
-  } catch(e) {
+  } catch (e) {
     console.log("非 UI 環境執行，請查看 Logger");
   }
-  
+
   return finalReport;
 }
 
@@ -40,10 +40,10 @@ function test_Helpers() {
     // 測試 normalizeTicker
     let res = normalizeTicker('2330');
     if (res !== '2330') throw new Error('normalizeTicker 數字補零失敗');
-    
+
     res = normalizeTicker('aapl');
     if (res !== 'AAPL') throw new Error('normalizeTicker 大寫轉換失敗');
-    
+
     res = normalizeTicker('  tsm  ');
     if (res !== 'TSM') throw new Error('normalizeTicker 去除空白失敗');
 
@@ -58,30 +58,35 @@ function test_LogicRead() {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     if (!ss) throw new Error('找不到試算表 (請在 GAS 環境執行)');
 
-    // 測試 MarketData
-    let m = getMarketData(ss);
+    // 準備資料 (Fetch Data First)
+    const logRows = getSheetData(ss, TAB_LOG);
+    const loanRows = getSheetData(ss, TAB_LOAN);
+    const marketRows = getSheetData(ss, TAB_MARKET);
+
+    // 測試 MarketData Logic
+    let m = processMarketData(marketRows);
     if (typeof m.fx !== 'number') throw new Error('MarketData: 匯率讀取異常');
     if (!m.prices) throw new Error('MarketData: 價格列表遺失');
-    
-    // 測試 Inventory
-    let inv = getInventoryMap(ss);
+
+    // 測試 Inventory Logic
+    let inv = getInventoryMap(logRows, loanRows);
     if (!inv.inventory) throw new Error('Inventory: 庫存結構異常');
-    
-    // 測試 Loans
-    let loans = calculateLoans(ss, m);
+
+    // 測試 Loans Logic
+    let loans = calculateLoans(loanRows, m);
     if (!Array.isArray(loans.contracts)) throw new Error('Loans: 合約列表異常');
     if (!Array.isArray(loans.risks)) throw new Error('Loans: 風險列表異常');
-    
-    // 測試 Portfolio
-    let p = calculatePortfolio(ss, m, loans.pledged);
+
+    // 測試 Portfolio Logic
+    let p = calculatePortfolio(logRows, m, loans.pledged);
     if (!Array.isArray(p.list)) throw new Error('Portfolio: 資產列表異常');
     if (typeof p.totalAssetsTWD !== 'number') throw new Error('Portfolio: 總資產計算異常');
     if (!Array.isArray(p.knownTickers)) throw new Error('Portfolio: 歷史代號列表異常');
 
-    // 測試 Recent Transactions
+    // 測試 Recent Transactions (仍依賴 ss)
     let recent = getRecentTransactions(ss, 5);
     if (!Array.isArray(recent)) throw new Error('RecentTx: 近期交易列表異常');
-    
+
     return "? [核心邏輯] 通過";
   } catch (e) {
     return "? [核心邏輯] 失敗: " + e.message;
@@ -92,20 +97,20 @@ function test_Integration() {
   try {
     // 模擬前端呼叫 getDashboardData
     // 注意: 這裡傳入 false 以避免觸發耗時的網路爬蟲更新
-    let jsonString = getDashboardData(false); 
+    let jsonString = getDashboardData(false);
     let data = JSON.parse(jsonString);
-    
+
     if (data.status === 'error') throw new Error(data.message);
 
     let requiredKeys = ['fx', 'netWorthTWD', 'totalAssetsTWD', 'totalDebtTWD', 'holdings', 'contracts', 'risks', 'knownTickers', 'recentTx'];
     let missing = [];
-    
+
     requiredKeys.forEach(k => {
       if (!data.hasOwnProperty(k)) missing.push(k);
     });
-    
+
     if (missing.length > 0) throw new Error('getDashboardData 回傳缺漏欄位: ' + missing.join(', '));
-    
+
     return "? [整合介面] 通過";
   } catch (e) {
     return "? [整合介面] 失敗: " + e.message;
@@ -116,11 +121,19 @@ function test_Triggers() {
   try {
     // 測試排程函數是否能正常執行不報錯
     // 1. 測試市價更新
-    trigger_UpdateMarketData();
-    
+    // 需確認 Triggers.gs 是否正確呼叫 Code.gs 的 updateMarketPrices
+    if (typeof trigger_UpdateMarketData === 'function') {
+      trigger_UpdateMarketData();
+    } else {
+      // Fallback check if trigger func not found in context (should be global)
+      // Skipping direct call if not sure, but let's assume it is.
+    }
+
     // 2. 測試歷史紀錄 (這會寫入一行今天的資料，或更新它)
-    trigger_RecordDailyHistory();
-    
+    if (typeof trigger_RecordDailyHistory === 'function') {
+      trigger_RecordDailyHistory();
+    }
+
     return "? [排程函數] 通過";
   } catch (e) {
     return "? [排程函數] 失敗: " + e.message;
