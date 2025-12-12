@@ -23,21 +23,21 @@
       </div>
 
       <div class="nav-menu">
-        <div class="nav-item active" onclick="go('dash', this)">
+        <div class="nav-item" :class="{ active: state.currentView === 'dash' }" @click="go('dash')">
           <i class="fa-solid fa-chart-pie"></i>
-          <span data-i18n="Dash">Dashboard</span>
+          <span>{{ t('Dash') }}</span>
         </div>
-        <div class="nav-item" onclick="go('holdings', this)">
+        <div class="nav-item" :class="{ active: state.currentView === 'holdings' }" @click="go('holdings')">
           <i class="fa-solid fa-layer-group"></i>
-          <span data-i18n="Port">Portfolio</span>
+          <span>{{ t('Port') }}</span>
         </div>
-        <div class="nav-item" onclick="go('loan', this)">
+        <div class="nav-item" :class="{ active: state.currentView === 'loan' }" @click="go('loan')">
           <i class="fa-solid fa-landmark"></i>
-          <span data-i18n="Vault">Vault</span>
+          <span>{{ t('Vault') }}</span>
         </div>
-        <div class="nav-item" onclick="go('settings', this)">
+        <div class="nav-item" :class="{ active: state.currentView === 'settings' }" @click="go('settings')">
           <i class="fa-solid fa-gear"></i>
-          <span data-i18n="Sett">Settings</span>
+          <span>{{ t('Sett') }}</span>
         </div>
       </div>
 
@@ -53,20 +53,26 @@
     <div class="main-content">
 
       <!-- DASHBOARD -->
-      <div id="dash" class="view active">
+      <!-- DASHBOARD -->
+      <div v-show="state.currentView === 'dash'" class="view active">
 
         <!-- Centered Balance Header -->
         <div class="dash-header">
-          <div class="dash-label" data-i18n="NetWarning">Total Vault Balance</div>
-          <div class="dash-balance" id="netWorth">...</div>
-          <div id="dailyChange"
-            style="margin-top:-16px; margin-bottom:24px; font-family:var(--font-sans); font-weight:500"></div>
+          <div class="dash-label">{{ t('NetWarning') }}</div>
+          <div class="dash-balance">{{ state.netWorth }}</div>
+          <div style="margin-top:-16px; margin-bottom:24px; font-family:var(--font-sans); font-weight:500">
+            <span :style="{ color: state.dailyChange >= 0 ? 'var(--color-green)' : 'var(--color-red)' }">
+              {{ state.dailyChange >= 0 ? '+' : '' }}{{ fmt(state.dailyChange) }}
+            </span>
+            <span style="font-size:12px; color:var(--text-secondary)">Today</span>
+          </div>
 
           <div class="dash-actions">
-            <button class="btn-gold-pill" onclick="openTxModal()"><i class="fa-solid fa-plus"
-                style="margin-right:8px"></i> <span data-i18n="AddF">Add Funds</span></button>
-            <button class="btn-outline" onclick="openTxModal()"><i class="fa-solid fa-arrow-up"></i></button>
-            <button class="btn-outline" onclick="load(true)"><i class="fa-solid fa-rotate"></i></button>
+            <button class="btn-gold-pill" @click="openTxModal()"><i class="fa-solid fa-plus"
+                style="margin-right:8px"></i> <span>{{ t('AddF') }}</span></button>
+            <button class="btn-outline" @click="openTxModal()"><i class="fa-solid fa-arrow-up"></i></button>
+            <button class="btn-outline" @click="load(true)"><i class="fa-solid fa-rotate"
+                :class="{'fa-spin': state.isLoading}"></i></button>
           </div>
         </div>
 
@@ -83,8 +89,27 @@
                 </div>
 
                 <div id="assetList" style="flex:1; min-width:280px">
-                  <!-- Injected by JS -->
-                  <div style="text-align:center; color:var(--text-secondary)">Loading...</div>
+                  <div v-for="h in displayedHoldings" :key="h.ticker" class="asset-row">
+                    <div style="display:flex; align-items:center">
+                      <div class="asset-icon"><i class="fa-solid fa-coins" style="color:var(--text-gold)"></i></div>
+                      <div>
+                        <div style="font-weight:600; font-size:16px">{{ h.ticker }}</div>
+                        <div style="font-size:12px; color:var(--text-secondary)">{{ fmt(h.qty) }} units</div>
+                      </div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-weight:600; font-size:16px">${{ fmt(h.valTWD) }}</div>
+                      <div style="font-size:12px"
+                        :style="{ color: h.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }">
+                        {{ h.pnl >= 0 ? '+' : '' }}{{ fmt(h.pnl) }}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    style="text-align:center; padding-top:12px; font-size:13px; color:var(--text-gold); cursor:pointer"
+                    @click="go('holdings')">
+                    {{ t('ViewAll') }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -92,9 +117,29 @@
 
           <!-- Transactions Section -->
           <div>
-            <div class="section-title" data-i18n="Tx">Transactions</div>
+            <div class="section-title">{{ t('Tx') }}</div>
             <div class="card" id="recentTxList">
-              <!-- Injected by JS -->
+              <div v-if="!state.recentTx || state.recentTx.length === 0"
+                style="padding:16px; color:var(--text-secondary)">No transactions</div>
+              <div v-for="(t, i) in (state.recentTx || []).slice(0, 5)" :key="i" class="tx-row">
+                <div style="display:flex; align-items:center; gap:16px">
+                  <div
+                    style="width:40px; height:40px; border-radius:50%; background:#1A1A1A; display:flex; align-items:center; justify-content:center"
+                    :style="{ color: (t.type === '買入' || t.type === '配息') ? 'var(--color-green)' : 'var(--text-primary)' }">
+                    <i class="fa-solid"
+                      :class="(t.type === '買入' || t.type === '配息') ? 'fa-arrow-down' : 'fa-arrow-up'"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight:600">{{ t.ticker }}</div>
+                    <div class="tx-date">{{ new Date(t.date).toLocaleDateString() }}</div>
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-weight:600">{{ (t.type === '買入' || t.type === '配息') ? '+' : '-' }} {{ fmt(t.qty *
+                    t.price) }}</div>
+                  <div style="font-size:12px; color:var(--text-secondary)">{{ t.type }}</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -102,23 +147,97 @@
       </div>
 
       <!-- PORTFOLIO / HOLDINGS -->
-      <div id="holdings" class="view hidden">
+      <div v-show="state.currentView === 'holdings'" class="view">
         <div class="top-header">
-          <div class="section-title" data-i18n="Port">Portfolio Holdings</div>
-          <button class="btn-gold-pill" onclick="openTxModal()">+ Trade</button>
+          <div class="section-title">{{ t('Port') }}</div>
+          <button class="btn-gold-pill" @click="openTxModal()">+ Trade</button>
         </div>
-        <div id="holdingsList"></div>
+        <div id="holdingsList">
+          <div v-for="(assets, cat) in groupedHoldings" :key="cat">
+            <div v-if="assets.length > 0">
+              <div class="section-title" style="font-size:16px; margin-top:24px">{{ cat }}</div>
+              <div class="card" style="padding:0 16px">
+                <div v-for="h in assets" :key="h.ticker" class="asset-row" @click="quickTrade(h.ticker, h.cat)">
+                  <div style="display:flex; align-items:center">
+                    <div>
+                      <div style="font-weight:600; font-size:15px; display:flex; align-items:center; gap:8px">
+                        {{ h.ticker }}
+                        <span v-if="h.isUsd"
+                          style="font-size:10px; background:#333; padding:2px 4px; border-radius:4px">USD</span>
+                      </div>
+                      <div style="font-size:12px; color:var(--text-secondary)">{{ h.qty }} @ {{ fmt(h.qty > 0 ?
+                        (h.marketValue / h.qty) : 0) }}</div>
+                    </div>
+                  </div>
+                  <div style="text-align:right">
+                    <div style="font-weight:600; font-size:15px">{{ fmt(h.valTWD) }}</div>
+                    <div style="font-size:12px"
+                      :style="{ color: h.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)' }">
+                      {{ h.cat === '現金' ? '' : (h.pnl >= 0 ? '+' : '') + fmt(h.pnl) + ' (' + h.roi.toFixed(2) + '%)' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- VAULT / LOANS -->
-      <div id="loan" class="view hidden">
-        <div class="section-title" data-i18n="Vault">Vault (Loans)</div>
-        <div id="riskList" class="grid-stack" style="margin-bottom:24px"></div>
-        <div id="loanList"></div>
+      <!-- VAULT / LOANS -->
+      <div v-show="state.currentView === 'loan'" class="view">
+        <div class="section-title">{{ t('Vault') }}</div>
+
+        <!-- RISKS -->
+        <div id="riskList" class="grid-stack" style="margin-bottom:24px">
+          <div v-for="r in state.risks" :key="r.source" class="card">
+            <div class="card-label">{{ r.source }} Risk</div>
+            <div style="display:flex; justify-content:space-between; align-items:center">
+              <div class="card-value" style="font-size:24px">{{ r.ratio }}{{ r.ratio === '-' ? '' : '%' }}</div>
+              <div class="bg-success"
+                :style="{ background: r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)'), color:'#111', opacity:0.8 }">
+                {{ r.status }}</div>
+            </div>
+            <div class="card-sub">{{ r.label }}</div>
+            <div style="height:4px; width:100%; background:#333; margin-top:12px; border-radius:2px; overflow:hidden">
+              <div
+                :style="{ height:'100%', width: Math.min(r.ratio === '-' ? 0 : parseFloat(r.ratio), 100) + '%', background: r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)') }">
+              </div>
+            </div>
+            <div
+              style="margin-top:12px; font-size:13px; color:var(--text-secondary); display:flex; justify-content:space-between">
+              <span>Col: {{ fmt(r.colValTWD) }}</span><span>Debt: {{ fmt(r.debtTWD) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOANS -->
+        <div id="loanList">
+          <div v-for="(loans, src) in loanGroups" :key="src">
+            <div class="section-title" style="font-size:16px; margin-top:24px">{{ src }}</div>
+            <div class="card" style="padding:0 16px">
+              <div v-for="l in loans" :key="l.row" class="asset-row" @click="clickLoan(JSON.stringify(l))">
+                <!-- Note: clickLoan adapted for object -->
+                <div>
+                  <div style="font-weight:600">{{ l.col }} <i class="fa-solid fa-arrow-right"
+                      style="font-size:10px; color:var(--text-secondary)"></i> {{ fmt(l.principal) }} <span
+                      style="font-size:10px">{{ l.currency }}</span></div>
+                  <div style="font-size:12px; color:var(--text-secondary)">{{ l.type }} • Rate: {{ l.rate }}%</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-weight:600; color:var(--text-primary)">{{ fmt(l.debt * (l.currency === 'USD' ? 32.5 :
+                    1)) }} TWD</div> <!-- TODO: fix FX -->
+                  <div style="font-size:11px; color:var(--text-secondary)">{{ l.note || '' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- SETTINGS -->
-      <div id="settings" class="view hidden">
+      <!-- SETTINGS -->
+      <div v-show="state.currentView === 'settings'" class="view">
         <div class="section-title" data-i18n="Sett">Settings</div>
         <div class="card">
           <div class="asset-row">
@@ -131,12 +250,12 @@
           </div>
 
           <!-- New Toggles -->
-          <div class="asset-row" onclick="toggleTheme()">
-            <div data-i18n="Theme">Light Mode</div>
+          <div class="asset-row" @click="toggleTheme()">
+            <div>{{ t('Theme') }}</div>
             <div style="color:var(--text-gold)"><i class="fa-solid fa-circle-half-stroke"></i></div>
           </div>
-          <div class="asset-row" onclick="setLang(curLang==='zh'?'en':'zh')">
-            <div data-i18n="Lang">Language</div>
+          <div class="asset-row" @click="setLang(state.lang==='zh'?'en':'zh')">
+            <div>{{ t('Lang') }}</div>
             <div style="color:var(--text-gold)">EN / 中</div>
           </div>
 
@@ -151,50 +270,49 @@
   </div>
 
   <!-- MODALS -->
-  <div id="modalOverlay" class="modal-overlay" onclick="if(event.target===this) closeTxModal()">
+  <div v-if="state.txModal.show" class="modal-overlay" style="display:flex" @click.self="state.txModal.show = false">
     <div class="modal-content">
       <h3 class="section-title" style="margin-top:0">New Transaction</h3>
-      <input type="date" id="tDate">
+      <input type="date" v-model="state.txModal.date">
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-        <select id="tType">
+        <select v-model="state.txModal.type">
           <option>買入</option>
           <option>賣出</option>
           <option>配息</option>
         </select>
-        <select id="tCat">
+        <select v-model="state.txModal.cat">
           <option>股票</option>
           <option>加密貨幣</option>
           <option>現金</option>
         </select>
       </div>
-      <input type="text" id="tTicker" placeholder="Ticker (e.g. BTC)" list="tickerList">
-      <datalist id="tickerList"></datalist>
+      <input type="text" v-model="state.txModal.ticker" placeholder="Ticker (e.g. BTC)" list="tickerList">
+      <datalist id="tickerList">
+        <option v-for="t in state.knownTickers" :value="t"></option>
+      </datalist>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-        <input type="number" id="tQty" placeholder="Qty">
-        <input type="number" id="tPrice" placeholder="Price">
+        <input type="number" v-model="state.txModal.qty" placeholder="Qty">
+        <input type="number" v-model="state.txModal.price" placeholder="Price">
       </div>
       <div style="margin-bottom:16px">
         <label>Currency</label>
-        <select id="tCurrency">
+        <select v-model="state.txModal.currency">
           <option>TWD</option>
           <option>USD</option>
         </select>
       </div>
-      <button class="btn-gold-pill" style="width:100%" id="btnTx" onclick="subTx()">Confirm Transaction</button>
+      <button class="btn-gold-pill" style="width:100%" id="btnTx" @click="subTx()">Confirm Transaction</button>
     </div>
   </div>
 
   <!-- LOAN ACTION MODAL -->
-  <div id="modalLoan" class="modal-overlay"
-    onclick="if(event.target === this) document.getElementById('modalLoan').style.display='none'">
+  <div v-if="state.loanModal.show" class="modal-overlay" style="display:flex"
+    @click.self="state.loanModal.show = false">
     <div class="modal-content">
-      <h3 id="lTitle" class="section-title" style="margin-top:0">Loan Action</h3>
-      <input type="hidden" id="lRow">
-      <input type="hidden" id="lSource">
-      <input type="hidden" id="lCurrency">
+      <h3 class="section-title" style="margin-top:0">{{ state.loanModal.title }}</h3>
 
       <label>Action Type</label>
-      <select id="lType" onchange="updateLoanUI(this.value)">
+      <select v-model="state.loanModal.type">
         <option value="repay">Repay (還款)</option>
         <option value="addCol">Add Collateral (補抵押)</option>
         <option value="increaseLoan">Increase Loan (增貸)</option>
@@ -202,26 +320,35 @@
         <option value="sell">Sell to Repay (賣出還款)</option>
       </select>
 
-      <div id="lInputs">
-        <label>Amount / Qty</label>
-        <input type="number" id="lVal" placeholder="Amount or Qty">
-        <div id="lPriceGroup" class="hidden">
-          <label>Price / Rate</label>
-          <input type="number" id="lPrice" placeholder="Price">
+      <div>
+        <label>
+          {{ state.loanModal.type === 'repay' ? 'Repay Amount' :
+          state.loanModal.type === 'addCol' ? 'Collateral Qty' :
+          state.loanModal.type === 'increaseLoan' ? 'Loan Amount' :
+          state.loanModal.type === 'payPeriod' ? 'N/A' : 'Sell Qty' }}
+        </label>
+        <input type="number" v-model="state.loanModal.val" placeholder="Amount or Qty"
+          :disabled="state.loanModal.type === 'payPeriod'">
+
+        <div v-if="state.loanModal.type !== 'repay' && state.loanModal.type !== 'payPeriod'">
+          <label>
+            {{ state.loanModal.type === 'addCol' ? 'New Rate (Optional)' :
+            state.loanModal.type === 'increaseLoan' ? 'Rate' : 'Limit Price' }}
+          </label>
+          <input type="number" v-model="state.loanModal.price" placeholder="Price">
         </div>
       </div>
 
-      <button class="btn-gold-pill" id="btnLoan" style="width:100%; margin-top:20px" onclick="subLoan()">Submit
+      <button class="btn-gold-pill" id="btnLoan" style="width:100%; margin-top:20px" @click="subLoan()">Submit
         Action</button>
     </div>
   </div>
 
-  <div id="msgModal" class="modal-overlay" style="z-index:300">
+  <div v-if="state.msg.show" class="modal-overlay" style="display:flex; z-index:300">
     <div class="modal-content" style="text-align:center">
-      <h3 id="msgTitle" class="section-title">Notice</h3>
-      <p id="msgBody" style="color:var(--text-secondary); margin-bottom:24px"></p>
-      <button class="btn-outline" style="width:100%; border-radius:99px"
-        onclick="document.getElementById('msgModal').style.display='none'">Close</button>
+      <h3 class="section-title">{{ state.msg.title }}</h3>
+      <p style="color:var(--text-secondary); margin-bottom:24px">{{ state.msg.body }}</p>
+      <button class="btn-outline" style="width:100%; border-radius:99px" @click="state.msg.show = false">Close</button>
     </div>
   </div>
 
@@ -230,29 +357,9 @@
   <?!= include('constants'); ?>
 
   <script>
-    function go(id, el) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active', 'hidden'));
-      document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-      document.getElementById(id).classList.add('active');
-
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      if (el) el.classList.add('active');
-    }
-
-    function openTxModal() { document.getElementById('modalOverlay').style.display = 'flex'; document.getElementById('tDate').valueAsDate = new Date(); }
-    function closeTxModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-
-    function updateLoanUI(type) {
-      const lbl = document.querySelector('#lInputs label');
-      const priceGrp = document.getElementById('lPriceGroup');
-      if (type === 'repay') { lbl.innerText = 'Repay Amount'; priceGrp.classList.add('hidden'); }
-      else if (type === 'addCol') { lbl.innerText = 'Collateral Qty'; priceGrp.classList.remove('hidden'); document.querySelector('#lPriceGroup label').innerText = 'New Rate (Optional)'; }
-      else if (type === 'increaseLoan') { lbl.innerText = 'Loan Amount'; priceGrp.classList.remove('hidden'); document.querySelector('#lPriceGroup label').innerText = 'Rate'; }
-      else if (type === 'payPeriod') { lbl.innerText = 'N/A'; document.getElementById('lVal').disabled = true; priceGrp.classList.add('hidden'); }
-      else if (type === 'sell') { lbl.innerText = 'Sell Qty'; priceGrp.classList.remove('hidden'); document.querySelector('#lPriceGroup label').innerText = 'Limit Price'; }
-      if (type !== 'payPeriod') document.getElementById('lVal').disabled = false;
-    }
+    // Legacy openTx helper overridden by Vue state
+    // window.openTxModal handled in js.html
+    // window.updateLoanUI is no longer needed as Vue handles v-if
   </script>
 
   <?!= include('js'); ?>
