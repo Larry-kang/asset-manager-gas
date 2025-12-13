@@ -58,6 +58,11 @@
     --text-gold: #B45309;
   }
 
+  /* GLOBAL RESET */
+  * {
+    box-sizing: border-box;
+  }
+
   body {
     background-color: var(--bg-dark);
     font-family: var(--font-sans);
@@ -65,6 +70,42 @@
     color: var(--text-primary);
     height: 100vh;
     overflow: hidden;
+  }
+
+  /* ... (Scrolbar styles remain here, inserted previously) ... */
+
+  /* Added for New Loan UI */
+  .top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    /* Allow wrapping on small screens */
+    gap: 12px;
+    /* Spacing when wrapped */
+  }
+
+  /* ... (Existing styles) ... */
+
+  /* Fix Modal on Mobile */
+  .modal-content {
+    padding: 24px;
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--radius-m) var(--radius-m) 0 0;
+    max-height: 80vh;
+    /* Reduced to ensure it fits with keyboard */
+    overflow-y: auto;
+  }
+
+  .modal-overlay {
+    padding: 12px;
+    /* Ensure safe distance from edges */
+    padding-bottom: env(safe-area-inset-bottom);
+    /* Fix bottom stick */
+    align-items: flex-end;
+    /* Sheet style on mobile */
   }
 
   /* SCROLLBAR */
@@ -452,20 +493,18 @@
 
     /* Fix Modal on Mobile */
     .modal-content {
-      padding: 20px;
+      padding: 24px 20px;
       width: 100%;
-      max-width: 100%;
       border-radius: var(--radius-m) var(--radius-m) 0 0;
-      /* Sheet style? Or just rounded */
-      border-radius: var(--radius-m);
+      max-height: 85vh;
+      overflow-y: auto;
+      margin-bottom: 0;
     }
 
     .modal-overlay {
-      padding: 16px;
+      padding: 0;
+      /* Full width sheet */
       align-items: flex-end;
-      /* Bottom sheet feel? Or center? User said "don't stick to bottom" */
-      align-items: center;
-      /* Keep center but tight */
     }
 
     .drawer-overlay {
@@ -583,6 +622,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .tag {
