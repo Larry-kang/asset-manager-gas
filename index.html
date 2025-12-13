@@ -171,7 +171,7 @@
           <div v-for="(assets, cat) in groupedHoldings" :key="cat">
             <div v-if="assets.length > 0">
               <div class="section-title" style="font-size:16px; margin-bottom:12px">{{ cat }}</div>
-              <div class="card" style="padding:0 16px">
+              <div class="card">
                 <div v-for="h in assets" :key="h.ticker" class="asset-row" @click="quickTrade(h.ticker, h.cat)">
                   <div style="display:flex; align-items:center">
                     <div>
