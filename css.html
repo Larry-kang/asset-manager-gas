@@ -2,22 +2,25 @@
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap');
 
   :root {
-    /* Ether.fi Gold Standard Palette */
-    --bg-dark: #050505;
-    --bg-card: #121212;
+    /* Ether.fi Inspired Palette */
+    --bg-dark: #070707;
+    /* Deepest warm black */
+    --bg-card: #141414;
+    /* Subtle contrast */
     --bg-card-hover: #1A1A1A;
 
-    --border-color: rgba(255, 255, 255, 0.08);
+    --border-color: rgba(255, 255, 255, 0.06);
 
-    --text-primary: #FFFFFF;
-    --text-secondary: #9CA3AF;
-    --text-gold: #D4B483;
+    --text-primary: #F3F3F3;
+    /* Soft White */
+    --text-secondary: #A1A1AA;
+    --text-gold: #C6A775;
+    /* Muted Gold */
 
     /* Gradients */
-    --gold-gradient: linear-gradient(135deg, #D4B483 0%, #C19B6C 100%);
-    --gold-text-gradient: linear-gradient(135deg, #FFECC7 0%, #D4B483 100%);
+    --gold-gradient: linear-gradient(135deg, #C6A775 0%, #A58858 100%);
 
-    --color-green: #34D399;
+    --color-green: #4ADE80;
     --color-red: #F87171;
 
     --font-serif: 'Playfair Display', serif;
@@ -27,31 +30,31 @@
     --radius-m: 16px;
     --radius-s: 8px;
 
-    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
 
-  /* LIGHT MODE OVERRIDES */
+  /* LIGHT MODE (Ether.fi style often keeps dark, but we'll make a matching clean light) */
   @media (prefers-color-scheme: light) {
     :root {
-      --bg-dark: #F9FAFB;
+      --bg-dark: #F5F5F4;
+      /* Warm Grey */
       --bg-card: #FFFFFF;
-      --bg-card-hover: #F3F4F6;
-      --border-color: rgba(0, 0, 0, 0.08);
-      --text-primary: #111827;
-      --text-secondary: #6B7280;
-      /* Gold remains, maybe slightly darker for contrast */
+      --bg-card-hover: #FAFAF9;
+      --border-color: rgba(0, 0, 0, 0.06);
+      --text-primary: #1C1917;
+      --text-secondary: #78716C;
       --text-gold: #B45309;
     }
   }
 
   /* Manual Light Mode Toggle Class */
   body.light-mode {
-    --bg-dark: #F9FAFB;
+    --bg-dark: #F5F5F4;
     --bg-card: #FFFFFF;
-    --bg-card-hover: #F3F4F6;
-    --border-color: rgba(0, 0, 0, 0.08);
-    --text-primary: #111827;
-    --text-secondary: #6B7280;
+    --bg-card-hover: #FAFAF9;
+    --border-color: rgba(0, 0, 0, 0.06);
+    --text-primary: #1C1917;
+    --text-secondary: #78716C;
     --text-gold: #B45309;
   }
 
@@ -441,6 +444,24 @@
 
     .card {
       padding: 20px;
+    }
+
+    /* Fix Modal on Mobile */
+    .modal-content {
+      padding: 20px;
+      width: 100%;
+      max-width: 100%;
+      border-radius: var(--radius-m) var(--radius-m) 0 0;
+      /* Sheet style? Or just rounded */
+      border-radius: var(--radius-m);
+    }
+
+    .modal-overlay {
+      padding: 16px;
+      align-items: flex-end;
+      /* Bottom sheet feel? Or center? User said "don't stick to bottom" */
+      align-items: center;
+      /* Keep center but tight */
     }
 
     .drawer-overlay {
