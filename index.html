@@ -329,12 +329,12 @@
         <div style="font-size:18px; font-weight:600; margin-bottom:16px">{{ t('NewLoan') }}</div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-          <select v-model="state.newLoanModal.source">
-            <option value="" disabled>{{ t('Source') }}</option>
-            <option value="Aave">Aave</option>
-            <option value="Compound">Compound</option>
-            <option value="Binance">Binance</option>
-          </select>
+          <input type="text" v-model="state.newLoanModal.source" :placeholder="t('Source')" list="sourceList">
+          <datalist id="sourceList">
+            <option value="Aave"></option>
+            <option value="Compound"></option>
+            <option value="Binance"></option>
+          </datalist>
           <input type="date" v-model="state.newLoanModal.date">
         </div>
 

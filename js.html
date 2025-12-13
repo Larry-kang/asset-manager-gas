@@ -161,8 +161,9 @@
                         res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
                     })
                     .withFailureHandler(err => {
+                        console.error('addLoan Failed:', err);
                         if (btn) { btn.disabled = false; btn.innerText = 'Submit'; }
-                        showMsg('Error', err.message);
+                        showMsg('Error', 'Create Failed: ' + err.message);
                     })
                     .addLoan(JSON.parse(JSON.stringify(state.newLoanModal)));
             }
