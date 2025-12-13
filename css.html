@@ -436,90 +436,6 @@
     display: none;
   }
 
-  /* MOBILE */
-  @media (max-width: 768px) {
-    .app-root {
-      flex-direction: column;
-    }
-
-    /* HIDE TOP NAV & DRAWER ELEMENTS */
-    .mobile-header,
-    .sidebar,
-    .drawer-overlay {
-      display: none !important;
-    }
-
-    /* SHOW BOTTOM NAV */
-    .bottom-nav {
-      display: flex !important;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: calc(60px + env(safe-area-inset-bottom));
-      background: rgba(12, 12, 12, 0.9);
-      /* Slight transparency */
-      border-top: 1px solid var(--border-color);
-      z-index: 1010;
-      padding-bottom: env(safe-area-inset-bottom);
-      align-items: center;
-      justify-content: space-around;
-      backdrop-filter: blur(12px);
-    }
-
-    .bottom-nav .nav-item {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-      color: var(--text-secondary);
-      font-size: 22px;
-      /* Large icons */
-      background: transparent !important;
-    }
-
-    .bottom-nav .nav-item.active {
-      color: var(--text-gold);
-    }
-
-    /* MAIN CONTENT ADJUSTMENT */
-    .main-content {
-      padding: 12px;
-      /* Tight but safe */
-      padding-top: calc(20px + env(safe-area-inset-top, 0px));
-      /* No top header now? Wait, users might need top spacing if header is gone*/
-      padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
-    }
-
-    .card {
-      padding: 16px;
-    }
-
-    .grid-stack {
-      gap: 16px;
-    }
-
-    .dash-balance {
-      font-size: 40px;
-    }
-
-    /* Fix Modal on Mobile */
-    .modal-content {
-      padding: 24px 20px;
-      width: 100%;
-      border-radius: var(--radius-m) var(--radius-m) 0 0;
-      max-height: 85vh;
-      overflow-y: auto;
-      margin-bottom: 0;
-    }
-
-    .modal-overlay {
-      padding: 0;
-      align-items: flex-end;
-    }
-  }
-
   /* UTILS */
   [v-cloak] {
     display: none !important;
@@ -631,5 +547,89 @@
     background: rgba(212, 180, 131, 0.2);
     border-color: var(--text-gold);
     color: var(--text-gold);
+  }
+
+  /* MOBILE MEDIA QUERY - MOVED TO BOTTOM FOR SPECIFICITY */
+  @media (max-width: 768px) {
+    .app-root {
+      flex-direction: column;
+    }
+
+    /* HIDE TOP NAV & DRAWER ELEMENTS */
+    .mobile-header,
+    .sidebar,
+    .drawer-overlay {
+      display: none !important;
+    }
+
+    /* SHOW BOTTOM NAV */
+    .bottom-nav {
+      display: flex !important;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(60px + env(safe-area-inset-bottom));
+      background: rgba(12, 12, 12, 0.9);
+      /* Slight transparency */
+      border-top: 1px solid var(--border-color);
+      z-index: 1010;
+      padding-bottom: env(safe-area-inset-bottom);
+      align-items: center;
+      justify-content: space-around;
+      backdrop-filter: blur(12px);
+    }
+
+    .bottom-nav .nav-item {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      color: var(--text-secondary);
+      font-size: 22px;
+      /* Large icons */
+      background: transparent !important;
+    }
+
+    .bottom-nav .nav-item.active {
+      color: var(--text-gold);
+    }
+
+    /* MAIN CONTENT ADJUSTMENT */
+    .main-content {
+      padding: 12px;
+      /* Tight but safe */
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      /* No top header now? Wait, users might need top spacing if header is gone*/
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
+    }
+
+    .card {
+      padding: 16px;
+    }
+
+    .grid-stack {
+      gap: 16px;
+    }
+
+    .dash-balance {
+      font-size: 40px;
+    }
+
+    /* Fix Modal on Mobile */
+    .modal-content {
+      padding: 24px 20px;
+      width: 100%;
+      border-radius: var(--radius-m) var(--radius-m) 0 0;
+      max-height: 85vh;
+      overflow-y: auto;
+      margin-bottom: 0;
+    }
+
+    .modal-overlay {
+      padding: 0;
+      align-items: flex-end;
+    }
   }
 </style>
