@@ -288,31 +288,36 @@
 
       <!-- SETTINGS -->
       <!-- SETTINGS -->
+      <!-- SETTINGS -->
       <div v-show="state.currentView === 'settings'" class="view">
-        <div class="section-title" data-i18n="Sett">Settings</div>
-        <div class="card">
-          <div class="asset-row">
-            <div data-i18n="SysStat">System Status</div>
-            <div class="bg-success" data-i18n="Oper">Operational</div>
-          </div>
-          <div class="asset-row" onclick="google.script.run.runSystemCheck()">
-            <div data-i18n="RunDig">Run Diagnostics</div>
-            <div style="color:var(--text-secondary)"><i class="fa-solid fa-chevron-right"></i></div>
-          </div>
+        <div class="top-header">
+          <div class="section-title" data-i18n="Sett" style="margin:0">Settings</div>
+        </div>
+        <div class="grid-stack">
+          <div class="card">
+            <div class="asset-row">
+              <div data-i18n="SysStat">System Status</div>
+              <div class="bg-success" data-i18n="Oper">Operational</div>
+            </div>
+            <div class="asset-row" onclick="google.script.run.runSystemCheck()">
+              <div data-i18n="RunDig">Run Diagnostics</div>
+              <div style="color:var(--text-secondary)"><i class="fa-solid fa-chevron-right"></i></div>
+            </div>
 
-          <!-- New Toggles -->
-          <div class="asset-row" @click="toggleTheme()">
-            <div>{{ t('Theme') }}</div>
-            <div style="color:var(--text-gold)"><i class="fa-solid fa-circle-half-stroke"></i></div>
-          </div>
-          <div class="asset-row" @click="setLang(state.lang==='zh'?'en':'zh')" data-testid="btn-lang">
-            <div>{{ t('Lang') }}</div>
-            <div style="color:var(--text-gold)">EN / 中</div>
-          </div>
+            <!-- New Toggles -->
+            <div class="asset-row" @click="toggleTheme()">
+              <div>{{ t('Theme') }}</div>
+              <div style="color:var(--text-gold)"><i class="fa-solid fa-circle-half-stroke"></i></div>
+            </div>
+            <div class="asset-row" @click="setLang(state.lang==='zh'?'en':'zh')" data-testid="btn-lang">
+              <div>{{ t('Lang') }}</div>
+              <div style="color:var(--text-gold)">EN / 中</div>
+            </div>
 
-          <div class="asset-row">
-            <div>Version</div>
-            <div style="color:var(--text-secondary)">v4.1.0</div>
+            <div class="asset-row">
+              <div>Version</div>
+              <div style="color:var(--text-secondary)">v4.1.0</div>
+            </div>
           </div>
         </div>
       </div>
