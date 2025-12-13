@@ -442,81 +442,29 @@
       flex-direction: column;
     }
 
-    .mobile-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      padding-top: calc(16px + env(safe-area-inset-top, 0px));
-      background: rgba(18, 18, 18, 0.95);
-      border-bottom: 1px solid var(--border-color);
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1001;
-      /* Above everything */
-    }
-
-    .sidebar {
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      width: 280px;
-      /* Drawer width */
-      height: 100vh;
-      border-right: 1px solid var(--border-color);
-      background: #000000;
-      /* Solid black for menu */
-      z-index: 1002;
-      /* Above header */
-      transform: translateX(-100%);
-      /* HIDE by default */
-      padding-top: calc(20px + env(safe-area-inset-top, 0px));
-      padding-bottom: env(safe-area-inset-bottom, 20px);
-    }
-
-    .sidebar.open {
-      transform: translateX(0);
-      /* SLIDE IN */
-    }
-
-    /* Restore sidebar elements on mobile for drawer */
-    .sidebar-logo,
-    .user-profile {
-      display: flex;
-    }
-
-    .nav-item span {
-      display: block;
-    }
-
-    /* Override: Hide Sidebar on Mobile now (Switching to Bottom Nav) */
-    .sidebar {
+    /* HIDE TOP NAV & DRAWER ELEMENTS */
+    .mobile-header,
+    .sidebar,
+    .drawer-overlay {
       display: none !important;
     }
 
-    .mobile-header .fa-bars {
-      display: none !important;
-    }
-
-    /* BOTTOM NAV */
+    /* SHOW BOTTOM NAV */
     .bottom-nav {
-      display: flex;
+      display: flex !important;
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       height: calc(60px + env(safe-area-inset-bottom));
-      background: #000;
-      /* Solid Black */
+      background: rgba(12, 12, 12, 0.9);
+      /* Slight transparency */
       border-top: 1px solid var(--border-color);
       z-index: 1010;
       padding-bottom: env(safe-area-inset-bottom);
       align-items: center;
       justify-content: space-around;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
     }
 
     .bottom-nav .nav-item {
@@ -526,24 +474,22 @@
       align-items: center;
       height: 100%;
       color: var(--text-secondary);
-      font-size: 20px;
-      /* Larger icons */
+      font-size: 22px;
+      /* Large icons */
       background: transparent !important;
-      /* No hover bg */
     }
 
     .bottom-nav .nav-item.active {
       color: var(--text-gold);
     }
 
-    /* Show text in drawer */
-
+    /* MAIN CONTENT ADJUSTMENT */
     .main-content {
-      padding: 8px;
-      /* Extremely tight for mobile */
-      padding-top: calc(60px + env(safe-area-inset-top, 0px));
+      padding: 12px;
+      /* Tight but safe */
+      padding-top: calc(20px + env(safe-area-inset-top, 0px));
+      /* No top header now? Wait, users might need top spacing if header is gone*/
       padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
-      /* Space for bottom nav */
     }
 
     .card {
@@ -552,6 +498,10 @@
 
     .grid-stack {
       gap: 16px;
+    }
+
+    .dash-balance {
+      font-size: 40px;
     }
 
     /* Fix Modal on Mobile */
@@ -566,35 +516,7 @@
 
     .modal-overlay {
       padding: 0;
-      /* Full width sheet */
       align-items: flex-end;
-    }
-
-    .drawer-overlay {
-      display: block;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 1001;
-      backdrop-filter: blur(2px);
-    }
-
-    .nav-item.active {
-      background: rgba(212, 180, 131, 0.1);
-      color: var(--text-gold);
-    }
-
-    .nav-item.active::after {
-      display: none;
-    }
-
-    /* Remove dot */
-
-    .dash-balance {
-      font-size: 40px;
     }
   }
 
