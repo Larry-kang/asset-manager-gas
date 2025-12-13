@@ -25,10 +25,29 @@
                 msg: { show: false, title: '', body: '' },
                 txModal: { show: false, date: new Date().toISOString().split('T')[0], type: '買入', cat: '股票', ticker: '', qty: '', price: '', currency: 'TWD' },
                 loanModal: { show: false, title: '', row: '', source: '', currency: '', type: 'repay', val: '', price: '' },
-                newLoanModal: { show: false, source: '', date: new Date().toISOString().split('T')[0], amount: '', rate: '', col: '', colQty: '', type: '加密貨幣', currency: 'USD' }
+                newLoanModal: { show: false, source: '', date: new Date().toISOString().split('T')[0], amount: '', rate: '', col: '', colQty: '', type: '加密貨幣', currency: 'USD' },
+                expanded: [] // [Source1, Source2...]
             });
 
-            // --- COMPUTED ---
+            // ... (Computeds remain same) ...
+
+            // --- TOGGLE ACTIONS ---
+            function toggleRisk(source) {
+                const idx = state.expanded.indexOf(source);
+                if (idx > -1) state.expanded.splice(idx, 1);
+                else state.expanded.push(source);
+            }
+
+            // ... (Rest of Setup) ...
+
+            return {
+                state, t: (key) => I18N[state.lang][key] || key, fmt,
+                load, setLang, toggleTheme, go, showMsg,
+                subTx, subLoan, subNewLoan, quickTrade, clickLoan, toggleRisk,
+                groupedHoldings, displayedHoldings, loanGroups,
+                // Make helper directly available to templates
+                openTxModal: () => { state.txModal.show = true; }
+            };
             const groupedHoldings = computed(() => {
                 const cats = { '現金': [], '股票': [], '加密貨幣': [] };
                 state.holdings.forEach(h => {

@@ -207,51 +207,83 @@
             Loan</button>
         </div>
 
-        <!-- RISKS -->
+        <!-- VAULT (Integrated Risk & Loans) -->
         <div id="riskList" class="grid-stack" style="margin-bottom:24px">
           <div v-for="r in state.risks" :key="r.source" class="card">
-            <div class="card-label">{{ r.source }} Risk</div>
-            <div style="display:flex; justify-content:space-between; align-items:center">
-              <div class="card-value" style="font-size:24px">{{ r.ratio }}{{ r.ratio === '-' ? '' : '%' }}</div>
-              <div class="bg-success"
-                :style="{ background: r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)'), color:'#111', opacity:0.8 }">
-                {{ r.status }}</div>
-            </div>
-            <div class="card-sub">{{ r.label }}</div>
-            <div style="height:4px; width:100%; background:#333; margin-top:12px; border-radius:2px; overflow:hidden">
+            <!-- HEADER (Click to Expand) -->
+            <div @click="toggleRisk(r.source)" style="cursor:pointer">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+                <div class="card-label" style="margin:0; font-size:16px; font-weight:600">{{ r.source }}</div>
+                <div style="display:flex; align-items:center; gap:8px">
+                  <div class="bg-success"
+                    :style="{ background: r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)'), color:'#111', opacity:0.8, fontSize:'12px', padding:'2px 8px' }">
+                    {{ r.status }}
+                  </div>
+                  <i class="fa-solid fa-chevron-down"
+                    :style="{transform: state.expanded.includes(r.source) ? 'rotate(180deg)' : ''}"
+                    style="transition:0.3s; font-size:12px; color:var(--text-secondary)"></i>
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center">
+                <div class="card-value" style="font-size:24px">{{ r.ratio }}{{ r.ratio === '-' ? '' : '%' }}</div>
+                <div style="font-size:13px; color:var(--text-secondary); text-align:right">
+                  <div>Health: {{ r.label.split(': ')[1] || '-' }}</div>
+                </div>
+              </div>
+
+              <div style="height:4px; width:100%; background:#333; margin-top:12px; border-radius:2px; overflow:hidden">
+                <div
+                  :style="{ height:'100%', width: Math.min(r.ratio === '-' ? 0 : parseFloat(r.ratio), 100) + '%', background: r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)') }">
+                </div>
+              </div>
+
               <div
-                :style="{ height:'100%', width: Math.min(r.ratio === '-' ? 0 : parseFloat(r.ratio), 100) + '%', background: r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)') }">
+                style="margin-top:12px; font-size:13px; color:var(--text-secondary); display:flex; justify-content:space-between">
+                <span>Col: {{ fmt(r.colValTWD) }}</span>
+                <span>Debt: {{ fmt(r.debtTWD) }}</span>
               </div>
             </div>
-            <div
-              style="margin-top:12px; font-size:13px; color:var(--text-secondary); display:flex; justify-content:space-between">
-              <span>Col: {{ fmt(r.colValTWD) }}</span><span>Debt: {{ fmt(r.debtTWD) }}</span>
+
+            <!-- EXPANDED DETAILS (Loans) -->
+            <div v-if="state.expanded.includes(r.source)"
+              style="margin-top:16px; border-top:1px solid #333; padding-top:16px; animation: fadeIn 0.3s">
+              <div v-if="!loanGroups[r.source]" style="color:var(--text-secondary); text-align:center; font-size:13px">
+                No loans</div>
+
+              <div v-for="l in loanGroups[r.source]" :key="l.row" class="asset-row" @click="clickLoan(l)"
+                style="padding:8px 0; border-bottom:1px solid #222">
+                <div>
+                  <div style="font-weight:600; font-size:15px">{{ l.col }} <span
+                      style="font-size:12px; color:var(--text-secondary)">{{ fmt(l.principal) }} {{ l.currency }}</span>
+                  </div>
+                  <div style="font-size:12px; color:var(--text-secondary)">Rate: {{ l.rate }}%</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-weight:600">{{ fmt(l.debt * (l.currency === 'USD' ? 32.5 : 1)) }} TWD</div>
+                  <div style="font-size:11px; color:#D4B483">{{ l.type }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FALLBACK: If a source has loans but NO risk entry (e.g. manual entry without API data), show separate card -->
+          <!-- Currently skipping for simplicity as risk usually covers all sources used -->
+          <div v-for="(loans, src) in loanGroups" :key="src + '_orphan'">
+            <div v-if="!state.risks.find(r => r.source === src)" class="card">
+              <div class="section-title" style="margin-bottom:12px">{{ src }} (Unknown Risk)</div>
+              <div v-for="l in loans" :key="l.row" class="asset-row" @click="clickLoan(l)">
+                <!-- Same Loan Row UI -->
+                <div>
+                  <div style="font-weight:600">{{ l.col }}</div>
+                  <div style="font-size:12px; color:var(--text-secondary)">Rate: {{ l.rate }}%</div>
+                </div>
+                <div style="text-align:right">{{ fmt(l.principal) }} {{ l.currency }}</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- LOANS -->
-        <div id="loanList">
-          <div v-for="(loans, src) in loanGroups" :key="src">
-            <div class="section-title" style="font-size:16px; margin-top:24px">{{ src }}</div>
-            <div class="card" style="padding:0 16px">
-              <div v-for="l in loans" :key="l.row" class="asset-row" @click="clickLoan(JSON.stringify(l))">
-                <!-- Note: clickLoan adapted for object -->
-                <div>
-                  <div style="font-weight:600">{{ l.col }} <i class="fa-solid fa-arrow-right"
-                      style="font-size:10px; color:var(--text-secondary)"></i> {{ fmt(l.principal) }} <span
-                      style="font-size:10px">{{ l.currency }}</span></div>
-                  <div style="font-size:12px; color:var(--text-secondary)">{{ l.type }} • Rate: {{ l.rate }}%</div>
-                </div>
-                <div style="text-align:right">
-                  <div style="font-weight:600; color:var(--text-primary)">{{ fmt(l.debt * (l.currency === 'USD' ? 32.5 :
-                    1)) }} TWD</div> <!-- TODO: fix FX -->
-                  <div style="font-size:11px; color:var(--text-secondary)">{{ l.note || '' }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- SETTINGS -->
