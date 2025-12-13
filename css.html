@@ -510,15 +510,21 @@
     display: none;
     align-items: center;
     justify-content: center;
+    padding: 24px;
+    /* Prevent touching edges */
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
   }
 
   .modal-content {
     background: #18181B;
     border: 1px solid var(--text-gold);
     border-radius: var(--radius-l);
-    width: 90%;
+    width: 100%;
     max-width: 420px;
     padding: 32px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   }
 
   input,
