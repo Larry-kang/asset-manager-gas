@@ -432,6 +432,10 @@
     display: none;
   }
 
+  .bottom-nav {
+    display: none;
+  }
+
   /* MOBILE */
   @media (max-width: 768px) {
     .app-root {
@@ -488,13 +492,58 @@
       display: block;
     }
 
+    /* Override: Hide Sidebar on Mobile now (Switching to Bottom Nav) */
+    .sidebar {
+      display: none !important;
+    }
+
+    .mobile-header .fa-bars {
+      display: none !important;
+    }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(60px + env(safe-area-inset-bottom));
+      background: #000;
+      /* Solid Black */
+      border-top: 1px solid var(--border-color);
+      z-index: 1010;
+      padding-bottom: env(safe-area-inset-bottom);
+      align-items: center;
+      justify-content: space-around;
+      backdrop-filter: blur(10px);
+    }
+
+    .bottom-nav .nav-item {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      color: var(--text-secondary);
+      font-size: 20px;
+      /* Larger icons */
+      background: transparent !important;
+      /* No hover bg */
+    }
+
+    .bottom-nav .nav-item.active {
+      color: var(--text-gold);
+    }
+
     /* Show text in drawer */
 
     .main-content {
       padding: 8px;
       /* Extremely tight for mobile */
       padding-top: calc(60px + env(safe-area-inset-top, 0px));
-      padding-bottom: env(safe-area-inset-bottom, 20px);
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
+      /* Space for bottom nav */
     }
 
     .card {

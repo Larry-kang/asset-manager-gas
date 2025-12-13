@@ -61,6 +61,22 @@
       </div>
     </div>
 
+    <!-- BOTTOM NAV (Mobile Only) -->
+    <div class="bottom-nav">
+      <div class="nav-item" :class="{ active: state.currentView === 'dash' }" @click="go('dash')">
+        <i class="fa-solid fa-chart-pie"></i>
+      </div>
+      <div class="nav-item" :class="{ active: state.currentView === 'holdings' }" @click="go('holdings')">
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+      <div class="nav-item" :class="{ active: state.currentView === 'loan' }" @click="go('loan')">
+        <i class="fa-solid fa-landmark"></i>
+      </div>
+      <div class="nav-item" :class="{ active: state.currentView === 'settings' }" @click="go('settings')">
+        <i class="fa-solid fa-gear"></i>
+      </div>
+    </div>
+
     <!-- MAIN -->
     <div class="main-content">
 
