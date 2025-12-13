@@ -134,15 +134,19 @@
 
             // --- SUBMISSIONS ---
             function subTx() {
-                const btn = document.getElementById('txBtn');
-                btn.disabled = true; const originalText = btn.innerText; btn.innerText = 'Processing...';
+                const btn = document.getElementById('btnTx');
+                if (btn) { btn.disabled = true; btn.innerText = 'Processing...'; } // Safety check
 
                 google.script.run
                     .withSuccessHandler(res => {
-                        btn.innerText = originalText; btn.disabled = false; state.txModal.show = false;
+                        if (btn) { btn.innerText = 'Confirm'; btn.disabled = false; } // Reset text
+                        state.txModal.show = false;
                         res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
                     })
-                    .withFailureHandler(err => { btn.innerText = originalText; btn.disabled = false; showMsg('System Error', err.message); })
+                    .withFailureHandler(err => {
+                        if (btn) { btn.innerText = 'Confirm'; btn.disabled = false; }
+                        showMsg('System Error', err.message);
+                    })
                     .addTx(JSON.parse(JSON.stringify(state.txModal)));
             }
 
@@ -174,15 +178,19 @@
                     price: state.loanModal.price
                 };
 
-                const btn = document.getElementById('loanBtn');
-                btn.disabled = true; const originalText = btn.innerText; btn.innerText = 'Running...';
+                const btn = document.getElementById('btnLoan');
+                if (btn) { btn.disabled = true; btn.innerText = 'Running...'; }
 
                 google.script.run
                     .withSuccessHandler(res => {
-                        btn.innerText = originalText; btn.disabled = false; state.loanModal.show = false;
+                        if (btn) { btn.innerText = 'Submit Action'; btn.disabled = false; }
+                        state.loanModal.show = false;
                         res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
                     })
-                    .withFailureHandler(err => { btn.innerText = originalText; btn.disabled = false; showMsg('System Error', err.message); })
+                    .withFailureHandler(err => {
+                        if (btn) { btn.innerText = 'Submit Action'; btn.disabled = false; }
+                        showMsg('System Error', err.message);
+                    })
                     .processContractAction(d);
             }
 
