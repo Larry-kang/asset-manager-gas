@@ -22,7 +22,7 @@ const server = http.createServer((req, res) => {
             }
 
             // 1. Inject Mock API
-            content = content.replace('<head>', '<head>\n<script src="/mock_api.js"></script>');
+            content = content.replace('<head>', '<head>\n<script src="/mock_api.js?v=repair_' + Date.now() + '"></script>');
 
             // 2. Resolve GAS includes: <?!= include('filename'); ?>
             // Regex to find include tags

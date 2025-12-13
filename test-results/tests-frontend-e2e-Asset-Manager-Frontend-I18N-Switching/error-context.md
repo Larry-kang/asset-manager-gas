@@ -2,6 +2,7 @@
 
 ```yaml
 - generic [ref=e2]:
+  - text: 
   - generic [ref=e3]:
     - generic [ref=e4]:
       - generic [ref=e5]: 
@@ -22,24 +23,25 @@
     - generic [ref=e20]:
       - generic [ref=e21]: MK
       - generic [ref=e22]: Ming-Hao
+  - text:    
   - generic [ref=e23]:
-    - text: +  
+    - text: +        
     - generic [ref=e24]:
-      - generic [ref=e25]: Settings
-      - generic [ref=e26]:
-        - generic [ref=e27] [cursor=pointer]:
-          - generic [ref=e28]: System Status
-          - generic [ref=e29]: Operational
-        - generic [ref=e30] [cursor=pointer]:
-          - generic [ref=e31]: Run Diagnostics
-          - generic [ref=e33]: 
-        - generic [ref=e34] [cursor=pointer]:
-          - generic [ref=e35]: 亮色模式
-          - generic [ref=e37]: 
-        - generic [ref=e38] [cursor=pointer]:
-          - generic [ref=e39]: 語言切換
-          - generic [ref=e40]: EN / 中
-        - generic [ref=e41] [cursor=pointer]:
-          - generic [ref=e42]: Version
-          - generic [ref=e43]: v4.1.0
+      - generic [ref=e26]: Settings
+      - generic [ref=e28]:
+        - generic [ref=e29] [cursor=pointer]:
+          - generic [ref=e30]: System Status
+          - generic [ref=e31]: Operational
+        - generic [ref=e32] [cursor=pointer]:
+          - generic [ref=e33]: Run Diagnostics
+          - generic [ref=e35]: 
+        - generic [ref=e36] [cursor=pointer]:
+          - generic [ref=e37]: 亮色模式
+          - generic [ref=e39]: 
+        - generic [ref=e40] [cursor=pointer]:
+          - generic [ref=e41]: 語言切換
+          - generic [ref=e42]: EN / 中
+        - generic [ref=e43] [cursor=pointer]:
+          - generic [ref=e44]: Version
+          - generic [ref=e45]: v4.1.0
 ```

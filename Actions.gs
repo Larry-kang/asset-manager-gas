@@ -112,3 +112,13 @@ function processContractAction(form) {
 function runSystemCheck() {
   return { success: true, message: '系統功能正常 (Backend Connected)' };
 }
+
+// Export for Node.js Testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    addTx,
+    addLoan,
+    processContractAction,
+    runSystemCheck
+  };
+}

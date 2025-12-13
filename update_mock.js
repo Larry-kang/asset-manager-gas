@@ -1,4 +1,7 @@
-/**
+const fs = require('fs');
+const path = require('path');
+
+const content = `/**
  * Mock API for local development
  * Simulates google.script.run with STATEFUL persistence (in-memory)
  * UPDATED_V4
@@ -8,21 +11,21 @@ class MockGAS {
         this.delay = 300;
         this.store = {
             holdings: [
-                { cat: 'ï¿½Ñ²ï¿½', ticker: 'TSLA', qty: 10, valTWD: 75000, pnl: 5000, roi: 7.1 },
-                { cat: 'ï¿½[ï¿½Kï¿½fï¿½ï¿½', ticker: 'ETH', qty: 2.5, valTWD: 150000, pnl: -2000, roi: -1.3 },
-                { cat: 'ï¿½Sï¿½Oï¿½ï¿½', ticker: 'PFF', qty: 200, valTWD: 60000, pnl: 1200, roi: 2.0 },
-                { cat: 'ï¿½{ï¿½ï¿½', ticker: 'USD', qty: 5000, valTWD: 160000, pnl: 0, roi: 0 }
+                { cat: 'ªÑ²¼', ticker: 'TSLA', qty: 10, valTWD: 75000, pnl: 5000, roi: 7.1 },
+                { cat: '¥[±K³f¹ô', ticker: 'ETH', qty: 2.5, valTWD: 150000, pnl: -2000, roi: -1.3 },
+                { cat: '¯S§OªÑ', ticker: 'PFF', qty: 200, valTWD: 60000, pnl: 1200, roi: 2.0 },
+                { cat: '²{ª÷', ticker: 'USD', qty: 5000, valTWD: 160000, pnl: 0, roi: 0 }
             ],
             recentTx: [
-                { date: '2023-12-01', type: 'ï¿½Rï¿½J', ticker: 'TSLA', qty: 5, price: 210 },
-                { date: '2023-12-05', type: 'ï¿½tï¿½ï¿½', ticker: 'PFF', qty: 0, price: 150 }
+                { date: '2023-12-01', type: '¶R¤J', ticker: 'TSLA', qty: 5, price: 210 },
+                { date: '2023-12-05', type: '°t®§', ticker: 'PFF', qty: 0, price: 150 }
             ],
             risks: [
                 { source: 'Aave', ratio: '65', status: 'Safe', label: 'Health: 1.54', colValTWD: 100000, debtTWD: 65000 }
             ],
             contracts: [
-                { row: 1, source: 'Aave', col: 'ETH', principal: 2000, currency: 'USD', rate: 3.5, type: 'ï¿½[ï¿½Kï¿½fï¿½ï¿½', debt: 2000 },
-                { row: 2, source: 'Compound', col: 'WBTC', principal: 5000, currency: 'USD', rate: 4.2, type: 'ï¿½[ï¿½Kï¿½fï¿½ï¿½', debt: 5000 }
+                { row: 1, source: 'Aave', col: 'ETH', principal: 2000, currency: 'USD', rate: 3.5, type: '¥[±K³f¹ô', debt: 2000 },
+                { row: 2, source: 'Compound', col: 'WBTC', principal: 5000, currency: 'USD', rate: 4.2, type: '¥[±K³f¹ô', debt: 5000 }
             ],
             knownTickers: ['TSLA', 'AAPL', 'ETH', 'BTC', 'NVDA', 'Binance']
         };
@@ -72,7 +75,7 @@ class MockGAS {
                 price: parseFloat(form.price)
             });
             // Auto-Add to holdings for realism if valid ticker
-            if (form.cat === 'ï¿½Ñ²ï¿½' || form.cat === 'ï¿½[ï¿½Kï¿½fï¿½ï¿½') {
+            if (form.cat === 'ªÑ²¼' || form.cat === '¥[±K³f¹ô') {
                  const exist = this.store.holdings.find(h => h.ticker === form.ticker);
                  if (exist) {
                      exist.qty += parseFloat(form.qty);
@@ -119,3 +122,7 @@ class MockGAS {
 
 window.google = { script: { run: new MockGAS() } };
 console.log('Stateful Mock GAS API V4 initialized');
+`;
+
+fs.writeFileSync(path.join(__dirname, 'mock_api.js'), content, { encoding: 'utf8' });
+console.log('mock_api.js forced update complete.');
