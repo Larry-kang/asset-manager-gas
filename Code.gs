@@ -25,7 +25,7 @@ function onOpen() {
 function doGet() {
   return HtmlService.createTemplateFromFile('index')
     .evaluate()
-    .setTitle('資產管家 v3.0.0')
+    .setTitle('Asset Manager v4.1.0')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
