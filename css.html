@@ -64,7 +64,26 @@
     overflow: hidden;
   }
 
-  /* --- APP SHELL --- */
+  /* SCROLLBAR */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-gold);
+  }
+
+  /* APP SHELL */
   .app-root {
     display: flex;
     height: 100vh;
@@ -346,8 +365,13 @@
     margin-bottom: 4px;
   }
 
-  .mobile-header { display: none; }
-  .drawer-overlay { display: none; }
+  .mobile-header {
+    display: none;
+  }
+
+  .drawer-overlay {
+    display: none;
+  }
 
   /* MOBILE */
   @media (max-width: 768px) {
@@ -367,7 +391,8 @@
       top: 0;
       left: 0;
       right: 0;
-      z-index: 1001; /* Above everything */
+      z-index: 1001;
+      /* Above everything */
     }
 
     .sidebar {
@@ -375,50 +400,71 @@
       top: 0;
       bottom: 0;
       left: 0;
-      width: 280px; /* Drawer width */
+      width: 280px;
+      /* Drawer width */
       height: 100vh;
       border-right: 1px solid var(--border-color);
-      background: #000000; /* Solid black for menu */
-      z-index: 1002; /* Above header */
-      transform: translateX(-100%); /* HIDE by default */
+      background: #000000;
+      /* Solid black for menu */
+      z-index: 1002;
+      /* Above header */
+      transform: translateX(-100%);
+      /* HIDE by default */
       padding-top: calc(20px + env(safe-area-inset-top, 0px));
       padding-bottom: env(safe-area-inset-bottom, 20px);
     }
-    
+
     .sidebar.open {
-      transform: translateX(0); /* SLIDE IN */
+      transform: translateX(0);
+      /* SLIDE IN */
     }
 
     /* Restore sidebar elements on mobile for drawer */
-    .sidebar-logo, .user-profile {
+    .sidebar-logo,
+    .user-profile {
       display: flex;
     }
-    
-    .nav-item span { display: block; } /* Show text in drawer */
-    
+
+    .nav-item span {
+      display: block;
+    }
+
+    /* Show text in drawer */
+
     .main-content {
-      padding: 20px;
+      padding: 16px;
       /* Padding for Header */
       padding-top: calc(70px + env(safe-area-inset-top, 0px));
       /* No bottom nav padding needed! */
       padding-bottom: env(safe-area-inset-bottom, 20px);
     }
 
+    .card {
+      padding: 20px;
+    }
+
     .drawer-overlay {
-        display: block;
-        position: fixed;
-        top:0; left:0; right:0; bottom:0;
-        background: rgba(0,0,0,0.5);
-        z-index: 1001;
-        backdrop-filter: blur(2px);
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1001;
+      backdrop-filter: blur(2px);
     }
 
     .nav-item.active {
       background: rgba(212, 180, 131, 0.1);
       color: var(--text-gold);
     }
-    
-    .nav-item.active::after { display: none; } /* Remove dot */
+
+    .nav-item.active::after {
+      display: none;
+    }
+
+    /* Remove dot */
 
     .dash-balance {
       font-size: 40px;
@@ -459,7 +505,8 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
-    z-index: 2000; /* Above drawer */
+    z-index: 2000;
+    /* Above drawer */
     display: none;
     align-items: center;
     justify-content: center;
