@@ -259,6 +259,7 @@ function calculateLoans(loanRows, marketData) {
 function normalizeTicker(t) {
   if (!t) return '';
   t = String(t).toUpperCase().trim();
+  if (t.startsWith("'")) t = t.substring(1);
   if (/^[0-9]+$/.test(t)) {
     if (t.length >= 4) return t;
     if (t.length <= 2) return t.padStart(4, '0');

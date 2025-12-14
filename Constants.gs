@@ -6,6 +6,7 @@
 // --- Sheet Names ---
 const TAB_LOG = '交易紀錄';
 const TAB_LOAN = '借貸紀錄';
+const TAB_LOAN_ACTIONS = '借貸流水帳'; // New Event Sourcing Sheet
 const TAB_MARKET = 'MarketData';
 const TAB_HISTORY = '資產歷程';
 

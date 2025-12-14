@@ -121,4 +121,43 @@ function testRepository() {
     Logger.log("First Record: " + JSON.stringify(data[0]));
   }
 }
+/*
+ * 借貸流水帳 Repository (Event Sourcing)
+ */
+class LoanActionRepository extends SheetRepository {
+  constructor() {
+    super(TAB_LOAN_ACTIONS);
+  }
+
+  // 覆寫以支援自動 Header 檢查
+  _ensureHeader(sheet) {
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(['Time', 'LoanID', 'Type', 'Protocol', 'Action', 'Asset', 'Amount', 'Note']);
+    }
+  }
+
+  appendAction(action) {
+    // action: { loanId, type, protocol, actionStr, asset, amount, note }
+    const time = new Date();
+    // 依序寫入: Time, LoanID, Type, Protocol, Action, Asset, Amount, Note
+    this.append([
+      time,
+      action.loanId,
+      action.type, // e.g., 'Stock', 'Crypto'
+      action.protocol, // e.g., 'Sinopac', 'AAVE'
+      action.actionStr, // 'OPEN', 'BORROW', 'SUPPLY', 'REPAY'
+      action.asset,
+      action.amount,
+      action.note || ''
+    ]);
+  }
+
+  findByLoanId(loanId) {
+    // 簡單實作: 全掃 (未來可優化為 Cache 或 Query)
+    const all = this.findAll(); // Base method returns objects mapped from header
+    return all.filter(row => row.LoanID === loanId);
+  }
+}
+
+// 為了讓舊程式碼相容，這裡暫不刪除 LogRepository / LoanRepository
 // utf-8 fixed

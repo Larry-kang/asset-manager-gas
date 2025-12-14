@@ -9,8 +9,14 @@ class MockRange {
         this.values = values;
     }
     getValues() { return this.values; }
-    setValue(v) { }
-    setValues(v) { }
+    setValue(v) {
+        // Simple mock implementation: set first cell
+        if (this.values && this.values.length > 0 && this.values[0].length > 0) this.values[0][0] = v;
+    }
+    setValues(v) { this.values = v; }
+    setNumberFormat(f) { return this; }
+    getFormula() { return ''; }
+    getValue() { return this.values[0] ? this.values[0][0] : ''; }
 }
 
 class MockSheet {
@@ -58,6 +64,19 @@ const context = vm.createContext({
         getUi: jest.fn(),
         getActiveSpreadsheet: jest.fn(() => mockSS)
     },
+    PropertiesService: {
+        getScriptProperties: jest.fn(() => ({
+            getProperty: jest.fn(() => null),
+            setProperty: jest.fn(),
+            setProperties: jest.fn()
+        }))
+    },
+    LockService: {
+        getScriptLock: jest.fn(() => ({
+            tryLock: jest.fn(() => true),
+            releaseLock: jest.fn()
+        }))
+    },
     HtmlService: {
         createTemplateFromFile: jest.fn(),
         createHtmlOutputFromFile: jest.fn(),
@@ -91,7 +110,11 @@ const combinedCode = constantsGS + '\n' + repositoryGS + '\n' + codeGS + '\n' + 
     '\nthis.ACT_DIVIDEND = ACT_DIVIDEND;' +
     '\nthis.TYPE_STOCK = TYPE_STOCK;' +
     '\nthis.RepositoryFactory = RepositoryFactory;' +
-    '\nthis.LogRepository = LogRepository;';
+    '\nthis.LogRepository = LogRepository;' +
+    '\nthis.getDashboardData = getDashboardData;' +
+    '\nthis.addTx = addTx;' +
+    '\nthis.addLoan = addLoan;' +
+    '\nthis.processContractAction = processContractAction;';
 
 vm.runInContext(combinedCode, context);
 
@@ -103,6 +126,11 @@ module.exports = {
     calculatePortfolio: context.calculatePortfolio,
     calculateLoans: context.calculateLoans,
     normalizeTicker: context.normalizeTicker,
+    // Controller / Actions
+    getDashboardData: context.getDashboardData,
+    addTx: context.addTx,
+    addLoan: context.addLoan,
+    processContractAction: context.processContractAction,
     // Repository Classes
     RepositoryFactory: context.RepositoryFactory,
     LogRepository: context.LogRepository,
