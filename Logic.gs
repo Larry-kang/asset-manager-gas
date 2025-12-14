@@ -255,6 +255,64 @@ function calculateLoans(loanRows, marketData) {
   return { contracts: contracts, risks: risks, totalDebtTWD: totalDebtTWD, pledged: pledged };
 }
 
+/**
+ * 彙整財務摘要 (Financial Summary Aggregator)
+ * @param {Number} totalAssets - 總資產
+ * @param {Number} totalDebt - 總負債
+ * @param {Number} prevClose - 昨日收盤淨值 (for daily change)
+ * @returns {Object} { netWorth, totalAssets, totalDebt, dailyChange, currency }
+ */
+function calculateFinancialSummary(totalAssets, totalDebt, prevClose) {
+  const safe = (n) => (isNaN(n) || n === null || n === undefined) ? 0 : Number(n);
+  const assets = safe(totalAssets);
+  const debt = safe(totalDebt);
+  const netWorth = assets - debt;
+
+  // Daily Change Logic
+  const prev = safe(prevClose);
+  let change = 0;
+  if (prev !== 0) {
+    change = netWorth - prev;
+  }
+
+  return {
+    netWorth: netWorth,
+    totalAssets: assets,
+    totalDebt: debt,
+    dailyChange: change,
+    currency: 'TWD'
+  };
+}
+
+/**
+ * 彙整財務摘要 (Financial Summary Aggregator)
+ * @param {Number} totalAssets - 總資產
+ * @param {Number} totalDebt - 總負債
+ * @param {Number} prevClose - 昨日收盤淨值 (for daily change)
+ * @returns {Object} { netWorth, totalAssets, totalDebt, dailyChange, currency }
+ */
+function calculateFinancialSummary(totalAssets, totalDebt, prevClose) {
+  const safe = (n) => (isNaN(n) || n === null || n === undefined) ? 0 : Number(n);
+  const assets = safe(totalAssets);
+  const debt = safe(totalDebt);
+  const netWorth = assets - debt;
+
+  // Daily Change Logic
+  const prev = safe(prevClose);
+  let change = 0;
+  if (prev !== 0) {
+    change = netWorth - prev;
+  }
+
+  return {
+    netWorth: netWorth,
+    totalAssets: assets,
+    totalDebt: debt,
+    dailyChange: change,
+    currency: 'TWD'
+  };
+}
+
 // 輔助函式需保留
 function normalizeTicker(t) {
   if (!t) return '';
@@ -285,7 +343,8 @@ if (typeof module !== 'undefined' && module.exports) {
     calculatePortfolio,
     calculateLoans,
     normalizeTicker,
-    TEST_LITERALS
+    TEST_LITERALS,
+    calculateFinancialSummary
   };
 
   // Set Globals for the module scope

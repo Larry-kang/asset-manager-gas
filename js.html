@@ -26,7 +26,7 @@
                 msg: { show: false, title: '', body: '' },
                 txModal: { show: false, date: new Date().toISOString().split('T')[0], type: '買入', cat: '股票', ticker: '', qty: '', price: '', currency: 'TWD' },
                 loanModal: { show: false, title: '', row: '', source: '', currency: '', type: 'repay', val: '', price: '' },
-                newLoanModal: { show: false, source: '', date: new Date().toISOString().split('T')[0], amount: '', rate: '', col: '', colQty: '', type: '加密貨幣', currency: 'USD' },
+                newLoanModal: { show: false, source: '', date: new Date().toISOString().split('T')[0], amount: '', rate: '', col: '', colQty: '', type: 'Credit Card', currency: 'USD' },
                 expanded: [] // [Source1, Source2...]
             });
 
@@ -173,8 +173,14 @@
                 // --- STATEFUL MOCK DB ---
                 if (!window.MOCK_DB) {
                     window.MOCK_DB = {
-                        netWorth: 1250000,
-                        dailyChange: 5000,
+                        financialSummary: {
+                            netWorth: 1250000,
+                            totalAssets: 1315000,
+                            totalDebt: 65000,
+                            dailyChange: 5000,
+                            currency: 'TWD'
+                        },
+                        // netWorth: 1250000, // Legacy fallback if needed
                         holdings: [
                             { ticker: 'AAPL', qty: 10, valTWD: 50000, cat: '股票', pnl: 2000, roi: 5.2 },
                             { ticker: 'BTC', qty: 0.5, valTWD: 1000000, cat: '加密貨幣', pnl: -50000, roi: -2.3 },
@@ -260,8 +266,15 @@
                 catch (e) { showMsg('Parse Error', 'Failed to parse server response'); return; }
 
                 if (d.status === 'success' || d.success === true) {
-                    state.netWorth = fmt(d.netWorthTWD);
-                    state.dailyChange = d.dailyChange || 0;
+                    if (d.financialSummary) {
+                        state.netWorth = fmt(d.financialSummary.netWorth);
+                        state.dailyChange = d.financialSummary.dailyChange || 0;
+                        // state.totalAssets = fmt(d.financialSummary.totalAssets); // Future
+                    } else {
+                        state.netWorth = fmt(d.netWorthTWD);
+                        state.dailyChange = d.dailyChange || 0;
+                    }
+
                     state.holdings = d.holdings || [];
                     state.recentTx = d.recentTx || [];
                     state.risks = d.risks || [];

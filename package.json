@@ -6,7 +6,8 @@
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "jest tests/backend",
     "test:frontend": "playwright test tests/frontend",
-    "dev": "node local_server.js"
+    "dev": "node local_server.js",
+    "start": "node local_server.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

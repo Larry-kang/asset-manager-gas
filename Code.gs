@@ -145,39 +145,41 @@ function getDashboardData(forceRefresh) {
 
     // 4. Transform Result
     const safeNum = (n) => (isNaN(n) || n === null || n === undefined) ? 0 : Number(n);
-    const netWorth = safeNum(portfolio.totalAssetsTWD - loanData.totalDebtTWD);
+    const totalAssets = safeNum(portfolio.totalAssetsTWD);
+    const totalDebt = safeNum(loanData.totalDebtTWD);
 
     // --- Daily Change Logic ---
     const props = PropertiesService.getScriptProperties();
     const today = new Date().toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' });
     let lastDate = props.getProperty('LAST_DATE');
+
+    // Get Prev Close
     let prevClose = parseFloat(props.getProperty('PREV_CLOSE') || 0);
-    // If first time or new day, update reference
+
+    // If new day, shift current known to prev close
     if (lastDate !== today) {
-      // If we have a stored current value from yesterday, that becomes today's previous close
-      // If completely new, we might just use current net worth effectively 0 change, or wait for next update
-      let lastKnown = parseFloat(props.getProperty('LAST_KNOWN_VAL') || netWorth);
+      let lastKnown = parseFloat(props.getProperty('LAST_KNOWN_VAL') || (totalAssets - totalDebt));
       prevClose = lastKnown;
+
       props.setProperties({
         'LAST_DATE': today,
-        'PREV_CLOSE': String(prevClose),
-        'LAST_KNOWN_VAL': String(netWorth)
+        'PREV_CLOSE': String(prevClose)
       });
-    } else {
-      // Update last known value for today
-      props.setProperty('LAST_KNOWN_VAL', String(netWorth));
     }
-    const dailyChange = netWorth - prevClose;
+
+    // Calculate via Pure Logic
+    const summary = calculateFinancialSummary(totalAssets, totalDebt, prevClose);
+
+    // Update State for tomorrow
+    props.setProperty('LAST_KNOWN_VAL', String(summary.netWorth));
     // ---------------------------
 
     const result = {
       status: "success",
+      financialSummary: summary,
       fx: safeNum(marketData.fx),
-      netWorthTWD: netWorth,
-      dailyChange: dailyChange,
-      totalAssetsTWD: safeNum(portfolio.totalAssetsTWD),
-      totalDebtTWD: safeNum(loanData.totalDebtTWD),
       holdings: portfolio.list,
+
       contracts: loanData.contracts,
       risks: loanData.risks,
       inventory: portfolio.inventory,
