@@ -1,19 +1,19 @@
 /**
  * Repository.gs
- * ¸ê®Æ¦s¨ú¼h (Data Access Layer)
+ * ï¿½ï¿½Æ¦sï¿½ï¿½ï¿½h (Data Access Layer)
  * 
- * Â¾³d¡G
- * 1. «Ê¸Ë©Ò¦³ SpreadsheetApp ªº©I¥s
- * 2. ºÞ²z Sheet ªº Schema »PÄæ¦ì¬M®g
- * 3. ´£¨Ñ¨ãÃþ«¬ªº¸ê®Æª«¥ó (DTO)
+ * Â¾ï¿½dï¿½G
+ * 1. ï¿½Ê¸Ë©Ò¦ï¿½ SpreadsheetApp ï¿½ï¿½ï¿½Iï¿½s
+ * 2. ï¿½Þ²z Sheet ï¿½ï¿½ Schema ï¿½Pï¿½ï¿½ï¿½Mï¿½g
+ * 3. ï¿½ï¿½ï¿½Ñ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æªï¿½ï¿½ï¿½ (DTO)
  */
 
 // --- Base Repository ---
 
 class SheetRepository {
   /**
-   * @param {string} tabName - Sheet ¦WºÙ
-   * @param {Object} schema - Äæ¦ì©w¸q { KEY: Index } (0-based for array mapping, 1-based for Sheet)
+   * @param {string} tabName - Sheet ï¿½Wï¿½ï¿½
+   * @param {Object} schema - ï¿½ï¿½ï¿½wï¿½q { KEY: Index } (0-based for array mapping, 1-based for Sheet)
    */
   constructor(tabName, schema) {
     this.tabName = tabName;
@@ -31,22 +31,22 @@ class SheetRepository {
   }
 
   /**
-   * Åª¨ú©Ò¦³¸ê®Æ (±Æ°£ Header)
-   * @returns {Array<Object>} Âà´««áªºª«¥ó°}¦C
+   * Åªï¿½ï¿½ï¿½Ò¦ï¿½ï¿½ï¿½ï¿½ (ï¿½Æ°ï¿½ Header)
+   * @returns {Array<Object>} ï¿½à´«ï¿½áªºï¿½ï¿½ï¿½ï¿½}ï¿½C
    */
   findAll() {
     const lastRow = this.sheet.getLastRow();
     if (lastRow <= 1) return [];
 
     const numCols = this.sheet.getLastColumn();
-    // °²³] Header ¦û¥Î 1 ¦C
+    // ï¿½ï¿½ï¿½] Header ï¿½ï¿½ï¿½ï¿½ 1 ï¿½C
     const data = this.sheet.getRange(2, 1, lastRow - 1, numCols).getValues();
 
     return data.map((row, index) => this._mapRowToEntity(row, index + 2));
   }
 
   /**
-   * ±N Row Array Âà´«¬° Entity Object
+   * ï¿½N Row Array ï¿½à´«ï¿½ï¿½ Entity Object
    */
   _mapRowToEntity(row, rowNum) {
     const entity = { _row: rowNum };

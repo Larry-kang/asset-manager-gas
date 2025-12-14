@@ -1,0 +1,29 @@
+FAIL tests/backend/logic.test.js
+  Logic.gs Core Business Logic
+    ??Inventory Calculation (Buy/Sell/Pledge) (2 ms)
+    ? Portfolio Valuation (2 ms)
+    ??Loan Risk Logic (Stock LTV) (2 ms)
+    ??Loan Risk Logic (Safe)
+
+  ??Logic.gs Core Business Logic ??Portfolio Valuation
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 64000
+    Received: 2000
+
+      53 |         expect(aapl.qty).toBe(10);
+      54 |         expect(aapl.marketValue).toBe(2000); // 10 * 200
+    > 55 |         expect(aapl.valTWD).toBe(64000); // 2000 * 32
+         |                             ^
+      56 |         expect(aapl.isUsd).toBe(true);
+      57 |     });
+      58 |
+
+      at Object.toBe (tests/backend/logic.test.js:55:29)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 3 passed, 4 total
+Snapshots:   0 total
+Time:        0.439 s, estimated 1 s
+Ran all test suites matching /tests\\backend\\logic.test.js/i.

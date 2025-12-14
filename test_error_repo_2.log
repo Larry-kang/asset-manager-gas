@@ -1,0 +1,60 @@
+
+> asset-manager-gas@1.0.0 test
+> jest
+
+FAIL tests/repository.test.js
+  ??Console
+
+    console.log
+      Loading GAS files...
+
+      at Object.log (tests/setup.js:80:9)
+
+  ??LogRepository Tests ??findAll should return mapped entities
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "2330"
+    Received: undefined
+
+      28 |
+      29 |         const record = results[0];
+    > 30 |         expect(record.ticker).toBe('2330');
+         |                               ^
+      31 |         expect(record.type).toBe(ACT_BUY);
+      32 |         expect(record.qty).toBe(1000);
+      33 |         expect(record.price).toBe(500);
+
+      at Object.toBe (tests/repository.test.js:30:31)
+
+  ??LogRepository Tests ??findByTicker should filter results
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 0
+
+      41 |
+      42 |         const results = repo.findByTicker('2330');
+    > 43 |         expect(results.length).toBe(1);
+         |                                ^
+      44 |         expect(results[0].ticker).toBe('2330');
+      45 |
+      46 |         const none = repo.findByTicker('XYZ');
+
+      at Object.toBe (tests/repository.test.js:43:32)
+
+PASS tests/logic.test.js
+  ??Console
+
+    console.log
+      Loading GAS files...
+
+      at Object.log (tests/setup.js:80:9)
+
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       2 failed, 5 passed, 7 total
+Snapshots:   0 total
+Time:        0.505 s, estimated 1 s
+Ran all test suites.

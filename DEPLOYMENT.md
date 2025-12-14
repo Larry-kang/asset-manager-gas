@@ -1,42 +1,42 @@
-# Google Apps Script ¦Û°Ê¤Æ³¡¸p¬yµ{ (CI/CD)
+# Google Apps Script ï¿½Û°Ê¤Æ³ï¿½ï¿½pï¿½yï¿½{ (CI/CD)
 
-¥»¤å¥ó·§­z¤F¨Ï¥Î GitHub Actions ³¡¸p Google Apps Script (GAS) ±M®×ªº¼Ð·Ç¤Æ¬yµ{¡C
-**®Ö¤ß­ì«h¡G** ¥Ã»·¤£­n¤â°Ê³¡¸p¡CGit ¬O°ß¤@ªº¯u²z¨Ó·½ (Source of Truth)¡C
+ï¿½ï¿½ï¿½ï¿½ó·§­zï¿½Fï¿½Ï¥ï¿½ GitHub Actions ï¿½ï¿½ï¿½p Google Apps Script (GAS) ï¿½Mï¿½×ªï¿½ï¿½Ð·Ç¤Æ¬yï¿½{ï¿½C
+**ï¿½Ö¤ß­ï¿½hï¿½G** ï¿½Ã»ï¿½ï¿½ï¿½ï¿½nï¿½ï¿½Ê³ï¿½ï¿½pï¿½CGit ï¿½Oï¿½ß¤@ï¿½ï¿½ï¿½uï¿½zï¿½Ó·ï¿½ (Source of Truth)ï¿½C
 
-## 1. «e¸m·Ç³Æ (¤@¦¸©Ê³]©w)
+## 1. ï¿½eï¿½mï¿½Ç³ï¿½ (ï¿½@ï¿½ï¿½ï¿½Ê³]ï¿½w)
 
-### A. ¥»¦aÀô¹Ò (Local Environment)
-1.  **¦w¸Ë Clasp:** ¥þ°ì¦w¸Ë¡G`npm i -g @google/clasp`¡C
-2.  **µn¤J:** °õ¦æ `clasp login`¡A³o±N²£¥Í `~/.clasprc.json` ¾ÌÃÒÀÉ®×¡C
-3.  **±M®×³]©w:** °õ¦æ `clasp clone <scriptId>` ©Î `clasp create`¡C
-4.  **©¿²¤ÀÉ®×:** «Ø¥ß `.claspignore` ¥H±Æ°£¶}µoÀÉ®× (¦p node_modules, tests, .git)¡C
+### A. ï¿½ï¿½ï¿½aï¿½ï¿½ï¿½ï¿½ (Local Environment)
+1.  **ï¿½wï¿½ï¿½ Clasp:** ï¿½ï¿½ï¿½ï¿½wï¿½Ë¡G`npm i -g @google/clasp`ï¿½C
+2.  **ï¿½nï¿½J:** ï¿½ï¿½ï¿½ï¿½ `clasp login`ï¿½Aï¿½oï¿½Nï¿½ï¿½ï¿½ï¿½ `~/.clasprc.json` ï¿½ï¿½ï¿½ï¿½ï¿½É®×¡C
+3.  **ï¿½Mï¿½×³]ï¿½w:** ï¿½ï¿½ï¿½ï¿½ `clasp clone <scriptId>` ï¿½ï¿½ `clasp create`ï¿½C
+4.  **ï¿½ï¿½ï¿½ï¿½ï¿½É®ï¿½:** ï¿½Ø¥ï¿½ `.claspignore` ï¿½Hï¿½Æ°ï¿½ï¿½}ï¿½oï¿½É®ï¿½ (ï¿½p node_modules, tests, .git)ï¿½C
 
-### B. GitHub Repository Secrets ³]©w
-¬°¤FÅý GitHub Action ¯à¥Nªí±z°õ¦æ³¡¸p¡A±z»Ý­n³]©w Repository Secrets¡G
+### B. GitHub Repository Secrets ï¿½]ï¿½w
+ï¿½ï¿½ï¿½Fï¿½ï¿½ GitHub Action ï¿½ï¿½Nï¿½ï¿½ï¿½zï¿½ï¿½ï¿½æ³¡ï¿½pï¿½Aï¿½zï¿½Ý­nï¿½]ï¿½w Repository Secretsï¿½G
 
-1.  **¨ú±o±zªº¾ÌÃÒ:**
-    *   ¶}±Ò¥»¦aªº `~/.clasprc.json` (¦ì©ó±zªº¨Ï¥ÎªÌ®Ú¥Ø¿ý¡Aµn¤J«á²£¥Í)¡C
-    *   ½Æ»s¨ä§¹¾ãªº JSON ¤º®e¡C
-2.  **³]©w Secret:**
-    *   ¶i¤J GitHub Repo > **Settings** > **Secrets and variables** > **Actions**¡C
-    *   ÂIÀ» **New Repository Secret**¡C
+1.  **ï¿½ï¿½ï¿½oï¿½zï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:**
+    *   ï¿½}ï¿½Ò¥ï¿½ï¿½aï¿½ï¿½ `~/.clasprc.json` (ï¿½ï¿½ï¿½zï¿½ï¿½ï¿½Ï¥ÎªÌ®Ú¥Ø¿ï¿½ï¿½Aï¿½nï¿½Jï¿½á²£ï¿½ï¿½)ï¿½C
+    *   ï¿½Æ»sï¿½ä§¹ï¿½ãªº JSON ï¿½ï¿½ï¿½eï¿½C
+2.  **ï¿½]ï¿½w Secret:**
+    *   ï¿½iï¿½J GitHub Repo > **Settings** > **Secrets and variables** > **Actions**ï¿½C
+    *   ï¿½Iï¿½ï¿½ **New Repository Secret**ï¿½C
     *   Name: `CLASP_SECRET`
-    *   Value: ¶K¤W­è­è½Æ»sªº `~/.clasprc.json` ¤º®e¡C
-3.  **³]©w Config Secret (¿ï¥Î¦ý±ÀÂË):**
-    *   ½Æ»s±M®×¤¤ `.clasp.json` ªº¤º®e (¥]§t scriptId)¡C
-    *   «Ø¥ß·sªº Repository Secret¡G`CLASP_CONFIG`¡C
-    *   *µù¡GÁöµM Workflow ¤ä´©±q Repo Åª¨ú `.clasp.json`¡A¦ý³z¹L Secrets ºÞ²z¸û¬°¦w¥þ¡C*
+    *   Value: ï¿½Kï¿½Wï¿½ï¿½ï¿½Æ»sï¿½ï¿½ `~/.clasprc.json` ï¿½ï¿½ï¿½eï¿½C
+3.  **ï¿½]ï¿½w Config Secret (ï¿½ï¿½Î¦ï¿½ï¿½ï¿½ï¿½ï¿½):**
+    *   ï¿½Æ»sï¿½Mï¿½×¤ï¿½ `.clasp.json` ï¿½ï¿½ï¿½ï¿½ï¿½e (ï¿½]ï¿½t scriptId)ï¿½C
+    *   ï¿½Ø¥ß·sï¿½ï¿½ Repository Secretï¿½G`CLASP_CONFIG`ï¿½C
+    *   *ï¿½ï¿½ï¿½Gï¿½ï¿½ï¿½M Workflow ï¿½ä´©ï¿½q Repo Åªï¿½ï¿½ `.clasp.json`ï¿½Aï¿½ï¿½ï¿½zï¿½L Secrets ï¿½Þ²zï¿½ï¿½ï¿½ï¿½ï¿½wï¿½ï¿½ï¿½C*
 
-## 2. Workflow ³]©wÀÉ (`.github/workflows/deploy.yml`)
+## 2. Workflow ï¿½]ï¿½wï¿½ï¿½ (`.github/workflows/deploy.yml`)
 
-½Ð¦b±zªº Repo ¤¤«Ø¥ß¦¹ÀÉ®×¡C¦¹¼Ð·Ç°t¸m³B²z¥H¤U¨Æ¶µ¡G
-*   Node.js Àô¹Ò³]©w
-*   ¦w¸Ë Clasp
-*   Token ®æ¦¡¼Ð·Ç¤Æ (¸Ñ¨M Clasp 2.4+ ª©¥» Token ®æ¦¡²V¶Ãªº°ÝÃD)
-*   °õ¦æ³¡¸p (`clasp push -f`)
+ï¿½Ð¦bï¿½zï¿½ï¿½ Repo ï¿½ï¿½ï¿½Ø¥ß¦ï¿½ï¿½É®×¡Cï¿½ï¿½ï¿½Ð·Ç°tï¿½mï¿½Bï¿½zï¿½Hï¿½Uï¿½Æ¶ï¿½ï¿½G
+*   Node.js ï¿½ï¿½ï¿½Ò³]ï¿½w
+*   ï¿½wï¿½ï¿½ Clasp
+*   Token ï¿½æ¦¡ï¿½Ð·Ç¤ï¿½ (ï¿½Ñ¨M Clasp 2.4+ ï¿½ï¿½ï¿½ï¿½ Token ï¿½æ¦¡ï¿½Vï¿½Ãªï¿½ï¿½ï¿½ï¿½D)
+*   ï¿½ï¿½ï¿½æ³¡ï¿½p (`clasp push -f`)
 
 ```yaml
-name: Deploy to GAS (³¡¸p¨ì GAS)
+name: Deploy to GAS (ï¿½ï¿½ï¿½pï¿½ï¿½ GAS)
 
 on:
   push:
@@ -49,20 +49,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js (³]©w Node Àô¹Ò)
+      - name: Setup Node.js (ï¿½]ï¿½w Node ï¿½ï¿½ï¿½ï¿½)
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install Clasp (¦w¸Ë Clasp)
+      - name: Install Clasp (ï¿½wï¿½ï¿½ Clasp)
         run: npm install -g @google/clasp
 
-      - name: Authenticate Clasp (ÅçÃÒ Clasp)
+      - name: Authenticate Clasp (ï¿½ï¿½ï¿½ï¿½ Clasp)
         run: |
-          # ¼g¤J Project ID °t¸m
+          # ï¿½gï¿½J Project ID ï¿½tï¿½m
           echo "$CLASP_CONFIG" > .clasp.json
           
-          # ¼g¤J¾ÌÃÒ (¥]§t½ÆÂøªº JSON ¸ÑªR»P®æ¦¡­×¥¿ÅÞ¿è)
+          # ï¿½gï¿½Jï¿½ï¿½ï¿½ï¿½ (ï¿½]ï¿½tï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ JSON ï¿½ÑªRï¿½Pï¿½æ¦¡ï¿½×¥ï¿½ï¿½Þ¿ï¿½)
           node -e "
             const fs = require('fs');
             const os = require('os');
@@ -70,16 +70,16 @@ jobs:
             const secret = process.env.CLASP_SECRET;
             if(!secret) process.exit(1);
             
-            // ÅÞ¿è¡G¼Ð·Ç¤Æ token ®æ¦¡ (³¡¤Àª©¥»·|¥]¦b 'tokens.default' ¤¤)
+            // ï¿½Þ¿ï¿½Gï¿½Ð·Ç¤ï¿½ token ï¿½æ¦¡ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½|ï¿½]ï¿½b 'tokens.default' ï¿½ï¿½)
             let json = JSON.parse(secret);
             let token = json.token || (json.tokens && json.tokens.default ? (json.tokens.default.token || json.tokens.default) : null);
             
             if(token) {
-               // ­««Ø¦¨ Clasp °¾¦nªºÂÂª©Â²¤Æ®æ¦¡
+               // ï¿½ï¿½ï¿½Ø¦ï¿½ Clasp ï¿½ï¿½ï¿½nï¿½ï¿½ï¿½Âªï¿½Â²ï¿½Æ®æ¦¡
                const rc = { token: token };
                fs.writeFileSync(path.join(os.homedir(), '.clasprc.json'), JSON.stringify(rc));
             } else {
-               console.error('µL®Äªº Token µ²ºc (Invalid Token Structure)');
+               console.error('ï¿½Lï¿½Äªï¿½ Token ï¿½ï¿½ï¿½c (Invalid Token Structure)');
                process.exit(1);
             }
           "
@@ -87,28 +87,28 @@ jobs:
           CLASP_CONFIG: ${{ secrets.CLASP_CONFIG }}
           CLASP_SECRET: ${{ secrets.CLASP_SECRET }}
 
-      - name: Deploy (°õ¦æ³¡¸p)
+      - name: Deploy (ï¿½ï¿½ï¿½æ³¡ï¿½p)
         run: clasp push --force
 ```
 
-## 3. ¤é±`¶}µo¬yµ{ (Daily Usage)
+## 3. ï¿½ï¿½`ï¿½}ï¿½oï¿½yï¿½{ (Daily Usage)
 
-**°ß¤@·Ç«h¡G¥u¨Ï¥Î Git «ü¥O¡C**
+**ï¿½ß¤@ï¿½Ç«hï¿½Gï¿½uï¿½Ï¥ï¿½ Git ï¿½ï¿½ï¿½Oï¿½C**
 
-1.  **¶}µo (Develop):** ¨Ï¥Î VS Code ¦b¥»¦a½s¿èµ{¦¡½X¡C
-2.  **´£¥æ (Commit):**
+1.  **ï¿½}ï¿½o (Develop):** ï¿½Ï¥ï¿½ VS Code ï¿½bï¿½ï¿½ï¿½aï¿½sï¿½ï¿½{ï¿½ï¿½ï¿½Xï¿½C
+2.  **ï¿½ï¿½ï¿½ï¿½ (Commit):**
     *   `git add .`
-    *   `git commit -m "feat: ·s¼W¥\¯à´y­z"`
-3.  **³¡¸p (Deploy):**
+    *   `git commit -m "feat: ï¿½sï¿½Wï¿½\ï¿½ï¿½yï¿½z"`
+3.  **ï¿½ï¿½ï¿½p (Deploy):**
     *   `git push`
 
-GitHub Action ±N·|¦Û°ÊÄ²µo¡A¨Ã¦b¬ù 30-60 ¬í¤º±N§ó·s³¡¸p¦Ü Google Apps Script¡C
+GitHub Action ï¿½Nï¿½|ï¿½Û°ï¿½Ä²ï¿½oï¿½Aï¿½Ã¦bï¿½ï¿½ 30-60 ï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½ï¿½sï¿½ï¿½ï¿½pï¿½ï¿½ Google Apps Scriptï¿½C
 
-## 4. ¬G»Ù±Æ°£ (Troubleshooting)
+## 4. ï¿½Gï¿½Ù±Æ°ï¿½ (Troubleshooting)
 
-*   **¿ù»~: "Precondition Failed" / "Token Expired":**
-    *   ­ì¦]¡G`CLASP_SECRET` ¤¤ªº Refresh Token ¥i¯à¤w¹L´Á (³q±`¨C 7 ¤Ñ»Ý§ó·s¡A©Î¤Ó¤[¥¼¨Ï¥Î)¡C
-    *   **¸Ñªk:** ¦b¥»¦a¦A¦¸°õ¦æ `clasp login`¡A¨ú±o·sªº `~/.clasprc.json` ¤º®e¡A¨Ã§ó·s GitHub Secret¡C
-*   **¿ù»~: "Files to push were not found":**
-    *   ­ì¦]¡GÀÉ®×¥i¯à³Q©¿²¤¤F¡C
-    *   **¸Ñªk:** ÀË¬d `.claspignore`¡A½T«O `.gs` ©M `.html` ÀÉ®× **¨S¦³** ³Q¦C¤J©¿²¤²M³æ¡C
+*   **ï¿½ï¿½ï¿½~: "Precondition Failed" / "Token Expired":**
+    *   ï¿½ï¿½]ï¿½G`CLASP_SECRET` ï¿½ï¿½ï¿½ï¿½ Refresh Token ï¿½iï¿½ï¿½wï¿½Lï¿½ï¿½ (ï¿½qï¿½`ï¿½C 7 ï¿½Ñ»Ý§ï¿½sï¿½Aï¿½Î¤Ó¤[ï¿½ï¿½ï¿½Ï¥ï¿½)ï¿½C
+    *   **ï¿½Ñªk:** ï¿½bï¿½ï¿½ï¿½aï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ `clasp login`ï¿½Aï¿½ï¿½ï¿½oï¿½sï¿½ï¿½ `~/.clasprc.json` ï¿½ï¿½ï¿½eï¿½Aï¿½Ã§ï¿½s GitHub Secretï¿½C
+*   **ï¿½ï¿½ï¿½~: "Files to push were not found":**
+    *   ï¿½ï¿½]ï¿½Gï¿½É®×¥iï¿½ï¿½Qï¿½ï¿½ï¿½ï¿½ï¿½Fï¿½C
+    *   **ï¿½Ñªk:** ï¿½Ë¬d `.claspignore`ï¿½Aï¿½Tï¿½O `.gs` ï¿½M `.html` ï¿½É®ï¿½ **ï¿½Sï¿½ï¿½** ï¿½Qï¿½Cï¿½Jï¿½ï¿½ï¿½ï¿½ï¿½Mï¿½ï¿½C

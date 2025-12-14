@@ -1,103 +1,103 @@
-# ? ¼Ð·Ç Git ¶}µo¤u§@¬yµ{ (Standard Git Workflow)
+# ? ï¿½Ð·ï¿½ Git ï¿½}ï¿½oï¿½uï¿½@ï¿½yï¿½{ (Standard Git Workflow)
 
-¬°¤F½T«O¥N½X«~½è»P¦Û°Ê¤Æ³¡¸pªºÃ­©w©Ê¡A¥»±M®×±Ä¥Î **GitHub Flow** ·f°t **Conventional Commits**¡C
-½Ð¿í´`¥H¤U³W½d¶i¦æ¶}µo¡C
+ï¿½ï¿½ï¿½Fï¿½Tï¿½Oï¿½Nï¿½Xï¿½~ï¿½ï¿½Pï¿½Û°Ê¤Æ³ï¿½ï¿½pï¿½ï¿½Ã­ï¿½wï¿½Ê¡Aï¿½ï¿½ï¿½Mï¿½×±Ä¥ï¿½ **GitHub Flow** ï¿½fï¿½t **Conventional Commits**ï¿½C
+ï¿½Ð¿ï¿½ï¿½`ï¿½Hï¿½Uï¿½Wï¿½dï¿½iï¿½ï¿½}ï¿½oï¿½C
 
-## 1. ¤À¤äµ¦²¤ (Branching Strategy)
+## 1. ï¿½ï¿½ï¿½äµ¦ï¿½ï¿½ (Branching Strategy)
 
-§Ú­Ì±Ä¥ÎÂ²¤Æªº GitHub Flow¡G
+ï¿½Ú­Ì±Ä¥ï¿½Â²ï¿½Æªï¿½ GitHub Flowï¿½G
 
-*   **`main` (¥D¤À¤ä)**:
-    *   ? **¸T¤îª½±µ Commit**¡C
-    *   ³o¬O¡u¥Í²£Àô¹Ò (Production)¡vªº¥N½X¡C
-    *   **°ß¤@** ·|Ä²µo¦Û°Ê³¡¸pªº¤À¤ä¡C
-*   **`feat/*` (¥\¯à¤À¤ä)**:
-    *   ¶}µo·s¥\¯à®É¨Ï¥Î¡C
-    *   ±À°e¦¹¤À¤ä **¤£·|** Ä²µo½u¤W³¡¸p (CI ¶È°õ¦æ´ú¸Õ)¡C
-    *   ©R¦W½d¨Ò: `feat/add-login`, `feat/new-dashboard`¡C
-*   **`fix/*` (­×´_¤À¤ä)**:
-    *   ­×´_ Bug ®É¨Ï¥Î¡C
-    *   ©R¦W½d¨Ò: `fix/header-mobile-view`, `fix/calc-error`¡C
-*   **`refactor/*` (­«ºc¤À¤ä)**:
-    *   ¥N½X­«ºc¡B¤£¼vÅT¥\¯à®É¨Ï¥Î¡C
-    *   ©R¦W½d¨Ò: `refactor/vue-migration`¡C
+*   **`main` (ï¿½Dï¿½ï¿½ï¿½ï¿½)**:
+    *   ? **ï¿½Tï¿½îª½ï¿½ï¿½ Commit**ï¿½C
+    *   ï¿½oï¿½Oï¿½uï¿½Í²ï¿½ï¿½ï¿½ï¿½ï¿½ (Production)ï¿½vï¿½ï¿½ï¿½Nï¿½Xï¿½C
+    *   **ï¿½ß¤@** ï¿½|Ä²ï¿½oï¿½Û°Ê³ï¿½ï¿½pï¿½ï¿½ï¿½ï¿½ï¿½ï¿½C
+*   **`feat/*` (ï¿½\ï¿½ï¿½ï¿½ï¿½ï¿½)**:
+    *   ï¿½}ï¿½oï¿½sï¿½\ï¿½ï¿½É¨Ï¥Î¡C
+    *   ï¿½ï¿½ï¿½eï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ **ï¿½ï¿½ï¿½|** Ä²ï¿½oï¿½uï¿½Wï¿½ï¿½ï¿½p (CI ï¿½È°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)ï¿½C
+    *   ï¿½Rï¿½Wï¿½dï¿½ï¿½: `feat/add-login`, `feat/new-dashboard`ï¿½C
+*   **`fix/*` (ï¿½×´_ï¿½ï¿½ï¿½ï¿½)**:
+    *   ï¿½×´_ Bug ï¿½É¨Ï¥Î¡C
+    *   ï¿½Rï¿½Wï¿½dï¿½ï¿½: `fix/header-mobile-view`, `fix/calc-error`ï¿½C
+*   **`refactor/*` (ï¿½ï¿½ï¿½cï¿½ï¿½ï¿½ï¿½)**:
+    *   ï¿½Nï¿½Xï¿½ï¿½ï¿½cï¿½Bï¿½ï¿½ï¿½vï¿½Tï¿½\ï¿½ï¿½É¨Ï¥Î¡C
+    *   ï¿½Rï¿½Wï¿½dï¿½ï¿½: `refactor/vue-migration`ï¿½C
 
-## 2. ¶}µo´`Àô (The Cycle)
+## 2. ï¿½}ï¿½oï¿½`ï¿½ï¿½ (The Cycle)
 
-### Step 1: ¶}µo·s¥\¯à
-±q `main` ¤Á¥X·s¤À¤ä¡G
+### Step 1: ï¿½}ï¿½oï¿½sï¿½\ï¿½ï¿½
+ï¿½q `main` ï¿½ï¿½ï¿½Xï¿½sï¿½ï¿½ï¿½ï¿½G
 ```bash
 git checkout main
 git pull origin main
 git checkout -b feat/your-feature-name
 ```
-*(Agent Tip: ¥i¨Ï¥Î `/new_feature` «ü¥O¦Û°Ê°õ¦æ)*
+*(Agent Tip: ï¿½iï¿½Ï¥ï¿½ `/new_feature` ï¿½ï¿½ï¿½Oï¿½Û°Ê°ï¿½ï¿½ï¿½)*
 
-### Step 2: ´£¥æÅÜ§ó (Commits)
-½Ð¨Ï¥Î **Conventional Commits** ®æ¦¡¡A³o¦³§U©ó¥¼¨Ó¦Û°Ê¥Í¦¨ Changelog¡C
+### Step 2: ï¿½ï¿½ï¿½ï¿½ï¿½Ü§ï¿½ (Commits)
+ï¿½Ð¨Ï¥ï¿½ **Conventional Commits** ï¿½æ¦¡ï¿½Aï¿½oï¿½ï¿½ï¿½Uï¿½ó¥¼¨Ó¦Û°Ê¥Í¦ï¿½ Changelogï¿½C
 
-**®æ¦¡:** `<type>(<scope>): <subject>`
+**ï¿½æ¦¡:** `<type>(<scope>): <subject>`
 
 *   **Types:**
-    *   `feat`: ·s¼W¥\¯à (Feature)
-    *   `fix`: ­×´_ Bug
-    *   `docs`: ­×§ï¤å¥ó (Documentation)
-    *   `style`: ®æ¦¡­×§ï (¤£¼vÅT¥N½X¹B¦æ¡A¦pªÅ¥Õ¡B¤À¸¹)
-    *   `refactor`: ­«ºc (¬J¤£¬O·s¼W¥\¯à¤]¤£¬O­× Bug)
-    *   `test`: ¼W¥[©Î­×§ï´ú¸Õ
-    *   `chore`: «Øºc¹Lµ{©Î»²§U¤u¨ãªºÅÜ°Ê (¦p package.json, workflows)
+    *   `feat`: ï¿½sï¿½Wï¿½\ï¿½ï¿½ (Feature)
+    *   `fix`: ï¿½×´_ Bug
+    *   `docs`: ï¿½×§ï¿½ï¿½ï¿½ (Documentation)
+    *   `style`: ï¿½æ¦¡ï¿½×§ï¿½ (ï¿½ï¿½ï¿½vï¿½Tï¿½Nï¿½Xï¿½Bï¿½ï¿½Aï¿½pï¿½Å¥Õ¡Bï¿½ï¿½ï¿½ï¿½)
+    *   `refactor`: ï¿½ï¿½ï¿½c (ï¿½Jï¿½ï¿½ï¿½Oï¿½sï¿½Wï¿½\ï¿½ï¿½]ï¿½ï¿½ï¿½Oï¿½ï¿½ Bug)
+    *   `test`: ï¿½Wï¿½[ï¿½Î­×§ï¿½ï¿½ï¿½ï¿½
+    *   `chore`: ï¿½Øºcï¿½Lï¿½{ï¿½Î»ï¿½ï¿½Uï¿½uï¿½ãªºï¿½Ü°ï¿½ (ï¿½p package.json, workflows)
 
-**½d¨Ò:**
+**ï¿½dï¿½ï¿½:**
 *   `feat: add dark mode toggle`
 *   `fix(logic): correct usd asset calculation`
 *   `docs: update deployment guide`
 
-*(Agent Tip: ¥i¨Ï¥Î `/git_commit` «ü¥O¡A§Ú·|À°±zÀË¬d®æ¦¡)*
+*(Agent Tip: ï¿½iï¿½Ï¥ï¿½ `/git_commit` ï¿½ï¿½ï¿½Oï¿½Aï¿½Ú·|ï¿½ï¿½ï¿½zï¿½Ë¬dï¿½æ¦¡)*
 
-### Step 3: ±À°e»P¦X¨Ö (Push & Merge)
-1.  **±À°e¤À¤ä:**
+### Step 3: ï¿½ï¿½ï¿½eï¿½Pï¿½Xï¿½ï¿½ (Push & Merge)
+1.  **ï¿½ï¿½ï¿½eï¿½ï¿½ï¿½ï¿½:**
     ```bash
     git push -u origin feat/your-feature-name
     ```
-2.  **«Ø¥ß Pull Request (PR):**
-    *   ¦b GitHub ºô­¶¤Wµo°_ PR (from `feat/...` to `main`)¡C
-    *   µ¥«Ý CI/CD ´ú¸Õ³q¹L (GitHub Actions ·|¦Û°Ê¶]´ú¸Õ)¡C
-3.  **¦X¨Ö (Merge):**
-    *   ½T»{µL»~«á¡A±N PR ¦X¨Ö¤J `main`¡C
-    *   **¦¹°Ê§@·|¦Û°ÊÄ²µo³¡¸p¬yµ{¡A§ó·s½u¤Wªº GAS ±M®×¡C**
+2.  **ï¿½Ø¥ï¿½ Pull Request (PR):**
+    *   ï¿½b GitHub ï¿½ï¿½ï¿½ï¿½ï¿½Wï¿½oï¿½_ PR (from `feat/...` to `main`)ï¿½C
+    *   ï¿½ï¿½ï¿½ï¿½ CI/CD ï¿½ï¿½ï¿½Õ³qï¿½L (GitHub Actions ï¿½|ï¿½Û°Ê¶]ï¿½ï¿½ï¿½ï¿½)ï¿½C
+3.  **ï¿½Xï¿½ï¿½ (Merge):**
+    *   ï¿½Tï¿½{ï¿½Lï¿½~ï¿½ï¿½Aï¿½N PR ï¿½Xï¿½Ö¤J `main`ï¿½C
+    *   **ï¿½ï¿½ï¿½Ê§@ï¿½|ï¿½Û°ï¿½Ä²ï¿½oï¿½ï¿½ï¿½pï¿½yï¿½{ï¿½Aï¿½ï¿½sï¿½uï¿½Wï¿½ï¿½ GAS ï¿½Mï¿½×¡C**
 
-## 3. ºò«æ­×´_ (Hotfix)
-¦pªG¦b½u¤Wµo²{ºò«æ Bug¡G
+## 3. ï¿½ï¿½ï¿½×´_ (Hotfix)
+ï¿½pï¿½Gï¿½bï¿½uï¿½Wï¿½oï¿½{ï¿½ï¿½ï¿½ Bugï¿½G
 1.  `git checkout main`
 2.  `git checkout -b fix/critical-bug`
-3.  ­×´_¨Ã´ú¸Õ¡C
-4.  Push -> PR -> Merge to `main` (Ä²µo¦Û°Ê³¡¸p)¡C
+3.  ï¿½×´_ï¿½Ã´ï¿½ï¿½Õ¡C
+4.  Push -> PR -> Merge to `main` (Ä²ï¿½oï¿½Û°Ê³ï¿½ï¿½p)ï¿½C
 
 ---
 
-## 5. Agent ¨ó§@¨óÄ³ (Agent Protocol)
+## 5. Agent ï¿½ï¿½@ï¿½ï¿½Ä³ (Agent Protocol)
 
-¬°½T«O¦h¥N²z (Multi-Agent) Àô¹Ò¤Uªº¨ó§@¶¶ºZ¡A©Ò¦³ Agent ¥²¶·¿í¦u¡G
+ï¿½ï¿½ï¿½Tï¿½Oï¿½hï¿½Nï¿½z (Multi-Agent) ï¿½ï¿½ï¿½Ò¤Uï¿½ï¿½ï¿½ï¿½@ï¿½ï¿½ï¿½Zï¿½Aï¿½Ò¦ï¿½ Agent ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½uï¿½G
 
-1.  **ÄY¸Tª½±µ Commit ¨ì Main**:
-    *   ©Ò¦³­×§ï **¥²¶·** ¦b `feat/...` ©Î `fix/...` ¤À¤ä¶i¦æ¡C
-    *   ¨Ï¥Î `/new_feature` ©Î `/new_fix` ½T«O±q³Ì·sªº `main` ¦P¨B¡C
-2.  **­ì¤l¤Æ´£¥æ (Atomic Commits)**:
-    *   ¨C­Ó Commit À³¥u¸Ñ¨M¤@­Ó°ÝÃD¡C
-    *   ÄY®æ¿í¦u Conventional Commits¡C
-3.  **¦Û°Ê¤ÆÅçÃÒ**:
-    *   Commit «e **¥²¶·** ³q¹L `npm test` (¨Ï¥Î `/git_commit` ¬yµ{)¡C
+1.  **ï¿½Yï¿½Tï¿½ï¿½ï¿½ï¿½ Commit ï¿½ï¿½ Main**:
+    *   ï¿½Ò¦ï¿½ï¿½×§ï¿½ **ï¿½ï¿½ï¿½ï¿½** ï¿½b `feat/...` ï¿½ï¿½ `fix/...` ï¿½ï¿½ï¿½ï¿½iï¿½ï¿½C
+    *   ï¿½Ï¥ï¿½ `/new_feature` ï¿½ï¿½ `/new_fix` ï¿½Tï¿½Oï¿½qï¿½Ì·sï¿½ï¿½ `main` ï¿½Pï¿½Bï¿½C
+2.  **ï¿½ï¿½lï¿½Æ´ï¿½ï¿½ï¿½ (Atomic Commits)**:
+    *   ï¿½Cï¿½ï¿½ Commit ï¿½ï¿½ï¿½uï¿½Ñ¨Mï¿½@ï¿½Ó°ï¿½ï¿½Dï¿½C
+    *   ï¿½Yï¿½ï¿½ï¿½ï¿½u Conventional Commitsï¿½C
+3.  **ï¿½Û°Ê¤ï¿½ï¿½ï¿½ï¿½ï¿½**:
+    *   Commit ï¿½e **ï¿½ï¿½ï¿½ï¿½** ï¿½qï¿½L `npm test` (ï¿½Ï¥ï¿½ `/git_commit` ï¿½yï¿½{)ï¿½C
 4.  **Pull Before Push**:
-    *   ¦b±À°e«e¡A½T»{»P»·ºÝ¨S¦³½Ä¬ð¡C
+    *   ï¿½bï¿½ï¿½ï¿½eï¿½eï¿½Aï¿½Tï¿½{ï¿½Pï¿½ï¿½ï¿½Ý¨Sï¿½ï¿½ï¿½Ä¬ï¿½C
 
 ---
 
-## 6. ±`¨£«ü¥O³t¬dªí
+## 6. ï¿½`ï¿½ï¿½ï¿½ï¿½ï¿½Oï¿½tï¿½dï¿½ï¿½
 
-| °Ê§@ | «ü¥O | »¡©ú |
+| ï¿½Ê§@ | ï¿½ï¿½ï¿½O | ï¿½ï¿½ï¿½ï¿½ |
 | :--- | :--- | :--- |
-| **¶}©l·s¥\¯à** | `/new_feature` | «Ø¥ß `feat/...` ¤À¤ä (¦Û°Ê¦P¨B main) |
-| **¶}©l­×´_** | `/new_fix` | «Ø¥ß `fix/...` ¤À¤ä (¦Û°Ê¦P¨B main) |
-| **´£¥æÀË¬d** | `/git_commit` | °õ¦æ´ú¸Õ¨Ã´£¥æ (§t Branch ÀË¬d) |
-| **³¡¸p** | `/deploy` | ±À°e¦Ü GitHub Ä²µo¦Û°Ê³¡¸p |
+| **ï¿½}ï¿½lï¿½sï¿½\ï¿½ï¿½** | `/new_feature` | ï¿½Ø¥ï¿½ `feat/...` ï¿½ï¿½ï¿½ï¿½ (ï¿½Û°Ê¦Pï¿½B main) |
+| **ï¿½}ï¿½lï¿½×´_** | `/new_fix` | ï¿½Ø¥ï¿½ `fix/...` ï¿½ï¿½ï¿½ï¿½ (ï¿½Û°Ê¦Pï¿½B main) |
+| **ï¿½ï¿½ï¿½ï¿½ï¿½Ë¬d** | `/git_commit` | ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¨Ã´ï¿½ï¿½ï¿½ (ï¿½t Branch ï¿½Ë¬d) |
+| **ï¿½ï¿½ï¿½p** | `/deploy` | ï¿½ï¿½ï¿½eï¿½ï¿½ GitHub Ä²ï¿½oï¿½Û°Ê³ï¿½ï¿½p |
 

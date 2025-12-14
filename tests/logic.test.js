@@ -40,7 +40,7 @@ describe('Logic.gs Tests', () => {
     // Loan Rows: [Source, Date, Amt, Rate, Col, Qty, Type, Warn, Liq, Note, Total, Paid, MonthPay, Curr]
     const mockLoanRows = [
         ['Header'],
-        // ­É 10000 TWD, ©è©ã 100 ªÑ 2330 (Val: 100 * 1000 = 100,000), Luan: 10,000. Ratio: 1000%
+        // ï¿½ï¿½ 10000 TWD, ï¿½ï¿½ï¿½ 100 ï¿½ï¿½ 2330 (Val: 100 * 1000 = 100,000), Luan: 10,000. Ratio: 1000%
         ['BankA', '2025-01-01', 10000, 2, '2330', 100, TYPE_STOCK, 160, 130, 'App', 12, 0, 0, 'TWD']
     ];
 

@@ -1,0 +1,40 @@
+
+> asset-manager-gas@1.0.0 test
+> jest
+
+  console.log
+    Loading GAS files...
+
+      at Object.log (tests/setup.js:80:9)
+
+FAIL tests/logic.test.js
+  Helper Functions
+    ??normalizeTicker should format correctly (2 ms)
+  Logic.gs Tests
+    ??processMarketData should parse prices (1 ms)
+    ??getInventoryMap should calculate correct free inventory
+    ? calculateLoans should compute debt and risk (4 ms)
+    ??calculatePortfolio should return correct totals (1 ms)
+
+  ??Logic.gs Tests ??calculateLoans should compute debt and risk
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Safe"
+    Received: "Info"
+
+      67 |         expect(res.totalDebtTWD).toBeGreaterThan(10000); // Principal + Interest
+      68 |         expect(res.risks.length).toBe(1);
+    > 69 |         expect(res.risks[0].status).toBe('Safe');
+         |                                     ^
+      70 |     });
+      71 |
+      72 |     test('calculatePortfolio should return correct totals', () => {
+
+      at Object.toBe (tests/logic.test.js:69:37)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 4 passed, 5 total
+Snapshots:   0 total
+Time:        0.425 s, estimated 1 s
+Ran all test suites.
