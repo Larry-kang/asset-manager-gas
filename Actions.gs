@@ -34,7 +34,7 @@ function addLoan(form) {
   if (!sheet) throw new Error("Sheet not found: " + TAB_LOAN);
 
   // Schema: [Source, Date, Amt, Rate, Col, Qty, Type, Warn, Liq, Note, Term, PaidTerm, Monthly, Currency]
-  // From JS State: { source, date, amount, rate, col, colQty, type, currency }
+  // From JS State: { source, date, amount, rate, col, colQty, type, currency, warn, liq }
   const row = [
     form.source,
     new Date(form.date),
@@ -43,17 +43,43 @@ function addLoan(form) {
     normalizeTicker(form.col),
     Number(form.colQty),
     form.type,
-    '', // Warn (User fills later or default?) - Let's leave empty for manual or default
-    '', // Liq
-    '', // Note
-    '', // Term
-    '', // PaidTerm
+    form.warn || '', // Warn (Col H)
+    form.liq || '',  // Liq (Col I)
+    form.fee ? `[開辦費: ${form.fee}]` : (form.note || ''), // Note
+    form.period ? Number(form.period) : '', // Term
+    0, // PaidTerm
     '', // Monthly
     form.currency
   ];
 
   sheet.appendRow(row);
   return { success: true, message: `已建立 ${form.source} 合約` };
+}
+
+function editLoan(form) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(TAB_LOAN);
+  if (!sheet) throw new Error("Sheet not found: " + TAB_LOAN);
+
+  // form: { row, amount, rate, warn, liq, ... }
+  // Row Index comes from frontend (check if valid)
+  const rowIdx = Number(form.row);
+  if (rowIdx < 2) throw new Error("Invalid Row Index");
+
+  // We only update specific columns to avoid breaking Source/Type consistency
+  // Updating: Amt(Col 3), Rate(Col 4), Warn(Col 8), Liq(Col 9)
+  // Also Col/Qty if needed (Col 5, 6)
+
+  sheet.getRange(rowIdx, 3).setValue(Number(form.amount));
+  sheet.getRange(rowIdx, 4).setValue(Number(form.rate));
+  sheet.getRange(rowIdx, 8).setValue(form.warn || ''); // H
+  sheet.getRange(rowIdx, 9).setValue(form.liq || '');  // I
+
+  // Optional: Update Collateral if changed
+  if (form.col) sheet.getRange(rowIdx, 5).setValue(normalizeTicker(form.col));
+  if (form.colQty) sheet.getRange(rowIdx, 6).setValue(Number(form.colQty));
+
+  return { success: true, message: '合約已更新' };
 }
 
 function processContractAction(form) {
@@ -118,6 +144,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     addTx,
     addLoan,
+    editLoan,
     processContractAction,
     runSystemCheck
   };

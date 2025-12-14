@@ -1,15 +1,11 @@
 ---
-description: Deploy changes to GitHub and Google Apps Script (Fully Automated)
+description: Deploy changes to GitHub (Triggers Remote GAS Deploy)
 ---
 
-1. Push to Google Apps Script
-// turbo-all
-clasp push
-
-2. Push to GitHub
+1. Push to GitHub (Triggers CI/CD)
 // turbo-all
 git push
 
-> [!WARNING]
-> This workflow pushes directly to `main` and GAS Production.
-> Ensure tests satisfy (`/run_tests`) before executing.
+> [!NOTE]
+> This workflow pushes to `main`.
+> GitHub Actions will automatically deploy to Google Apps Script.

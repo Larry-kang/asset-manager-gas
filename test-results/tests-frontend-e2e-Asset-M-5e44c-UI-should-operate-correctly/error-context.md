@@ -25,52 +25,71 @@
       - generic [ref=e22]: Ming-Hao
   - text:    
   - generic [ref=e23]:
-    - text: +       
     - generic [ref=e24]:
       - generic [ref=e25]:
-        - generic [ref=e26]: 借貸金庫
-        - button "+ New Loan" [active] [ref=e27] [cursor=pointer]
-      - generic [ref=e28]:
-        - generic [ref=e30] [cursor=pointer]:
-          - generic [ref=e31]:
-            - generic [ref=e32]: Aave
-            - generic [ref=e33]:
-              - generic [ref=e34]: Safe
-              - generic [ref=e35]: 
-          - generic [ref=e36]:
-            - generic [ref=e37]: 65%
-            - generic [ref=e39]: "Health: 1.54"
-          - generic [ref=e42]:
-            - generic [ref=e43]: "Col: 100,000"
-            - generic [ref=e44]: "Debt: 65,000"
-        - generic [ref=e46]:
-          - generic [ref=e47]: Compound (Unknown Risk)
-          - generic [ref=e48] [cursor=pointer]:
-            - generic [ref=e49]:
-              - generic [ref=e50]: WBTC
-              - generic [ref=e51]: "Rate: 4.2%"
-            - generic [ref=e52]: 5,000 USD
-    - text:  
-  - generic [ref=e54]:
-    - generic [ref=e55]: 建立新借貸合約
-    - generic [ref=e56]:
-      - combobox "來源" [ref=e57]
-      - textbox [ref=e58]: 2025-12-13
-    - spinbutton [ref=e59]
-    - generic [ref=e60]:
-      - spinbutton [ref=e61]
-      - combobox [ref=e62]:
-        - option "USD" [selected]
-        - option "TWD"
-    - generic [ref=e63]: 抵押品資訊
-    - generic [ref=e64]:
-      - textbox "代號 (e.g. ETH)" [ref=e65]
-      - spinbutton [ref=e66]
-    - generic [ref=e68]:
-      - generic [ref=e69] [cursor=pointer]: 股票
-      - generic [ref=e70] [cursor=pointer]: 加密貨幣
-      - generic [ref=e71] [cursor=pointer]: 信用貸款
-    - generic [ref=e72]:
-      - button "建立" [ref=e73] [cursor=pointer]
-      - button "取消" [ref=e74] [cursor=pointer]
+        - generic [ref=e26]: 總資產餘額
+        - generic [ref=e27]: 445,000
+        - generic [ref=e28]: +1,250Today
+        - generic [ref=e29]:
+          - button "+ 新增資金" [ref=e30] [cursor=pointer]:
+            - generic [ref=e31]: +
+            - generic [ref=e32]: 新增資金
+          - button "" [ref=e33] [cursor=pointer]:
+            - generic [ref=e34]: 
+          - button "" [ref=e35] [cursor=pointer]:
+            - generic [ref=e36]: 
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - generic [ref=e39]: Assets
+          - generic [ref=e44]:
+            - generic [ref=e45] [cursor=pointer]:
+              - generic [ref=e46]:
+                - generic [ref=e48]: 
+                - generic [ref=e49]:
+                  - generic [ref=e50]: USD
+                  - generic [ref=e51]: 5,000 units
+              - generic [ref=e52]:
+                - generic [ref=e53]: $160,000
+                - generic [ref=e54]: "+0"
+            - generic [ref=e55] [cursor=pointer]:
+              - generic [ref=e56]:
+                - generic [ref=e58]: 
+                - generic [ref=e59]:
+                  - generic [ref=e60]: ETH
+                  - generic [ref=e61]: 3 units
+              - generic [ref=e62]:
+                - generic [ref=e63]: $150,000
+                - generic [ref=e64]: "-2,000"
+            - generic [ref=e65] [cursor=pointer]:
+              - generic [ref=e66]:
+                - generic [ref=e68]: 
+                - generic [ref=e69]:
+                  - generic [ref=e70]: TSLA
+                  - generic [ref=e71]: 10 units
+              - generic [ref=e72]:
+                - generic [ref=e73]: $75,000
+                - generic [ref=e74]: +5,000
+            - generic [ref=e75] [cursor=pointer]: 查看所有資產
+        - generic [ref=e76]:
+          - generic [ref=e77]: 近期交易
+          - generic [ref=e78]:
+            - generic [ref=e79]:
+              - generic [ref=e80]:
+                - generic [ref=e82]: 
+                - generic [ref=e83]:
+                  - generic [ref=e84]: TSLA
+                  - generic [ref=e85]: 12/1/2023
+              - generic [ref=e86]:
+                - generic [ref=e87]: "- 1,050"
+                - generic [ref=e88]: �R�J
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - generic [ref=e92]: 
+                - generic [ref=e93]:
+                  - generic [ref=e94]: PFF
+                  - generic [ref=e95]: 12/5/2023
+              - generic [ref=e96]:
+                - generic [ref=e97]: "- 0"
+                - generic [ref=e98]: �t��
+    - text:   
 ```

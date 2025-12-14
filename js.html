@@ -48,6 +48,75 @@
                 return [...state.holdings].sort((a, b) => b.valTWD - a.valTWD).slice(0, 3);
             });
 
+            const loanTypes = ['Credit Card', 'Personal Loan', 'Stock Loan', 'Crypto Loan'];
+
+            // Computed: Filter Holdings based on Loan Type
+            const eligibleCollateral = computed(() => {
+                const type = state.newLoanModal.type;
+                if (!type || type === 'Credit Card' || type === 'Personal Loan') return [];
+                const catMap = { 'Stock Loan': '股票', 'Crypto Loan': '加密貨幣' };
+                const requiredCat = catMap[type];
+                return state.holdings.filter(h => h.cat === requiredCat);
+            });
+
+            // Computed: Get Max Qty for selected Ticker
+            const maxColQty = computed(() => {
+                const ticker = state.newLoanModal.col;
+                if (!ticker) return 0;
+                const holding = state.holdings.find(h => h.ticker === ticker);
+                return holding ? holding.qty : 0;
+            });
+
+            // Computed: Is Form Valid?
+            const isLoanValid = computed(() => {
+                const m = state.newLoanModal;
+                if (!m.source || !m.amount) return false;
+                // Type specific checks
+                if (m.type === 'Stock Loan' || m.type === 'Crypto Loan') {
+                    if (!m.col || !m.colQty) return false;
+                    if (parseFloat(m.colQty) > maxColQty.value) return false; // Inventory Check
+                }
+                return true;
+            });
+
+            // Watch for Type change to set Default Warn/Liq
+            watch(() => state.newLoanModal.type, (newType) => {
+                if (state.isEditMode) return; // Don't override in Edit Mode
+                if (newType === 'Stock Loan') {
+                    state.newLoanModal.warn = 160;
+                    state.newLoanModal.liq = 133;
+                    state.newLoanModal.marginMode = '';
+                } else if (newType === 'Crypto Loan') {
+                    state.newLoanModal.warn = 70;
+                    state.newLoanModal.liq = 75;
+                    state.newLoanModal.marginMode = 'Cross'; // Default
+                } else {
+                    state.newLoanModal.warn = '';
+                    state.newLoanModal.liq = '';
+                }
+            });
+
+            // Computed: Max Borrow Advice
+            const maxBorrowAdvice = computed(() => {
+                const m = state.newLoanModal;
+                if (!m.col || !m.colQty) return null;
+                const holding = state.holdings.find(h => h.ticker === m.col);
+                if (!holding) return null;
+
+                // Est Market Value
+                const unitPrice = holding.valTWD / holding.qty; // Approx
+                const totalVal = parseFloat(m.colQty) * unitPrice;
+
+                if (m.type === 'Stock Loan') {
+                    // Maint Ratio 166% => Collateral / Loan = 1.66 => Loan = Col / 1.66
+                    return Math.floor(totalVal / 1.66);
+                } else if (m.type === 'Crypto Loan') {
+                    // LTV 50% => Loan = Col * 0.5
+                    return Math.floor(totalVal * 0.5);
+                }
+                return null;
+            });
+
             const loanGroups = computed(() => {
                 const groups = {};
                 state.contracts.forEach(l => { if (!groups[l.source]) groups[l.source] = []; groups[l.source].push(l); });
@@ -61,12 +130,15 @@
                     'NetWarning': 'Total Vault Balance', 'Assets': 'Assets', 'Tx': 'Transactions',
                     'AddF': 'Add Funds', 'ViewAll': 'View All Assets', 'RunDig': 'Run Diagnostics',
                     'SysStat': 'System Status', 'Oper': 'Operational', 'Theme': 'Light Mode', 'Lang': 'Language',
+                    'BtnNewLoan': '+ New Loan', 'BtnTrade': '+ Trade',
                     // New Loan
                     'NewLoan': 'New Loan Contract', 'Source': 'Source', 'Amt': 'Loan Amount', 'Rate': 'Rate %',
                     'ColInfo': 'Collateral Info', 'Ticker': 'Ticker', 'ColQty': 'Col Qty',
                     'Create': 'Create', 'Cancel': 'Cancel', 'Submit': 'Submit',
                     'Stock': 'Stock', 'Crypto': 'Crypto', 'Credit': 'Credit Loan',
-                    // Tx & Loan Actions
+                    'CreditCard': 'Credit Card', 'PersonalLoan': 'Personal Loan', 'StockLoan': 'Stock Loan', 'CryptoLoan': 'Crypto Loan',
+                    'Type': 'Loan Type', 'Period': 'Period (Months)', 'Fee': 'Fee',
+                    // Risk & Advice
                     'NewTx': 'New Transaction', 'Currency': 'Currency', 'ConfirmTx': 'Confirm Transaction',
                     'ActionType': 'Action Type', 'RepayAmt': 'Repay Amount', 'LoanAmt': 'Loan Amount',
                     'SellQty': 'Sell Qty', 'NewRate': 'New Rate (Optional)', 'LimitPrice': 'Limit Price',
@@ -77,18 +149,95 @@
                     'NetWarning': '總資產餘額', 'Assets': '資產分佈', 'Tx': '近期交易',
                     'AddF': '新增資金', 'ViewAll': '查看所有資產', 'RunDig': '執行系統診斷',
                     'SysStat': '系統狀態', 'Oper': '運作正常', 'Theme': '亮色模式', 'Lang': '語言切換',
+                    'BtnNewLoan': '+ 新增借貸', 'BtnTrade': '+ 新增投資',
                     // New Loan
                     'NewLoan': '建立新借貸合約', 'Source': '來源', 'Amt': '借款金額', 'Rate': '利率 %',
                     'ColInfo': '抵押品資訊', 'Ticker': '代號 (e.g. ETH)', 'ColQty': '抵押數量',
                     'Create': '建立', 'Cancel': '取消', 'Submit': '送出',
                     'Stock': '股票', 'Crypto': '加密貨幣', 'Credit': '信用貸款',
-                    // Tx & Loan Actions
+                    'CreditCard': '信用卡費', 'PersonalLoan': '信用貸款', 'StockLoan': '股票質押', 'CryptoLoan': '加密質押',
+                    'Type': '借貸類型', 'Period': '期數 (月)', 'Fee': '開辦費',
+                    // Risk & Advice
                     'NewTx': '新增交易', 'Currency': '幣別', 'ConfirmTx': '確認交易',
                     'ActionType': '操作項目', 'RepayAmt': '還款金額', 'LoanAmt': '借款金額',
                     'SellQty': '賣出數量', 'NewRate': '新利率 (選填)', 'LimitPrice': '限價',
                     'SubAction': '提交操作', 'Close': '關閉', 'Manage': '管理'
                 }
             };
+
+            // --- MOCK FOR LOCAL DEV ---
+            if (typeof google === 'undefined') {
+                console.warn('Running in Local Mock Mode');
+
+                // --- STATEFUL MOCK DB ---
+                if (!window.MOCK_DB) {
+                    window.MOCK_DB = {
+                        netWorth: 1250000,
+                        dailyChange: 5000,
+                        holdings: [
+                            { ticker: 'AAPL', qty: 10, valTWD: 50000, cat: '股票', pnl: 2000, roi: 5.2 },
+                            { ticker: 'BTC', qty: 0.5, valTWD: 1000000, cat: '加密貨幣', pnl: -50000, roi: -2.3 },
+                            { ticker: 'USDT', qty: 2000, valTWD: 60000, cat: '加密貨幣', pnl: 0, roi: 0 }
+                        ],
+                        contracts: [
+                            { row: 1, source: 'Aave', col: 'ETH', principal: 1000, rate: 2.5, type: 'Crypto Loan', currency: 'USD', debtTWD: 32500 }
+                        ],
+                        risks: [
+                            { source: 'Aave', label: 'Health: 1.54', ratio: '65', status: 'Safe', colValTWD: 100000, debtTWD: 65000 }
+                        ]
+                    };
+                }
+
+                window.google = {
+                    script: {
+                        run: {
+                            withSuccessHandler: (s) => ({
+                                withFailureHandler: (f) => ({
+                                    getDashboardData: () => setTimeout(() => {
+                                        // Recalculate Mock Totals if needed, for now just return DB
+                                        s(JSON.stringify(window.MOCK_DB));
+                                    }, 500),
+                                    addLoan: (form) => setTimeout(() => {
+                                        const newLoan = {
+                                            row: window.MOCK_DB.contracts.length + 1,
+                                            source: form.source,
+                                            col: form.col || 'Cash', // Default
+                                            principal: parseFloat(form.amount),
+                                            rate: parseFloat(form.rate || 0),
+                                            type: form.type,
+                                            currency: form.currency || 'TWD',
+                                            debtTWD: parseFloat(form.amount) * (form.currency === 'USD' ? 32.5 : 1) // Simple calc
+                                        };
+                                        window.MOCK_DB.contracts.push(newLoan);
+                                        // Update Risk Mock roughly
+                                        let risk = window.MOCK_DB.risks.find(r => r.source === form.source);
+                                        if (!risk) {
+                                            risk = { source: form.source, label: 'Health: 2.0', ratio: '50', status: 'Safe', colValTWD: 0, debtTWD: 0 };
+                                            window.MOCK_DB.risks.push(risk);
+                                        }
+                                        risk.debtTWD += newLoan.debtTWD;
+                                        s({ success: true, message: 'Mock Create Success' });
+                                    }, 500),
+                                    editLoan: (form) => setTimeout(() => {
+                                        const l = window.MOCK_DB.contracts.find(c => c.row == form.row);
+                                        if (l) {
+                                            const oldDebt = l.debtTWD;
+                                            l.principal = parseFloat(form.amount); // Simplification: assume editing principal
+                                            l.rate = parseFloat(form.rate);
+                                            l.debtTWD = l.principal * (l.currency === 'USD' ? 32.5 : 1);
+                                            // Update Risk
+                                            const risk = window.MOCK_DB.risks.find(r => r.source === l.source);
+                                            if (risk) risk.debtTWD += (l.debtTWD - oldDebt);
+                                        }
+                                        s({ success: true, message: 'Mock Update Success' });
+                                    }, 500),
+                                    processContractAction: (d) => setTimeout(() => s({ success: true, message: 'Mock Action Success' }), 500)
+                                })
+                            })
+                        }
+                    }
+                };
+            }
 
             // --- ACTIONS ---
             function load(refresh = false) {
@@ -132,7 +281,15 @@
             function toggleTheme() {
                 state.theme = state.theme === 'dark' ? 'light' : 'dark';
                 localStorage.setItem('app_theme', state.theme);
-                document.body.classList.toggle('light-mode', state.theme === 'light');
+
+                // Explicitly manage BOTH classes to override system prefs
+                if (state.theme === 'light') {
+                    document.body.classList.add('light-mode');
+                    document.body.classList.remove('dark-mode');
+                } else {
+                    document.body.classList.add('dark-mode');
+                    document.body.classList.remove('light-mode');
+                }
             }
             function go(page) { state.currentView = page; }
             function showMsg(title, body) { state.msg.title = title; state.msg.body = body; state.msg.show = true; }
@@ -156,22 +313,79 @@
                     .addTx(JSON.parse(JSON.stringify(state.txModal)));
             }
 
+            function openEditLoan(contract) {
+                if (!contract) return;
+                state.isEditMode = true;
+                state.editingRowId = contract.row;
+                state.newLoanModal.show = true;
+                state.newLoanModal.source = contract.source || '';
+                state.newLoanModal.date = contract.date ? new Date(contract.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+                state.newLoanModal.amount = contract.principal || 0; // Use principal as base amount
+                state.newLoanModal.rate = contract.rate || 0;
+                state.newLoanModal.currency = contract.currency || 'TWD';
+                state.newLoanModal.type = contract.type || 'Stock Loan';
+                state.newLoanModal.col = contract.col || '';
+                state.newLoanModal.colQty = contract.colQty || '';
+                state.newLoanModal.warn = contract.warn || '';
+                state.newLoanModal.liq = contract.liq || '';
+                state.newLoanModal.period = contract.period || '';
+                state.newLoanModal.fee = contract.fee || '';
+
+                // Set Margin Mode
+                if (contract.type === 'Crypto Loan') {
+                    // Infer mode from source name or explicit field if available
+                    state.newLoanModal.marginMode = contract.source && contract.source.includes('-') ? 'Isolated' : 'Cross';
+                } else {
+                    state.newLoanModal.marginMode = '';
+                }
+            }
+
             function subNewLoan() {
+                const m = state.newLoanModal;
+                // Validation (Basic)
+                if (!m.source || !m.amount) { showMsg('Error', 'Source and Amount are required'); return; }
+
                 const btn = document.getElementById('newLoanBtn');
                 if (btn) { btn.disabled = true; btn.innerText = 'Processing...'; }
 
+                let method = 'addLoan';
+                if (state.isEditMode) method = 'editLoan';
+
+                // Construct Form
+                const form = {
+                    row: state.isEditMode ? state.editingRowId : null,
+                    source: m.source,
+                    date: m.date,
+                    amount: m.amount,
+                    rate: m.rate || 0,
+                    type: m.type,
+                    currency: m.currency || 'TWD',
+                    warn: m.warn,
+                    liq: m.liq,
+                    col: m.col,
+                    colQty: m.colQty,
+                    period: m.period,
+                    fee: m.fee
+                    // Add marginMode if needed by backend, though backend relies on source name mostly
+                };
+
+                // Isolated Mode Logic for New Loan (Not Edit, as Edit locks source)
+                if (!state.isEditMode && m.type === 'Crypto Loan' && m.marginMode === 'Isolated') {
+                    if (!form.source.includes('-')) form.source = `${m.source}-${m.col}`;
+                }
+
                 google.script.run
                     .withSuccessHandler(res => {
-                        if (btn) { btn.disabled = false; btn.innerText = 'Submit'; }
+                        if (btn) { btn.disabled = false; btn.innerText = state.isEditMode ? 'Update' : 'Create'; }
                         state.newLoanModal.show = false;
+                        state.isEditMode = false; // Reset mode
                         res.success ? (showMsg('Success', res.message), load(true)) : showMsg('Failed', res.message);
                     })
                     .withFailureHandler(err => {
-                        console.error('addLoan Failed:', err);
-                        if (btn) { btn.disabled = false; btn.innerText = 'Submit'; }
-                        showMsg('Error', 'Create Failed: ' + err.message);
-                    })
-                    .addLoan(JSON.parse(JSON.stringify(state.newLoanModal)));
+                        console.error(method + ' Failed:', err);
+                        if (btn) { btn.disabled = false; btn.innerText = state.isEditMode ? 'Update' : 'Create'; }
+                        showMsg('Error', 'Action Failed: ' + err.message);
+                    })[method](form);
             }
 
             function subLoan() {
@@ -233,7 +447,14 @@
 
             // --- MOUNT HANDLER ---
             onMounted(() => {
-                if (state.theme === 'light') document.body.classList.add('light-mode');
+                // Force correct initial theme class
+                if (state.theme === 'light') {
+                    document.body.classList.add('light-mode');
+                    document.body.classList.remove('dark-mode');
+                } else {
+                    document.body.classList.add('dark-mode');
+                    document.body.classList.remove('light-mode');
+                }
                 load();
             });
 
@@ -243,7 +464,8 @@
                 subTx, subLoan, subNewLoan, quickTrade, clickLoan, toggleRisk,
                 groupedHoldings, displayedHoldings, loanGroups,
                 // Make helper directly available to templates
-                openTxModal: () => { state.txModal.show = true; }
+                openTxModal: () => { state.txModal.show = true; },
+                openEditLoan
             };
         }
     }).mount('#app');

@@ -181,7 +181,7 @@
       <div v-show="state.currentView === 'holdings'" class="view">
         <div class="top-header">
           <div class="section-title">{{ t('Port') }}</div>
-          <button class="btn-gold-pill" @click="openTxModal()">+ Trade</button>
+          <button class="btn-gold-pill" @click="openTxModal()">{{ t('BtnTrade') }}</button>
         </div>
         <div id="holdingsList" class="grid-stack">
           <div v-for="(assets, cat) in groupedHoldings" :key="cat">
@@ -219,8 +219,8 @@
       <div v-show="state.currentView === 'loan'" class="view">
         <div class="top-header">
           <div class="section-title">{{ t('Vault') }}</div>
-          <button class="btn-gold-pill" @click="state.newLoanModal.show = true" data-testid="btn-new-loan">+ New
-            Loan</button>
+          <button class="btn-gold-pill" @click="state.isEditMode = false; state.newLoanModal.show = true"
+            data-testid="btn-new-loan">{{ t('BtnNewLoan') }}</button>
         </div>
 
         <!-- VAULT (Integrated Risk & Loans) -->
@@ -232,9 +232,10 @@
                 <div class="card-label" style="margin:0; font-size:16px; font-weight:600">{{ r.source }}</div>
                 <div style="display:flex; align-items:center; gap:8px">
                   <div class="bg-success"
-                    :style="{ background: r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)'), color:'#111', opacity:0.8, fontSize:'12px', padding:'2px 8px' }">
-                    {{ r.status }}
+                    :style="{ background: r.colValTWD > 0 ? (r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)')) : '#666', color:'#111', opacity:0.8, fontSize:'12px', padding:'2px 8px' }">
+                    {{ r.colValTWD > 0 ? r.status : 'Credit' }}
                   </div>
+                  <!-- REMOVED HEADER MENU -->
                   <i class="fa-solid fa-chevron-down"
                     :style="{transform: state.expanded.includes(r.source) ? 'rotate(180deg)' : ''}"
                     style="transition:0.3s; font-size:12px; color:var(--text-secondary)"></i>
@@ -242,13 +243,16 @@
               </div>
 
               <div style="display:flex; justify-content:space-between; align-items:center">
-                <div class="card-value" style="font-size:24px">{{ r.ratio }}{{ r.ratio === '-' ? '' : '%' }}</div>
+                <div class="card-value" style="font-size:24px">
+                  {{ r.colValTWD > 0 ? r.ratio + (r.ratio === '-' ? '' : '%') : fmt(r.debtTWD) }}
+                </div>
                 <div style="font-size:13px; color:var(--text-secondary); text-align:right">
-                  <div>Health: {{ r.label.split(': ')[1] || '-' }}</div>
+                  <div>{{ r.colValTWD > 0 ? 'Health: ' + (r.label.split(': ')[1] || '-') : 'Total Debt' }}</div>
                 </div>
               </div>
 
-              <div style="height:4px; width:100%; background:#333; margin-top:12px; border-radius:2px; overflow:hidden">
+              <div v-if="r.colValTWD > 0"
+                style="height:4px; width:100%; background:#333; margin-top:12px; border-radius:2px; overflow:hidden">
                 <div
                   :style="{ height:'100%', width: Math.min(r.ratio === '-' ? 0 : parseFloat(r.ratio), 100) + '%', background: r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)') }">
                 </div>
@@ -268,16 +272,28 @@
                 No loans</div>
 
               <div v-for="l in loanGroups[r.source]" :key="l.row" class="asset-row" @click="clickLoan(l)"
-                style="padding:8px 0; border-bottom:1px solid #222">
-                <div>
-                  <div style="font-weight:600; font-size:15px">{{ l.col }} <span
-                      style="font-size:12px; color:var(--text-secondary)">{{ fmt(l.principal) }} {{ l.currency }}</span>
+                style="padding:8px 0; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center">
+                <div style="flex:1">
+                  <div style="font-weight:600; font-size:15px; display:flex; align-items:center; gap:8px">
+                    {{ l.col }}
+                    <span style="font-size:12px; color:var(--text-secondary)">{{ fmt(l.principal) }} {{ l.currency
+                      }}</span>
                   </div>
                   <div style="font-size:12px; color:var(--text-secondary)">Rate: {{ l.rate }}%</div>
                 </div>
-                <div style="text-align:right">
-                  <div style="font-weight:600">{{ fmt(l.debt * (l.currency === 'USD' ? 32.5 : 1)) }} TWD</div>
-                  <div style="font-size:11px; color:#D4B483">{{ l.type }}</div>
+                <div style="display:flex; align-items:center; gap:12px">
+                  <div style="text-align:right">
+                    <div style="font-weight:600">{{ fmt(l.debt * (l.currency === 'USD' ? 32.5 : 1)) }} TWD</div>
+                    <div style="font-size:11px; color:#D4B483">{{ t(l.type.replace(/\s/g, '')) }}</div>
+                  </div>
+
+                  <!-- DIRECT EDIT BUTTON -->
+                  <div @click.stop="openEditLoan(l)"
+                    style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:var(--bg-card-hover); transition:0.2s; cursor:pointer"
+                    class="btn-icon-hover">
+                    <i class="fa-solid fa-pen" style="color:var(--text-gold); font-size:14px"></i>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -323,7 +339,8 @@
             <!-- New Toggles -->
             <div class="asset-row" @click="toggleTheme()">
               <div>{{ t('Theme') }}</div>
-              <div style="color:var(--text-gold)"><i class="fa-solid fa-circle-half-stroke"></i></div>
+              <div style="color:var(--text-gold)"><i class="fa-solid"
+                  :class="state.theme === 'light' ? 'fa-sun' : 'fa-moon'"></i></div>
             </div>
             <div class="asset-row" @click="setLang(state.lang==='zh'?'en':'zh')" data-testid="btn-lang">
               <div>{{ t('Lang') }}</div>
@@ -379,49 +396,84 @@
     <div v-if="state.newLoanModal.show" class="modal-overlay" style="display:flex"
       @click.self="state.newLoanModal.show = false">
       <div class="modal-content">
-        <div style="font-size:18px; font-weight:600; margin-bottom:16px">{{ t('NewLoan') }}</div>
+        <div style="font-size:18px; font-weight:600; margin-bottom:16px">{{ state.isEditMode ? 'Update Loan' :
+          t('NewLoan') }}</div>
+
+        <!-- TYPE SELECTOR (Disabled in Edit Mode) -->
+        <div style="display:flex; gap:8px; margin-bottom:16px; overflow-x:auto"
+          :style="{pointerEvents: state.isEditMode ? 'none' : 'auto', opacity: state.isEditMode ? 0.6 : 1}">
+          <div v-for="tag in ['Credit Card', 'Personal Loan', 'Stock Loan', 'Crypto Loan']" :key="tag"
+            @click="state.newLoanModal.type = tag; state.newLoanModal.col = ''; state.newLoanModal.colQty = ''"
+            class="tag" :class="{active: state.newLoanModal.type === tag}" style="white-space:nowrap">
+            {{ t(tag.replace(/\s/g, '')) }}
+          </div>
+        </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-          <input type="text" v-model="state.newLoanModal.source" :placeholder="t('Source')" list="sourceList">
+          <!-- Source (Disabled in Edit Mode) -->
+          <input type="text" v-model="state.newLoanModal.source" :placeholder="t('Source') + ' (e.g. Fubon)'"
+            list="sourceList" :disabled="state.isEditMode">
           <datalist id="sourceList">
-            <option value="Aave"></option>
-            <option value="Compound"></option>
+            <option value="Fubon"></option>
+            <option value="CTBC"></option>
             <option value="Binance"></option>
+            <option value="Aave"></option>
           </datalist>
           <input type="date" v-model="state.newLoanModal.date">
         </div>
 
-        <input type="number" v-model="state.newLoanModal.amount" :placeholder="t('Amt') + ' (e.g. 1000)'"
-          data-testid="input-amt">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-          <input type="number" v-model="state.newLoanModal.rate" :placeholder="t('Rate')" data-testid="input-rate">
+        <input type="number" v-model="state.newLoanModal.amount" :placeholder="t('Amt')" style="margin-top:12px">
+
+        <!-- CONDITIONAL: Rate & Period (For Personal Loan or Crypto/Stock) -->
+        <div v-if="state.newLoanModal.type !== 'Credit Card'"
+          style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px">
+          <input type="number" v-model="state.newLoanModal.rate" :placeholder="t('Rate')">
           <select v-model="state.newLoanModal.currency">
-            <option value="USD">USD</option>
             <option value="TWD">TWD</option>
+            <option value="USD">USD</option>
           </select>
         </div>
 
-        <div style="margin:12px 0; font-size:14px; color:var(--text-secondary)">{{ t('ColInfo') }}</div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-          <input type="text" v-model="state.newLoanModal.col" :placeholder="t('Ticker')" list="tickerList">
-          <input type="number" v-model="state.newLoanModal.colQty" :placeholder="t('ColQty')">
+        <!-- CONDITIONAL: Personal Loan Extras -->
+        <div v-if="state.newLoanModal.type === 'Personal Loan'"
+          style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px">
+          <input type="number" v-model="state.newLoanModal.period" :placeholder="t('Period')">
+          <input type="number" v-model="state.newLoanModal.fee" :placeholder="t('Fee')">
         </div>
 
-        <div style="margin-bottom:16px">
-          <div style="display:flex; gap:8px">
-            <div v-for="tag in [{k:'Stock',v:'股票'}, {k:'Crypto',v:'加密貨幣'}, {k:'Credit',v:'信用貸款'}]" :key="tag.k"
-              @click="state.newLoanModal.type = tag.v" class="tag" :class="{active: state.newLoanModal.type === tag.v}">
-              {{ t(tag.k) }}</div>
+        <!-- CONDITIONAL: Collateral (Stock/Crypto Only) -->
+        <div v-if="state.newLoanModal.type === 'Stock Loan' || state.newLoanModal.type === 'Crypto Loan'">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
+            <input type="text" v-model="state.newLoanModal.col" :placeholder="t('Ticker') + ' (e.g. ETH)'">
+            <input type="number" v-model="state.newLoanModal.colQty" :placeholder="t('ColQty')">
+          </div>
+          <div style="display:flex; gap:4px; margin-bottom:12px">
+            <div v-for="m in ['Cross', 'Isolated']" :key="m" @click="state.newLoanModal.marginMode = m" class="tag"
+              :class="{active: state.newLoanModal.marginMode === m}" style="padding:4px 12px; font-size:12px">{{ t(m) }}
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+            <input type="number" v-model="state.newLoanModal.warn" :placeholder="t('Warn')">
+            <input type="number" v-model="state.newLoanModal.liq" :placeholder="t('Liq')">
           </div>
         </div>
 
-        <div style="display:flex; gap:16px">
-          <button id="newLoanBtn" class="btn-gold-block" style="flex:1" @click="subNewLoan()">{{ t('Create') }}</button>
+        <!-- ADVICE -->
+        <div v-if="maxBorrowAdvice"
+          style="margin-top:12px; background:rgba(255,215,0,0.1); padding:8px; border-radius:4px; font-size:13px; color:var(--color-gold); display:flex; align-items:center; gap:8px">
+          <i class="fa-regular fa-lightbulb"></i>
+          <span>{{ t('MaxSafe') }}: {{ fmt(maxBorrowAdvice) }} {{ state.newLoanModal.currency }}</span>
+        </div>
+        <div style="display:flex; gap:16px; margin-top:24px">
+          <button id="newLoanBtn" class="btn-gold-block" style="flex:1" :disabled="!isLoanValid"
+            :style="{opacity: isLoanValid ? 1 : 0.5}" @click="subNewLoan()">{{ state.isEditMode ? 'Update' : t('Create')
+            }}</button>
           <button class="btn-outline-block" style="flex:1" @click="state.newLoanModal.show = false">{{ t('Cancel')
             }}</button>
         </div>
       </div>
     </div>
+
     <!-- LOAN ACTION MODAL -->
     <div v-if="state.loanModal.show" class="modal-overlay" style="display:flex"
       @click.self="state.loanModal.show = false">
