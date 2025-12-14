@@ -568,11 +568,15 @@
       flex-direction: column;
     }
 
-    /* HIDE TOP NAV & DRAWER ELEMENTS */
-    .mobile-header,
+    /* HIDE SIDEBAR & DRAWER OVERLAY (But keep mobile-header visible!) */
     .sidebar,
     .drawer-overlay {
       display: none !important;
+    }
+
+    /* Ensure Mobile Header is visible */
+    .mobile-header {
+      display: flex !important;
     }
 
     /* SHOW BOTTOM NAV */

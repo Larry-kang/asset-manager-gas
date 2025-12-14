@@ -1,32 +1,62 @@
 const { test, expect } = require('@playwright/test');
 
-test.describe('Asset Manager Frontend', () => {
+test.describe('Asset Manager E2E Redux', () => {
     const BASE_URL = 'http://localhost:3003';
 
     test.beforeEach(async ({ page }) => {
-        page.on('console', msg => console.log(`PAGE LOG: ${msg.text()}`));
-        page.on('pageerror', err => console.log(`PAGE ERROR: ${err.message}`));
-
-        // Force English for consistent selectors
-        await page.addInitScript(() => {
-            localStorage.setItem('app_lang', 'en');
-        });
-
+        await page.setViewportSize({ width: 1280, height: 720 });
         await page.goto(BASE_URL);
+        await expect(page.locator('#loading')).not.toBeVisible({ timeout: 15000 });
     });
 
-    test('Dashboard should load with correct title', async ({ page }) => {
+    test('01. Core Dashboard Elements', async ({ page }) => {
         await expect(page).toHaveTitle(/Asset Manager/);
-        // Target the sidebar logo specifically, or handle visibility
-        const logos = page.locator('.logo-text');
-        await expect(logos.first()).toHaveText('ASSET MANAGER');
+        await expect(page.locator('.dash-balance')).toBeVisible();
     });
 
-    test.skip('New Loan UI should operate correctly', async ({ page }) => {
-        // ...
+    test('02. Navigation Flow', async ({ page }) => {
+        // Sidebar Portfolio Icon
+        await page.locator('.sidebar .fa-layer-group').click();
+        await expect(page.locator('.top-header')).toContainText(/Part|Port|投資組合/);
+
+        // Sidebar Vault Icon
+        await page.locator('.sidebar .fa-landmark').click();
+        await expect(page.locator('.top-header')).toContainText(/Vault|借貸/);
+
+        // Sidebar Settings Icon
+        await page.locator('.sidebar .fa-gear').click();
+        await expect(page.locator('.top-header')).toContainText(/Set|設定/);
     });
 
-    test.skip('I18N Switching', async ({ page }) => {
-        // ...
+    test('03. Feature: Language Switch', async ({ page }) => {
+        await page.locator('.sidebar .fa-gear').click();
+        const toggleBtn = page.locator('.card .asset-row').filter({ hasText: 'EN / 中' });
+        await expect(toggleBtn).toBeVisible();
+        const header = page.locator('.top-header .section-title');
+        const initialText = await header.innerText();
+        await toggleBtn.click();
+        await expect(header).not.toHaveText(initialText, { timeout: 10000 });
+        await toggleBtn.click();
+        await expect(header).toHaveText(initialText, { timeout: 10000 });
+    });
+
+    test('04. Feature: New Loan Modal', async ({ page }) => {
+        await page.locator('.sidebar .fa-landmark').click();
+
+        // Use precise test ID to distinguish from other view buttons
+        await page.click('[data-testid="btn-new-loan"]');
+
+        const modal = page.locator('.modal-content').filter({ hasText: /Loan|借貸/ }).first();
+        await expect(modal).toBeVisible();
+
+        await page.locator('.modal-overlay').first().click({ position: { x: 5, y: 5 } });
+    });
+
+    test('05. Feature: Transaction Modal', async ({ page }) => {
+        await page.locator('.sidebar .fa-chart-pie').click();
+        // Dash header is unique
+        await page.locator('.dash-header .btn-gold-pill').first().click();
+        const modal = page.locator('.modal-content').filter({ hasText: /Tx|Transaction|交易/ }).first();
+        await expect(modal).toBeVisible();
     });
 });

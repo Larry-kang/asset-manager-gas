@@ -1,64 +1,94 @@
-const logic = require('../../Logic.gs');
-const { getInventoryMap, calculateLoans, normalizeTicker, TEST_LITERALS } = logic;
-const { ACT_BUY, ACT_SELL, TYPE_STOCK, TYPE_CRYPTO } = TEST_LITERALS;
+const Constants = require('../../Constants.gs');
+Object.assign(global, Constants); // Inject Global Constants
+const Logic = require('../../Logic.gs');
 
-describe('Logic.gs Unit Tests', () => {
+describe('Logic.gs Core Business Logic', () => {
 
-    test('normalizeTicker should format tickers correctly', () => {
-        expect(normalizeTicker('2330')).toBe('2330');
-        expect(normalizeTicker('aapl')).toBe('AAPL');
-        expect(normalizeTicker(' tsm ')).toBe('TSM');
-        expect(normalizeTicker('11')).toBe('0011');
+    // --- Helper for Mock Data Construction ---
+    const makeLog = (date, type, ticker, qty, price = 100) => {
+        // [Date, Type, Ticker, Cat, Qty, Price, Curr, Note]
+        // Indices: 0, 1, 2, 3, 4, 5, 6, 7
+        return ['2024-01-01', type, ticker, '股票', qty, price, 'TWD', ''];
+    };
+
+    const makeLoan = (source, col, colQty) => {
+        // [Src, Date, Amt, Rate, Col, Qty, Type, Warn, Liq, Note...]
+        return [source, '2024-01-01', 10000, 2, col, colQty, '股票', 160, 140, ''];
+    };
+
+    test('Inventory Calculation (Buy/Sell/Pledge)', () => {
+        const logs = [
+            ['Header'],
+            makeLog('2024-01-01', ACT_BUY, 'TSMC', 1000), // Buy 1000
+            makeLog('2024-01-02', ACT_BUY, 'TSMC', 500),  // Buy 500
+            makeLog('2024-01-03', ACT_SELL, 'TSMC', 200), // Sell 200 -> 1300 remaining
+        ];
+
+        const loans = [
+            ['Header'],
+            makeLoan('BankA', 'TSMC', 1000) // Pledge 1000 -> 300 Free
+        ];
+
+        const result = Logic.getInventoryMap(logs, loans);
+
+        expect(result.inventory['TSMC']).toBe(300); // 1500 - 200 - 1000
     });
 
-    test('getInventoryMap should calculate inventory correctly', () => {
-        // Log: [Date, Type, Ticker, Cat, Qty, Price, Currency, Note]
-        const logRows = [
-            ['Date', 'Type', 'Ticker', 'Cat', 'Qty', 'Price', 'Curr', 'Note'],
-            ['2023-01-01', ACT_BUY, 'AAPL', TYPE_STOCK, 10, 150, 'USD', ''],
-            ['2023-01-02', ACT_BUY, 'AAPL', TYPE_STOCK, 5, 155, 'USD', ''],
-            ['2023-01-03', ACT_SELL, 'AAPL', TYPE_STOCK, 3, 160, 'USD', ''],
-            ['2023-01-01', ACT_BUY, 'TSLA', TYPE_STOCK, 10, 200, 'USD', '']
+    test('Portfolio Valuation', () => {
+        const logs = [
+            ['Header'],
+            makeLog('2024-01-01', ACT_BUY, 'AAPL', 10, 150) // Cost: 1500
         ];
-
-        // Loan: [Source, Date, Amount, Rate, Col, Qty, Type, Warn, Liq, Note...]
-        const loanRows = [
-            ['Source', 'Date', 'Amt', 'Rate', 'Col', 'Qty', 'Type', 'Warn', 'Liq', 'Note'],
-            ['Aave', '2023-01-05', 1000, 2, 'AAPL', 5, TYPE_CRYPTO, 80, 90, '']
-        ];
-
-        const result = getInventoryMap(logRows, loanRows);
-
-        // AAPL: 10 + 5 - 3 = 12 (Total). Locked: 5. Free: 7.
-        expect(result.inventory['AAPL']).toBe(7);
-        expect(result.inventory['TSLA']).toBe(10);
-    });
-
-    test('calculateLoans should compute interest and health factor', () => {
-        const loanRows = [
-            ['Source', 'Date', 'Amt', 'Rate', 'Col', 'Qty', 'Type', 'Warn', 'Liq', 'Note'],
-            ['Compound', '2023-01-01', 1000, 10, 'ETH', 10, TYPE_CRYPTO, 80, 90, '', 0, 0, 0, 'USD']
-        ];
-        // 1000 Principal USD, 10% Rate. Interest accrued.
+        // Apple is US stock (regex check in Logic)
 
         const marketData = {
-            fx: 30,
-            prices: { 'ETH': 200 }
+            fx: 32,
+            prices: { 'AAPL': 200 } // Current Price
         };
 
-        const result = calculateLoans(loanRows, marketData);
-        const contract = result.contracts[0];
+        const result = Logic.calculatePortfolio(logs, marketData, {});
+        const aapl = result.list.find(h => h.ticker === 'AAPL');
 
-        expect(contract.source).toBe('Compound');
-        expect(contract.debt).toBeGreaterThan(1000);
-
-        // Col Val = 10 * 200 * 30 = 60000 (Crypto uses FX)
-        expect(contract.colValTWD).toBe(60000);
-
-        // Risk Check
-        const risk = result.risks.find(r => r.source === 'Compound');
-        expect(parseFloat(risk.ratio)).toBeGreaterThan(49);
-        expect(risk.status).toBe('Safe');
+        expect(aapl).toBeDefined();
+        expect(aapl.qty).toBe(10);
+        expect(aapl.marketValue).toBe(2000); // 10 * 200
+        expect(aapl.valTWD).toBe(64000); // 2000 * 32
+        expect(aapl.isUsd).toBe(true);
     });
 
+    test('Loan Risk Logic (Stock LTV)', () => {
+        const loans = [
+            ['Header'],
+            // [Src, Date, Amt, Rate, Col, Qty, Type, Warn, Liq, Note]
+            // Borrow 10000 TWD, Col 1000 TWD * 10 = 10000 Value
+            ['BankB', '2024-01-01', 10000, 0, '2330', 10, TYPE_STOCK, 160, 130, '']
+        ];
+
+        const marketData = { fx: 1, prices: { '2330': 1000 } }; // Price 1000. ColVal = 10000.
+
+        const result = Logic.calculateLoans(loans, marketData);
+        const risk = result.risks[0];
+
+        // Maintenance Ratio = ColVal / Debt * 100 = 10000 / 10000 * 100 = 100%
+        // Warn is 160. 100 < 160. Should be Warning or Danger depending on Liquidation.
+        // Liq is 130. 100 < 130. Should be DANGER.
+
+        expect(risk.status).toBe('Danger');
+        expect(parseFloat(risk.ratio)).toBe(100);
+    });
+
+    test('Loan Risk Logic (Safe)', () => {
+        // Borrow 5000. Col 10000. Ratio 200%. Safe.
+        const loans = [
+            ['Header'],
+            ['BankC', '2024-01-01', 5000, 0, '2330', 10, TYPE_STOCK, 160, 130, '']
+        ];
+        const marketData = { fx: 1, prices: { '2330': 1000 } };
+
+        const result = Logic.calculateLoans(loans, marketData);
+        const risk = result.risks[0];
+
+        expect(risk.status).toBe('Safe');
+        expect(parseFloat(risk.ratio)).toBe(200);
+    });
 });

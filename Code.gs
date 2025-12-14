@@ -102,14 +102,14 @@ function getRecentTransactions(ss, limit = 10) {
     let r = data[i];
     list.push({
       row: startRow + i,
-      date: r[0],
-      type: r[1],
-      ticker: normalizeTicker(r[2]),
-      cat: r[3],
-      qty: r[4],
-      price: r[5],
-      currency: r[6],
-      note: r[7]
+      date: r[IDX_LOG_DATE],
+      type: r[IDX_LOG_TYPE],
+      ticker: normalizeTicker(r[IDX_LOG_TICKER]),
+      cat: r[IDX_LOG_CAT],
+      qty: r[IDX_LOG_QTY],
+      price: r[IDX_LOG_PRICE],
+      currency: r[IDX_LOG_CURRENCY],
+      note: r[IDX_LOG_NOTE]
     });
   }
   return list;
@@ -239,7 +239,7 @@ function updateMarketPrices(ss, forceRefresh) {
       }
     }
   };
-  collect(sT, 2, 3); collect(sL, 4, 6);
+  collect(sT, IDX_LOG_TICKER, IDX_LOG_CAT); collect(sL, IDX_LOAN_COL, IDX_LOAN_TYPE);
 
   // 讀取現有快取
   let mData = sM.getDataRange().getValues();
@@ -293,10 +293,24 @@ function fetchTwStockPrice(ticker, logs) {
   try {
     const url = `https://www.cnyes.com/twstock/${ticker}`;
     const res = UrlFetchApp.fetch(url, { 'muteHttpExceptions': true });
-    if (res.getResponseCode() !== 200) return null;
-    const match = res.getContentText().match(/<h3 class="[^"]*">([0-9,]+\.?[0-9]*)<\/h3>/);
-    if (match && match[1]) return parseFloat(match[1].replace(/,/g, ''));
-  } catch (e) { }
+
+    if (res.getResponseCode() !== 200) {
+      if (logs) logs.push(`Error: TwStock ${ticker} returned ${res.getResponseCode()}`);
+      return null;
+    }
+
+    const content = res.getContentText();
+    // Use a more robust regex or logic if possible, currently sticking to existing but adding logs
+    const match = content.match(/<h3 class="[^"]*">([0-9,]+\.?[0-9]*)<\/h3>/);
+
+    if (match && match[1]) {
+      return parseFloat(match[1].replace(/,/g, ''));
+    } else {
+      if (logs) logs.push(`Warn: TwStock parser failed for ${ticker}`);
+    }
+  } catch (e) {
+    if (logs) logs.push(`Exception: TwStock ${ticker} - ${e.toString()}`);
+  }
   return null;
 }
 

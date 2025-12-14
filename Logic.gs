@@ -19,13 +19,13 @@ function getInventoryMap(logRows, loanRows) {
   let pledged = {};
 
   // 1. Process Transaction Logs
-  // logRows: [Date, Type, Ticker, Cat, Qty, Price, Currency, Note] (Indices: 0..7)
+  // logRows: [Date, Type, Ticker, Cat, Qty, Price, Currency, Note]
   if (logRows && logRows.length > 1) {
     for (let i = 1; i < logRows.length; i++) {
       let r = logRows[i];
-      let t = normalizeTicker(r[2]);
-      let type = r[1];
-      let qty = Number(r[4]);
+      let t = normalizeTicker(r[IDX_LOG_TICKER]);
+      let type = r[IDX_LOG_TYPE];
+      let qty = Number(r[IDX_LOG_QTY]);
 
       if (!t) continue;
       if (!holdings[t]) holdings[t] = 0;
@@ -40,9 +40,9 @@ function getInventoryMap(logRows, loanRows) {
   if (loanRows && loanRows.length > 1) {
     for (let i = 1; i < loanRows.length; i++) {
       let r = loanRows[i];
-      if (!r[0] || String(r[9]).includes('結清')) continue;
-      let col = normalizeTicker(r[4]);
-      let colQty = Number(r[5]);
+      if (!r[IDX_LOAN_SOURCE] || String(r[IDX_LOAN_NOTE]).includes('結清')) continue;
+      let col = normalizeTicker(r[IDX_LOAN_COL]);
+      let colQty = Number(r[IDX_LOAN_COL_QTY]);
       if (col) pledged[col] = (pledged[col] || 0) + colQty;
     }
   }
@@ -93,12 +93,12 @@ function calculatePortfolio(logRows, marketData, pledgedData) {
   if (logRows && logRows.length > 1) {
     for (let i = 1; i < logRows.length; i++) {
       let r = logRows[i];
-      let type = r[1], ticker = normalizeTicker(r[2]), cat = r[3];
+      let type = r[IDX_LOG_TYPE], ticker = normalizeTicker(r[IDX_LOG_TICKER]), cat = r[IDX_LOG_CAT];
       if (ticker) knownTickers[ticker] = 1;
 
-      let qty = Number(r[4]) || 0;
-      let price = Number(r[5]) || 0;
-      let curr = r[6];
+      let qty = Number(r[IDX_LOG_QTY]) || 0;
+      let price = Number(r[IDX_LOG_PRICE]) || 0;
+      let curr = r[IDX_LOG_CURRENCY];
 
       if (!holdings[ticker]) holdings[ticker] = { qty: 0, totalCost: 0, cat: cat, currency: curr };
       let h = holdings[ticker];
@@ -131,7 +131,7 @@ function calculatePortfolio(logRows, marketData, pledgedData) {
     if (h.cat === '現金') { currentPrice = 1; h.totalCost = h.qty; }
     else if (!currentPrice) { currentPrice = 0; }
 
-    let isUsdAsset = (h.currency === 'USD' || h.cat === '加密貨幣' || (h.cat === '股票' && !/^[0-9]/.test(t)));
+    let isUsdAsset = (h.currency === 'USD' || h.cat === TYPE_CRYPTO || (h.cat === TYPE_STOCK && !/^[0-9]/.test(t)));
     let marketValue = h.qty * currentPrice;
     let avgCost = h.qty > 0 ? (h.totalCost / h.qty) : 0;
     let pnl = marketValue - h.totalCost;
@@ -164,21 +164,20 @@ function calculateLoans(loanRows, marketData) {
   if (loanRows && loanRows.length > 1) {
     for (let i = 1; i < loanRows.length; i++) {
       let r = loanRows[i];
-      let src = r[0];
-      if (!src || String(r[9]).includes('結清')) continue;
+      let src = r[IDX_LOAN_SOURCE];
+      if (!src || String(r[IDX_LOAN_NOTE]).includes('結清')) continue;
 
-      let rowIdx = i + 1; // 修正 Logical Index 應為 Excel Row Index (Data Array 0-based -> Sheet 1-based, 但Header佔1, 所以 i=1 is row 2)
-      // Wait, if loanRows includes Header (Row 1), then i=1 is Row 2. Correct. It matches Actions.gs expectation.
+      let rowIdx = i + 1;
 
-      let date = new Date(r[1]);
-      let amt = Number(r[2]) || 0;
-      let rate = Number(r[3]) || 0;
-      let col = normalizeTicker(r[4]);
-      let colQty = Number(r[5]) || 0;
-      let type = r[6];
-      let warn = Number(r[7]); let liq = Number(r[8]);
-      let totalTerm = Number(r[10]) || 0; let paidTerm = Number(r[11]) || 0; let monthlyPay = Number(r[12]) || 0;
-      let loanCurr = (r.length >= 14 ? r[13] : 'TWD') || 'TWD';
+      let date = new Date(r[IDX_LOAN_DATE]);
+      let amt = Number(r[IDX_LOAN_AMT]) || 0;
+      let rate = Number(r[IDX_LOAN_RATE]) || 0;
+      let col = normalizeTicker(r[IDX_LOAN_COL]);
+      let colQty = Number(r[IDX_LOAN_COL_QTY]) || 0;
+      let type = r[IDX_LOAN_TYPE];
+      let warn = Number(r[IDX_LOAN_WARN]); let liq = Number(r[IDX_LOAN_LIQ]);
+      let totalTerm = Number(r[IDX_LOAN_TOTAL_TERM]) || 0; let paidTerm = Number(r[IDX_LOAN_PAID_TERM]) || 0; let monthlyPay = Number(r[IDX_LOAN_MONTHLY]) || 0;
+      let loanCurr = (r.length >= 14 ? r[IDX_LOAN_CURRENCY] : 'TWD') || 'TWD';
 
       if (col) pledged[col] = (pledged[col] || 0) + colQty;
 
@@ -197,7 +196,8 @@ function calculateLoans(loanRows, marketData) {
       totalDebtTWD += debtTWD;
 
       let price = marketData.prices[col] || 0;
-      let isUsd = (type === '加密貨幣' || (type === '股票' && !/^[0-9]/.test(col)));
+      let isUsd = (type === TYPE_CRYPTO || (type === TYPE_STOCK && !/^[0-9]/.test(col)));
+
       let colValTWD = colQty * price * (isUsd ? marketData.fx : 1);
 
       contracts.push({
@@ -230,12 +230,12 @@ function calculateLoans(loanRows, marketData) {
     let r = riskMap[src];
     let ratio = 0, status = 'Safe', label = '';
 
-    if (r.type === '股票') {
+    if (r.type === TYPE_STOCK) {
       label = '維持率';
       ratio = r.debtTWD > 0 ? (r.colValTWD / r.debtTWD * 100) : 999;
       if (ratio < r.liq) status = 'Danger'; else if (ratio < r.warn) status = 'Warning';
     }
-    else if (r.type === '加密貨幣') {
+    else if (r.type === TYPE_CRYPTO) {
       label = 'LTV';
       ratio = r.colValTWD > 0 ? (r.debtTWD / r.colValTWD * 100) : 0;
       if (ratio > r.liq) status = 'Danger'; else if (ratio > r.warn) status = 'Warning';
@@ -327,28 +327,12 @@ function normalizeTicker(t) {
 
 // Export for Node.js Testing (Jest)
 if (typeof module !== 'undefined' && module.exports) {
-  // Define literals exactly as they appear in the file
-  const TEST_LITERALS = {
-    ACT_BUY: '買入',
-    ACT_SELL: '賣出',
-    ACT_DIVIDEND: '配息',
-    TYPE_STOCK: '股票',
-    TYPE_CRYPTO: '加密貨幣',
-    TYPE_CREDIT: '信用貸款'
-  };
-
   module.exports = {
     getInventoryMap,
     processMarketData,
     calculatePortfolio,
     calculateLoans,
     normalizeTicker,
-    TEST_LITERALS,
     calculateFinancialSummary
   };
-
-  // Set Globals for the module scope
-  global.ACT_BUY = TEST_LITERALS.ACT_BUY;
-  global.ACT_SELL = TEST_LITERALS.ACT_SELL;
-  global.ACT_DIVIDEND = TEST_LITERALS.ACT_DIVIDEND;
 }
