@@ -1,0 +1,59 @@
+
+> asset-manager-gas@1.0.0 test
+> jest tests/aggregation.test.js
+
+  console.log
+    Aggregated Stock Risk: {
+      label: '?湔蝬剜???,
+      value: '134.02%',
+      status: 'Warning',
+      rawRatio: 134.020618556701
+    }
+
+      at Object.log (tests/aggregation.test.js:23:17)
+
+FAIL tests/aggregation.test.js
+  Aggregation Logic Tests
+    ? Stock Aggregation: Multiple Positions -> One Ratio (15 ms)
+    ? Backward Compatibility: Single Position Transform
+    ??Crypto Aggregation: Health Factor
+
+  ??Aggregation Logic Tests ??Stock Aggregation: Multiple Positions -> One Ratio
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "嚙踝蕭嚙踝蕭嚙踝蕭嚙緞"
+    Received: "?湔蝬剜???
+
+      23 |         console.log('Aggregated Stock Risk:', aggRisk);
+      24 |
+    > 25 |         expect(aggRisk.label).toBe('嚙踝蕭嚙踝蕭嚙踝蕭嚙緞');
+         |                               ^
+      26 |         expect(Number(parseFloat(aggRisk.value))).toBeCloseTo(134.02, 1);
+      27 |         expect(aggRisk.status).toBe('Warning');
+      28 |     });
+
+      at Object.toBe (tests/aggregation.test.js:25:31)
+
+  ??Aggregation Logic Tests ??Backward Compatibility: Single Position Transform
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "嚙踝蕭嚙踝蕭嚙踝蕭嚙緞"
+    Received: "?湔蝬剜???
+
+      34 |
+      35 |         const risk = RiskCalculator.transform(pos, stockMarketData);
+    > 36 |         expect(risk.label).toBe('嚙踝蕭嚙踝蕭嚙踝蕭嚙緞');
+         |                            ^
+      37 |         expect(Number(parseFloat(risk.value))).toBeCloseTo(1000.00);
+      38 |     });
+      39 |
+
+      at Object.toBe (tests/aggregation.test.js:36:28)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 1 passed, 3 total
+Snapshots:   0 total
+Time:        0.646 s, estimated 1 s
+Ran all test suites matching /tests\\aggregation.test.js/i.

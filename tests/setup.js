@@ -2,67 +2,119 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-// --- Mock Classes ---
-
-class MockRange {
-    constructor(values) {
-        this.values = values;
-    }
-    getValues() { return this.values; }
-    setValue(v) {
-        // Simple mock implementation: set first cell
-        if (this.values && this.values.length > 0 && this.values[0].length > 0) this.values[0][0] = v;
-    }
-    setValues(v) { this.values = v; }
-    setNumberFormat(f) { return this; }
-    getFormula() { return ''; }
-    getValue() { return this.values[0] ? this.values[0][0] : ''; }
+// Polyfill jest for standalone execution
+if (typeof jest === 'undefined') {
+    global.jest = {
+        fn: (impl) => {
+            const mock = (...args) => (impl ? impl(...args) : undefined);
+            mock.mockReturnValue = (val) => { };
+            return mock;
+        }
+    };
 }
 
-class MockSheet {
+// 1. Read GAS Files
+const codeContent = fs.readFileSync(path.join(__dirname, '../Code.gs'), 'utf8');
+const logicContent = fs.readFileSync(path.join(__dirname, '../Logic.gs'), 'utf8');
+const repoContent = fs.readFileSync(path.join(__dirname, '../Repository.gs'), 'utf8');
+const actionsContent = fs.readFileSync(path.join(__dirname, '../Actions.gs'), 'utf8'); // Actions depends on Logic/Repo
+const constantsContent = fs.readFileSync(path.join(__dirname, '../Constants.gs'), 'utf8'); // Load Constants
+
+// 2. Mock GAS Environment
+const MockSheet = class {
     constructor(name) {
         this.name = name;
         this.data = []; // 2D array
+        this.lastRow = 0;
     }
+    getName() { return this.name; }
     getLastRow() { return this.data.length; }
-    getLastColumn() { return this.data.length > 0 ? this.data[0].length : 0; }
     getRange(row, col, numRows, numCols) {
-        // Return subset of data
-        // Apps Script is 1-based, array is 0-based
-        // if row=2, array index=1
-        const slice = this.data.slice(row - 1, row - 1 + numRows).map(r => r.slice(col - 1, col - 1 + numCols));
-        return new MockRange(slice);
+        return new MockRange(this, row, col, numRows, numCols);
+    }
+    appendRow(row) {
+        this.data.push(row);
+        this.lastRow++;
+        return this; // Return sheet for chaining if needed
     }
     getDataRange() {
-        return new MockRange(this.data);
+        return new MockRange(this, 1, 1, this.data.length || 1, (this.data[0] || []).length || 1);
     }
-    appendRow(row) { this.data.push(row); }
-    getValues() { return this.data; } // Fallback
-}
+    clear() { this.data = []; this.lastRow = 0; }
+};
 
-class MockSpreadsheet {
-    constructor() {
-        this.sheets = {};
+const MockRange = class {
+    constructor(sheet, row, col, numRows, numCols) {
+        this.sheet = sheet;
+        this.row = row;
+        this.col = col;
+        this.numRows = numRows;
+        this.numCols = numCols;
     }
-    getSheetByName(name) {
-        if (!this.sheets[name]) {
-            this.sheets[name] = new MockSheet(name);
+    getValues() {
+        let result = [];
+        for (let i = 0; i < this.numRows; i++) {
+            let r = this.sheet.data[this.row - 1 + i] || [];
+            let rowData = [];
+            for (let j = 0; j < this.numCols; j++) {
+                rowData.push(r[this.col - 1 + j] === undefined ? '' : r[this.col - 1 + j]);
+            }
+            result.push(rowData);
         }
-        return this.sheets[name];
+        if (result.length === 0) return [[]];
+        return result;
     }
-    insertSheet(name) {
-        return this.getSheetByName(name);
+    setValue(val) {
+        for (let i = 0; i < this.numRows; i++) {
+            if (!this.sheet.data[this.row - 1 + i]) this.sheet.data[this.row - 1 + i] = [];
+            for (let j = 0; j < this.numCols; j++) {
+                this.sheet.data[this.row - 1 + i][this.col - 1 + j] = val;
+            }
+        }
+        return this;
     }
-}
+    setValues(values) {
+        for (let i = 0; i < values.length; i++) {
+            let rIdx = this.row - 1 + i;
+            if (!this.sheet.data[rIdx]) this.sheet.data[rIdx] = [];
+            for (let j = 0; j < values[i].length; j++) {
+                this.sheet.data[rIdx][this.col - 1 + j] = values[i][j];
+            }
+        }
+        return this;
+    }
+    setNumberFormat(f) { return this; }
+    getFormula() { return ''; }
+};
 
-const mockSS = new MockSpreadsheet();
+const MockSS = {
+    getSheetByName: jest.fn((name) => {
+        return context.mockSheets[name] || null;
+    }),
+    insertSheet: jest.fn((name) => {
+        const s = new MockSheet(name);
+        context.mockSheets[name] = s;
+        return s;
+    }),
+    getSheets: jest.fn(() => Object.values(context.mockSheets))
+};
 
-const context = vm.createContext({
-    Logger: { log: jest.fn(msg => console.log('[GAS Log]', msg)) },
-    Utilities: { formatDate: jest.fn((d) => new Date(d).toISOString()) },
+// 3. Create VM Context
+const context = {
     SpreadsheetApp: {
-        getUi: jest.fn(),
-        getActiveSpreadsheet: jest.fn(() => mockSS)
+        getActiveSpreadsheet: jest.fn(() => MockSS),
+        openById: jest.fn(() => MockSS)
+    },
+    Logger: { log: jest.fn(msg => console.log('[GAS Log]', msg)) },
+    Utilities: {
+        formatDate: jest.fn((d) => new Date(d).toISOString().split('T')[0]),
+        newBlob: jest.fn()
+    },
+    LockService: {
+        getScriptLock: jest.fn(() => ({
+            tryLock: jest.fn(() => true),
+            releaseLock: jest.fn()
+        }))
     },
     PropertiesService: {
         getScriptProperties: jest.fn(() => ({
@@ -71,73 +123,60 @@ const context = vm.createContext({
             setProperties: jest.fn()
         }))
     },
-    LockService: {
-        getScriptLock: jest.fn(() => ({
-            tryLock: jest.fn(() => true),
-            releaseLock: jest.fn()
-        }))
-    },
     HtmlService: {
-        createTemplateFromFile: jest.fn(),
-        createHtmlOutputFromFile: jest.fn(),
-        XFrameOptionsMode: { ALLOWALL: 'ALLOWALL' }
+        createHtmlOutputFromFile: jest.fn(() => ({ setTitle: jest.fn() }))
     },
+    UrlFetchApp: {
+        fetch: jest.fn()
+    },
+    mockSheets: {},
     console: console,
-    // Expose mocks to tests so we can inject data
-    MockSS: mockSS
-});
+    exports: {},
+    module: { exports: {} }
+};
 
-/**
- * Reads file content
- */
-function readFile(filename) {
-    const filePath = path.join(__dirname, '..', filename);
-    return fs.readFileSync(filePath, 'utf8');
-}
+vm.createContext(context);
 
-// Concatenate files to ensure shared scope (mimic GAS)
-console.log("Loading GAS files...");
-const constantsGS = readFile('Constants.gs'); // [NEW]
-const repositoryGS = readFile('Repository.gs'); // [NEW]
-const codeGS = readFile('Code.gs');
-const logicGS = readFile('Logic.gs');
-const actionsGS = readFile('Actions.gs'); // Load Actions too if needed
+// Include Constants first
+vm.runInContext(constantsContent, context);
 
-const combinedCode = constantsGS + '\n' + repositoryGS + '\n' + codeGS + '\n' + logicGS + '\n' + actionsGS +
-    '\nthis.TAB_LOG = TAB_LOG;' +
-    '\nthis.ACT_BUY = ACT_BUY;' +
-    '\nthis.ACT_SELL = ACT_SELL;' +
-    '\nthis.ACT_DIVIDEND = ACT_DIVIDEND;' +
-    '\nthis.TYPE_STOCK = TYPE_STOCK;' +
-    '\nthis.RepositoryFactory = RepositoryFactory;' +
-    '\nthis.LogRepository = LogRepository;' +
-    '\nthis.getDashboardData = getDashboardData;' +
-    '\nthis.addTx = addTx;' +
-    '\nthis.addLoan = addLoan;' +
-    '\nthis.processContractAction = processContractAction;';
+// Explicitly export Classes from Logic.gs to Context
+// Class declarations in VM might not automatically hoist to 'this'
+const logicWithExports = logicContent +
+    "\n; this.LoanPosition = LoanPosition; this.RiskCalculator = RiskCalculator;";
 
-vm.runInContext(combinedCode, context);
+vm.runInContext(logicWithExports, context);
+vm.runInContext(repoContent, context);
+vm.runInContext(actionsContent, context); // Actions depend on logic/repo
 
-// Export functions for testing
-module.exports = {
-    context: context, // Export context to access classes
-    getInventoryMap: context.getInventoryMap,
-    processMarketData: context.processMarketData,
-    calculatePortfolio: context.calculatePortfolio,
-    calculateLoans: context.calculateLoans,
-    normalizeTicker: context.normalizeTicker,
-    // Controller / Actions
-    getDashboardData: context.getDashboardData,
-    addTx: context.addTx,
-    addLoan: context.addLoan,
-    processContractAction: context.processContractAction,
-    // Repository Classes
-    RepositoryFactory: context.RepositoryFactory,
-    LogRepository: context.LogRepository,
+// Export context for tests
+const {
+    MockSheet: MockSheetRef,
+    MockSS: MockSSRef,
+    // Logic
+    getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
+    LoanPosition, RiskCalculator, // New Logic
+    ACT_BUY, ACT_SELL, TYPE_STOCK,
+    // Actions
+    getDashboardData, addTx, addLoan, processContractAction,
+    // Repository
+    SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
     // Constants
-    TAB_LOG: context.TAB_LOG,
-    ACT_BUY: context.ACT_BUY,
-    ACT_SELL: context.ACT_SELL,
-    ACT_DIVIDEND: context.ACT_DIVIDEND,
-    TYPE_STOCK: context.TYPE_STOCK
+    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET
+} = context;
+
+module.exports = {
+    context,
+    // Mock classes for manual instantiation if needed
+    MockSheet, MockSS,
+    // Logic
+    getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
+    LoanPosition, RiskCalculator,
+    ACT_BUY, ACT_SELL, TYPE_STOCK,
+    // Actions
+    getDashboardData, addTx, addLoan, processContractAction,
+    // Repository
+    SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
+    // Constants
+    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET
 };

@@ -167,9 +167,7 @@ function calculateLoans(loanRows, marketData) {
       let src = r[0];
       if (!src || String(r[9]).includes('結清')) continue;
 
-      let rowIdx = i + 1; // 修正 Logical Index 應為 Excel Row Index (Data Array 0-based -> Sheet 1-based, 但Header佔1, 所以 i=1 is row 2)
-      // Wait, if loanRows includes Header (Row 1), then i=1 is Row 2. Correct. It matches Actions.gs expectation.
-
+      let rowIdx = i + 1; // 修正 Logical Index 應為 Excel Row Index
       let date = new Date(r[1]);
       let amt = Number(r[2]) || 0;
       let rate = Number(r[3]) || 0;
@@ -201,12 +199,7 @@ function calculateLoans(loanRows, marketData) {
       let colValTWD = colQty * price * (isUsd ? marketData.fx : 1);
 
       contracts.push({
-        row: rowIdx, // Sheet Row Index (i=1 -> Row 2)
-        // Wait, if I iterate from i=1 (2nd row of array), that corresponds to Row 2 in sheet.
-        // So Array Index 1 == Sheet Row 2.
-        // The formula should be: SheetRow = 1 + i.
-        // Let's verify: i=0 is Header (Row 1). i=1 is Row 2.
-        // Yes.
+        row: rowIdx,
         source: src, date: date.toISOString().split('T')[0],
         debt: currentDebt, principal: amt, interest: accruedInterest,
         rate: rate, col: col, colQty: colQty, type: type, currency: loanCurr,
@@ -255,6 +248,138 @@ function calculateLoans(loanRows, marketData) {
   return { contracts: contracts, risks: risks, totalDebtTWD: totalDebtTWD, pledged: pledged };
 }
 
+// --- Event Sourcing Logic ---
+
+/**
+ * 借貸倉位模型: 從 Actions 重建狀態
+ */
+class LoanPosition {
+  constructor(id, protocol, type, groupId) {
+    this.id = id;
+    this.protocol = protocol;
+    this.type = type; // 'Stock', 'Crypto', 'Credit'
+    this.groupId = groupId || protocol; // Default group by protocol
+    this.collaterals = {}; // { 'BTC': 1.0 }
+    this.debts = {};       // { 'USDC': 50000 }
+    this.history = [];     // Array of Actions
+  }
+
+  apply(action) {
+    this.history.push(action);
+    const asset = action.Asset;
+    const amount = Number(action.Amount);
+
+    // Action Type Handling
+    if (action.Action === 'OPEN' || action.Action === 'SUPPLY') {
+      // 增加抵押
+      if (!this.collaterals[asset]) this.collaterals[asset] = 0;
+      this.collaterals[asset] += amount;
+    }
+    else if (action.Action === 'BORROW') {
+      if (!this.debts[asset]) this.debts[asset] = 0;
+      this.debts[asset] += amount;
+    }
+    else if (action.Action === 'REPAY') {
+      if (this.debts[asset]) this.debts[asset] -= amount;
+      if (this.debts[asset] < 0) this.debts[asset] = 0;
+    }
+    else if (action.Action === 'WITHDRAW') {
+      if (this.collaterals[asset]) this.collaterals[asset] -= amount;
+      if (this.collaterals[asset] < 0) this.collaterals[asset] = 0;
+    }
+  }
+}
+
+/**
+ * 風險計算策略工廠
+ */
+class RiskCalculator {
+  // 單一倉位計算 (Legacy Support)
+  static transform(position, marketData) {
+    // Wrap single position in array for aggregation logic reuse
+    return this.aggregate([position], position.type, marketData);
+  }
+
+  // 聚合計算 (Aggregation)
+  static aggregate(positions, type, marketData) {
+    if (!positions || positions.length === 0) return { status: 'Unknown', health: 0 };
+
+    if (type === 'Stock') return this.aggStock(positions, marketData);
+    if (type === 'Crypto') return this.aggCrypto(positions, marketData);
+    if (type === 'Credit') return this.aggCredit(positions);
+    return { status: 'Unknown', health: 0 };
+  }
+
+  static aggStock(positions, marketData) {
+    // 整戶維持率 = (Sum(擔保品市值) / Sum(借款金額)) * 100%
+    let totalColVal = 0;
+    let totalDebtVal = 0;
+
+    for (let pos of positions) {
+      for (let t in pos.collaterals) {
+        let price = marketData.prices[t] || 0;
+        totalColVal += pos.collaterals[t] * price;
+      }
+      for (let d in pos.debts) {
+        totalDebtVal += pos.debts[d]; // Assume TWD debt
+      }
+    }
+
+    const ratio = totalDebtVal > 0 ? (totalColVal / totalDebtVal) * 100 : 999;
+    let status = 'Safe';
+    if (ratio < 130) status = 'Danger';
+    else if (ratio < 140) status = 'Warning';
+
+    return {
+      label: '整戶維持率',
+      value: ratio.toFixed(2) + '%',
+      status: status,
+      rawRatio: ratio
+    };
+  }
+
+  static aggCrypto(positions, marketData) {
+    // AAVE Aggregated HF = (Sum(Col * Threshold) / Sum(Debt_USD))
+    let weightedColUSD = 0;
+    let totalDebtUSD = 0;
+    const fx = marketData.fx || 32.5;
+
+    for (let pos of positions) {
+      for (let t in pos.collaterals) {
+        let priceTWD = marketData.prices[t] || 0;
+        let priceUSD = priceTWD / fx;
+        // 假設 Threshold 0.825
+        weightedColUSD += (pos.collaterals[t] * priceUSD * 0.825);
+      }
+      for (let d in pos.debts) {
+        let priceTWD = marketData.prices[d] || 0;
+        let priceUSD = d === 'USDT' || d === 'USDC' ? 1.0 : (priceTWD / fx);
+        totalDebtUSD += pos.debts[d] * priceUSD;
+      }
+    }
+
+    const hf = totalDebtUSD > 0 ? (weightedColUSD / totalDebtUSD) : 999;
+    let status = 'Safe';
+    if (hf < 1.0) status = 'Danger';
+    else if (hf < 1.1) status = 'Warning';
+
+    return {
+      label: 'Aggregated HF',
+      value: hf.toFixed(2),
+      status: status,
+      rawRatio: hf
+    };
+  }
+
+  static aggCredit(positions) {
+    return { label: '信貸', value: '-', status: 'Info' };
+  }
+
+  static calcStock(pos, marketData) { return this.aggStock([pos], marketData); }
+  static calcCrypto(pos, marketData) { return this.aggCrypto([pos], marketData); }
+  static calcCredit(pos) { return this.aggCredit([pos]); }
+}
+
 // 輔助函式需保留
 function normalizeTicker(t) {
   if (!t) return '';
@@ -267,4 +392,3 @@ function normalizeTicker(t) {
   }
   return t;
 }
-// utf-8 fixed

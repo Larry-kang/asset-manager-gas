@@ -1,0 +1,76 @@
+
+> asset-manager-gas@1.0.0 test
+> jest tests/aggregation.test.js
+
+  console.log
+    Aggregated Stock Risk: {
+      label: '?湔蝬剜???,
+      value: '134.02%',
+      status: 'Warning',
+      rawRatio: 134.020618556701
+    }
+
+      at Object.log (tests/aggregation.test.js:36:17)
+
+FAIL tests/aggregation.test.js
+  Aggregation Logic Tests
+    ? Stock Aggregation: Multiple Positions -> One Ratio (18 ms)
+    ? Backward Compatibility: Single Position Transform (1 ms)
+    ? Crypto Aggregation: Health Factor (1 ms)
+
+  ??Aggregation Logic Tests ??Stock Aggregation: Multiple Positions -> One Ratio
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "嚙踝蕭嚙踝蕭嚙踝蕭嚙緞"
+    Received: "?湔蝬剜???
+
+      36 |         console.log('Aggregated Stock Risk:', aggRisk);
+      37 |
+    > 38 |         expect(aggRisk.label).toBe('嚙踝蕭嚙踝蕭嚙踝蕭嚙緞');
+         |                               ^
+      39 |         expect(Number(parseFloat(aggRisk.value))).toBeCloseTo(134.02, 1);
+      40 |         expect(aggRisk.status).toBe('Warning');
+      41 |     });
+
+      at Object.toBe (tests/aggregation.test.js:38:31)
+
+  ??Aggregation Logic Tests ??Backward Compatibility: Single Position Transform
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "嚙踝蕭嚙踝蕭嚙踝蕭嚙緞"
+    Received: "?湔蝬剜???
+
+      49 |
+      50 |         const risk = RiskCalculator.transform(pos, stockMarketData);
+    > 51 |         expect(risk.label).toBe('嚙踝蕭嚙踝蕭嚙踝蕭嚙緞'); // Now defaults to aggregated label
+         |                            ^
+      52 |         expect(Number(parseFloat(risk.value))).toBeCloseTo(1000.00);
+      53 |     });
+      54 |
+
+      at Object.toBe (tests/aggregation.test.js:51:28)
+
+  ??Aggregation Logic Tests ??Crypto Aggregation: Health Factor
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Health Factor"
+    Received: "Aggregated HF"
+
+      64 |         const aggRisk = RiskCalculator.aggregate([pos1], 'Crypto', cryptoMarketData);
+      65 |
+    > 66 |         expect(aggRisk.label).toBe('Health Factor');
+         |                               ^
+      67 |         expect(aggRisk.status).toBeDefined();
+      68 |     });
+      69 |
+
+      at Object.toBe (tests/aggregation.test.js:66:31)
+
+Test Suites: 1 failed, 1 total
+Tests:       3 failed, 3 total
+Snapshots:   0 total
+Time:        0.584 s, estimated 1 s
+Ran all test suites matching /tests\\aggregation.test.js/i.
