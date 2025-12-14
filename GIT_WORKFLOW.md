@@ -10,9 +10,10 @@
 *   **`main` (主分支)**:
     *   ? **禁止直接 Commit**。
     *   這是「生產環境 (Production)」的代碼。
-    *   任何推送到此分支的變更都會 **自動觸發部署** 到 Google Apps Script (Release Version)。
+    *   **唯一** 會觸發自動部署的分支。
 *   **`feat/*` (功能分支)**:
     *   開發新功能時使用。
+    *   推送此分支 **不會** 觸發線上部署 (CI 僅執行測試)。
     *   命名範例: `feat/add-login`, `feat/new-dashboard`。
 *   **`fix/*` (修復分支)**:
     *   修復 Bug 時使用。
