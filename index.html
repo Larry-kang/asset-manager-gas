@@ -153,13 +153,12 @@
 
           <div style="margin-bottom:24px">
             <div style="font-weight:600; margin-bottom:8px">Base Currency</div>
-            <select id="setCurrency" style="max-width:200px">
+            <select id="setCurrency" style="max-width:200px" onchange="autoSaveSettings()">
               <option value="TWD" selected>TWD (NT$)</option>
               <option value="USD">USD ($)</option>
             </select>
           </div>
-
-          <button class="btn-gold-pill" onclick="saveSettings()">Save Preferences</button>
+          <!-- Save button removed for fluent auto-save UX -->
         </div>
 
         <div class="card" style="margin-top:24px">

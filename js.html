@@ -416,14 +416,15 @@
         document.body.classList.toggle('light-mode');
         const tog = document.getElementById('themeToggle');
         if (tog) tog.checked = !document.body.classList.contains('light-mode');
+        autoSaveSettings();
     }
 
-    function saveSettings() {
+    function autoSaveSettings() {
         const isDark = !document.body.classList.contains('light-mode');
         const curr = document.getElementById('setCurrency').value;
         const prefs = { dark: isDark, currency: curr };
         localStorage.setItem('am_prefs', JSON.stringify(prefs));
-        showMsg('Settings Saved', 'Your preferences have been updated.');
+        // Silent save - no alert
     }
 
     function loadSettings() {
@@ -435,6 +436,7 @@
                     const sel = document.getElementById('setCurrency');
                     if (sel) sel.value = p.currency;
                 }
+                const tog = document.getElementById('themeToggle');
                 if (tog) tog.checked = (p.dark !== false);
             }
         } catch (e) { console.error('Error loading settings', e); }
@@ -447,7 +449,7 @@
         // Simple mock for language toggle visual feedback
         const el = document.querySelector('[data-i18n="Lang"] + div');
         if (el) el.innerText = lang === 'zh' ? '中文' : 'English';
-        showMsg('Language Changed', `Locale set to ${lang === 'zh' ? 'Traditional Chinese' : 'English'}`);
+        // Silent update - no alert
     }
 
     function runSystemCheck() {

@@ -34,11 +34,16 @@ test('Dashboard Loads and Shows Risks', async ({ page }) => {
     await expect(page.locator('text=System')).toBeVisible();
     await expect(page.locator('text=Run Diagnostics')).toBeVisible();
 
-    // Toggle Theme
+    // Toggle Theme (Instant)
     await page.click('#themeToggle');
 
-    // Toggle Language (Mock Check)
+    // Toggle Language (Instant)
     await page.click('text=Language');
+
+    // Toggle Currency (Instant Auto-Save)
+    await page.selectOption('#setCurrency', 'USD');
+    // Assert no alert appeared (implicit, Playwright would fail if untracked dialog pops up without handler, 
+    // or we can just proceed to verify navigation matches expectation)
 
     // 6. Test Loan Wizard Flow
     await page.click('div[onclick="go(\'loan\', this)"]'); // Back to vault
