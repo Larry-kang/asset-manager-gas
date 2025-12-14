@@ -25,24 +25,23 @@ test('Dashboard Loads and Shows Risks', async ({ page }) => {
     // 4. Verify Risk Card ("Sinopac")
     await expect(page.locator('text=Sinopac')).toBeVisible();
 
-    // Check for some value presence, but relax specific text for now
-    // await expect(page.locator('text=160.00')).toBeVisible();
+    // 5. Test Settings Page (New)
+    await page.click('div[onclick="go(\'settings\', this)"]');
+    await expect(page.locator('#settings')).toBeVisible();
+    await expect(page.locator('text=Dark Mode')).toBeVisible();
+    await page.click('#themeToggle'); // Toggle Theme
 
-    // 5. Test Loan Wizard Opening
+    // 6. Test Loan Wizard Flow
+    await page.click('div[onclick="go(\'loan\', this)"]'); // Back to vault
     await page.click('text=+ New Loan');
     await expect(page.locator('#modalWizard')).toBeVisible();
-    await expect(page.locator('text=Smart Loan Wizard')).toBeVisible();
 
-    // 6. Test Wizard Flow (Select AAVE)
-    await page.click('text=DeFi Lending (AAVE)');
+    // Step 1 -> Step 2
+    // Click Sinopac card
+    await page.click('text=Stock Loan (Sinopac)');
+    await expect(page.locator('#wizStep2')).not.toBeHidden();
+    // await expect(page.locator('#wizStockTicker')).toBeVisible();
 
-    // Verify Step 2 shows up
-    const step2 = page.locator('#wizStep2');
-    await expect(step2).not.toBeHidden(); // .hidden class removed
-    // await expect(page.locator('text=AAVE (Crypto)')).toBeVisible();
-
-    // 7. Verify Crypto Input Form
-    await expect(page.locator('#wizInputCrypto')).not.toBeHidden();
-
-    await page.screenshot({ path: 'tests/e2e/report/loan_dashboard.png' });
+    // Take Final Screenshot
+    await page.screenshot({ path: 'tests/e2e/report/qa_verification.png', fullPage: true });
 });

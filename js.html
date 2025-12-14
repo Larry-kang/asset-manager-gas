@@ -410,4 +410,37 @@
         closeWizard();
         google.script.run.withSuccessHandler(() => load(true)).getDashboardData();
     }
+
+    /* --- SETTINGS LOGIC --- */
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        const tog = document.getElementById('themeToggle');
+        if (tog) tog.checked = !document.body.classList.contains('light-mode');
+    }
+
+    function saveSettings() {
+        const isDark = !document.body.classList.contains('light-mode');
+        const curr = document.getElementById('setCurrency').value;
+        const prefs = { dark: isDark, currency: curr };
+        localStorage.setItem('am_prefs', JSON.stringify(prefs));
+        showMsg('Settings Saved', 'Your preferences have been updated.');
+    }
+
+    function loadSettings() {
+        try {
+            const p = JSON.parse(localStorage.getItem('am_prefs'));
+            if (p) {
+                if (p.dark === false) document.body.classList.add('light-mode');
+                if (p.currency) {
+                    const sel = document.getElementById('setCurrency');
+                    if (sel) sel.value = p.currency;
+                }
+                const tog = document.getElementById('themeToggle');
+                if (tog) tog.checked = (p.dark !== false);
+            }
+        } catch (e) { console.error('Error loading settings', e); }
+    }
+
+    // Init
+    loadSettings();
 </script>

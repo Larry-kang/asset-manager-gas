@@ -66,6 +66,34 @@
   }
 
 
+  /* UTILITY: Forms */
+  input,
+  select {
+    background: #1A1A1A;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 12px;
+    border-radius: var(--radius-m);
+    width: 100%;
+    box-sizing: border-box;
+    font-family: var(--font-sans);
+    outline: none;
+    transition: all 0.3s;
+  }
+
+  input:focus,
+  select:focus {
+    border-color: var(--text-gold);
+    box-shadow: 0 0 0 2px rgba(212, 180, 131, 0.2);
+  }
+
+  /* Fix for Option styling in dark mode */
+  option {
+    background-color: #1A1A1A;
+    color: var(--text-primary);
+    padding: 10px;
+  }
+
   /* UTILITY: Visual Health Bar */
   .health-bar-container {
     height: 6px;

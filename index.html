@@ -137,34 +137,44 @@
       <!-- SETTINGS -->
       <div id="settings" class="view hidden">
         <div class="section-title" data-i18n="Sett">Settings</div>
+
         <div class="card">
-          <div class="asset-row">
-            <div data-i18n="SysStat">System Status</div>
-            <div class="bg-success" data-i18n="Oper">Operational</div>
-          </div>
-          <div class="asset-row" onclick="google.script.run.runSystemCheck()">
-            <div data-i18n="RunDig">Run Diagnostics</div>
-            <div style="color:var(--text-secondary)"><i class="fa-solid fa-chevron-right"></i></div>
-          </div>
-
-          <!-- New Toggles -->
-          <div class="asset-row" onclick="toggleTheme()">
-            <div data-i18n="Theme">Light Mode</div>
-            <div style="color:var(--text-gold)"><i class="fa-solid fa-circle-half-stroke"></i></div>
-          </div>
-          <div class="asset-row" onclick="setLang(curLang==='zh'?'en':'zh')">
-            <div data-i18n="Lang">Language</div>
-            <div style="color:var(--text-gold)">EN / 中</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
+            <div>
+              <div style="font-weight:600">Dark Mode</div>
+              <div style="font-size:12px; color:var(--text-secondary)">Toggle application theme</div>
+            </div>
+            <!-- Simple Toggle Switch -->
+            <label class="switch">
+              <input type="checkbox" id="themeToggle" checked onchange="toggleTheme()">
+              <span class="slider round"></span>
+            </label>
           </div>
 
-          <div class="asset-row">
-            <div>Version</div>
-            <div style="color:var(--text-secondary)">v4.1.0</div>
+          <div style="margin-bottom:24px">
+            <div style="font-weight:600; margin-bottom:8px">Base Currency</div>
+            <select id="setCurrency" style="max-width:200px">
+              <option value="TWD" selected>TWD (NT$)</option>
+              <option value="USD">USD ($)</option>
+            </select>
           </div>
+
+          <button class="btn-gold-pill" onclick="saveSettings()">Save Preferences</button>
+        </div>
+
+        <div class="card" style="margin-top:24px">
+          <div style="font-weight:600; margin-bottom:16px; color:var(--color-red)">Danger Zone</div>
+          <button class="btn-outline" style="border-color:var(--color-red); color:var(--color-red)"
+            onclick="if(confirm('Clear local cache?')) localStorage.clear()">Clear Local Cache</button>
         </div>
       </div>
 
+
+
     </div>
+  </div>
+
+  </div>
   </div>
 
   <!-- MODALS -->
