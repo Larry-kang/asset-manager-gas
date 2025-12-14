@@ -2,8 +2,10 @@
 description: Start a new feature development cycle (Git Flow)
 ---
 
-1. Create and switch to a new feature branch
+1. Update and switch to a new feature branch
 // turbo-all
+git checkout main
+git pull origin main
 git checkout -b feat/{{feature_name}}
 
 > [!NOTE]
