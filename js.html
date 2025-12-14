@@ -60,6 +60,10 @@
     }
 
     function renderAssets(d) {
+        // Hide Skeleton
+        const skel = document.getElementById('assetSkeleton');
+        if (skel) skel.style.display = 'none';
+
         if (!d.holdings) return;
         const ctx = document.getElementById('assetChart');
         if (!ctx) return;
@@ -191,6 +195,17 @@
         const rList = document.getElementById('riskList');
         if (!lList) return;
         lList.innerHTML = ''; rList.innerHTML = '';
+
+        if (!d.risks || d.risks.length === 0) {
+            rList.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align:center; padding:48px 24px; color:var(--text-secondary); background:var(--bg-card); border-radius:16px; border:1px dashed var(--border-color)">
+                    <i class="fa-solid fa-vault" style="font-size:48px; margin-bottom:16px; color:var(--text-gold); opacity:0.5"></i>
+                    <div style="font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:8px">No Active Loans</div>
+                    <div style="font-size:13px">Your vault is empty. Create a new loan to get started.</div>
+                </div>
+            `;
+            return;
+        }
 
         if (d.risks) {
             d.risks.forEach(r => {

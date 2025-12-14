@@ -105,6 +105,37 @@
     box-shadow: 0 0 10px rgba(212, 180, 131, 0.5);
   }
 
+  /* UTILITY: Skeleton Loader */
+  .skeleton {
+    background: linear-gradient(90deg, #222 25%, #333 50%, #222 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  .skeleton-text {
+    height: 16px;
+    width: 60%;
+    margin-bottom: 8px;
+  }
+
+  .skeleton-card {
+    border-radius: var(--radius-m);
+    padding: 16px;
+    border: 1px solid var(--border-color);
+  }
+
   /* UTILITY: Glassmorphism */
   .glass-panel {
     background: rgba(18, 18, 18, 0.85);

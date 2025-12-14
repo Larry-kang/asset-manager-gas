@@ -82,9 +82,25 @@
                   <canvas id="assetChart"></canvas>
                 </div>
 
-                <div id="assetList" style="flex:1; min-width:280px">
-                  <!-- Injected by JS -->
-                  <div style="text-align:center; color:var(--text-secondary)">Loading...</div>
+                <div style="flex:1; min-width:280px">
+                  <!-- Skeleton State -->
+                  <div id="assetSkeleton">
+                    <div class="skeleton-card" style="margin-bottom:8px">
+                      <div style="display:flex; justify-content:space-between">
+                        <div class="skeleton skeleton-text" style="width:40%"></div>
+                        <div class="skeleton skeleton-text" style="width:20%"></div>
+                      </div>
+                      <div class="skeleton skeleton-text" style="width:30%"></div>
+                    </div>
+                    <div class="skeleton-card">
+                      <div style="display:flex; justify-content:space-between">
+                        <div class="skeleton skeleton-text" style="width:40%"></div>
+                        <div class="skeleton skeleton-text" style="width:20%"></div>
+                      </div>
+                      <div class="skeleton skeleton-text" style="width:30%"></div>
+                    </div>
+                  </div>
+                  <div id="assetList"></div>
                 </div>
               </div>
             </div>
