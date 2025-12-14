@@ -190,21 +190,27 @@
     <div class="modal-content" style="max-width: 500px">
       <h3 class="section-title" style="margin-top:0">Smart Loan Wizard</h3>
 
+      <!-- Stepper -->
+      <div class="stepper">
+        <div class="step-dot active" id="wizDot1"></div>
+        <div class="step-dot" id="wizDot2"></div>
+      </div>
+
       <!-- Step 1: Protocol Selection -->
       <div id="wizStep1">
         <label>Select Loan Protocol</label>
         <div class="wizard-options">
-          <div class="wiz-card" onclick="setWizProto('Sinopac', 'Stock')">
+          <div class="protocol-card" onclick="setWizProto('Sinopac', 'Stock')">
             <i class="fa-solid fa-arrow-trend-up"></i>
-            <div>Stock Loan (Sinopac)</div>
+            <div style="margin-top:8px">Stock Loan (Sinopac)</div>
           </div>
-          <div class="wiz-card" onclick="setWizProto('AAVE', 'Crypto')">
+          <div class="protocol-card" onclick="setWizProto('AAVE', 'Crypto')">
             <i class="fa-brands fa-ethereum"></i>
-            <div>DeFi Lending (AAVE)</div>
+            <div style="margin-top:8px">DeFi Lending (AAVE)</div>
           </div>
-          <div class="wiz-card" onclick="setWizProto('LineBank', 'Credit')">
+          <div class="protocol-card" onclick="setWizProto('LineBank', 'Credit')">
             <i class="fa-solid fa-credit-card"></i>
-            <div>Credit Loan (Line Bank)</div>
+            <div style="margin-top:8px">Credit Loan (Line Bank)</div>
           </div>
         </div>
       </div>

@@ -194,38 +194,66 @@
 
         if (d.risks) {
             d.risks.forEach(r => {
-                const riskColor = r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? 'var(--color-yellow)' : 'var(--color-red)');
+                const riskColor = r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? '#FBBF24' : 'var(--color-red)');
                 const ratio = r.ratio === '-' ? 0 : parseFloat(r.ratio);
+
+                // Visual Bar Logic: 110%~200% mapped to bar width
+                let barPct = 0;
+                if (ratio > 0) {
+                    barPct = Math.min(Math.max((ratio - 110) / (200 - 110) * 100, 5), 100);
+                }
+                if (ratio > 300) barPct = 100;
 
                 const card = document.createElement('div');
                 card.className = 'card';
+                card.style.position = 'relative';
                 card.onclick = () => openLoanAction(r.source, 'repay');
-                card.innerHTML = `
-             <div style="display:flex; justify-content:space-between; align-items:center;">
-                 <div class="card-label" style="font-size:16px"><i class="fa-solid fa-shield-halved" style="margin-right:8px"></i>${r.source}</div>
-                 <div class="bg-success" style="background:${riskColor}; color:#111; opacity:0.8">${r.status}</div>
-             </div>
-             <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:8px">
-                 <div class="card-value" style="font-size:32px">${r.ratio}${r.ratio === '-' ? '' : (r.source === 'AAVE' ? '' : '%')}</div>
-                 <div style="font-size:13px; color:var(--text-secondary)">${r.label}</div>
-             </div>
-             
-             <div style="background:#222; border-radius:8px; padding:12px; margin-top:16px">
-                 <div style="display:flex; justify-content:space-between; margin-bottom:8px">
-                    <span style="color:var(--text-secondary); font-size:13px">Collateral</span>
-                    <span style="font-weight:600">${fmt(r.colValTWD)}</span>
-                 </div>
-                 <div style="display:flex; justify-content:space-between">
-                    <span style="color:var(--text-secondary); font-size:13px">Debt</span>
-                    <span style="font-weight:600">${fmt(r.debtTWD)}</span>
-                 </div>
-             </div>
 
-             <div style="margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:12px">
-                <button class="btn-outline" onclick="event.stopPropagation(); openLoanAction('${r.source}', 'addCol')">Add Col</button>
-                <button class="btn-outline" onclick="event.stopPropagation(); openLoanAction('${r.source}', 'repay')">Repay</button>
+                card.innerHTML = `
+         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+             <div class="card-label" style="font-size:16px; font-weight:600; color:white">
+                <i class="fa-solid fa-shield-halved" style="margin-right:8px; color:var(--text-gold)"></i>${r.source}
              </div>
-             `;
+             <div style="font-size:12px; color:${riskColor}; border:1px solid ${riskColor}; padding:2px 8px; border-radius:12px">
+                ${r.status}
+             </div>
+         </div>
+
+         <!-- Health Bar Section -->
+         <div style="margin-bottom:20px">
+             <div style="display:flex; justify-content:space-between; align-items:baseline">
+                 <div style="color:var(--text-secondary); font-size:12px">Health Factor</div>
+                 <div class="card-value" style="font-size:24px; color:${riskColor}">${r.ratio}${r.ratio === '-' ? '' : '%'}</div>
+             </div>
+             <div class="health-bar-container">
+                 <div class="health-bar-fill" style="width:${barPct}%; background: linear-gradient(90deg, ${riskColor}, ${riskColor}); box-shadow: 0 0 8px ${riskColor}"></div>
+             </div>
+         </div>
+         
+         <!-- Split Data Grid -->
+         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding-top:16px; border-top:1px solid var(--border-color)">
+             <!-- Collateral Col -->
+             <div>
+                <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px"><i class="fa-solid fa-layer-group" style="margin-right:6px"></i>Collateral</div>
+                <div style="font-weight:600; font-size:15px; color:white">${fmt(r.colValTWD)}</div>
+             </div>
+             <!-- Debt Col -->
+             <div style="text-align:right">
+                <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px"><i class="fa-solid fa-file-invoice-dollar" style="margin-right:6px"></i>Debt</div>
+                <div style="font-weight:600; font-size:15px; color:white">${fmt(r.debtTWD)}</div>
+             </div>
+         </div>
+
+         <!-- Actions -->
+         <div style="margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <button class="btn-outline" style="border-radius:24px; font-size:13px; height:40px" onclick="event.stopPropagation(); openLoanAction('${r.source}', 'addCol')">
+                <i class="fa-solid fa-plus" style="margin-right:4px"></i>Add Col
+            </button>
+            <button class="btn-outline" style="border-radius:24px; font-size:13px; height:40px; border-color:var(--color-red); color:var(--color-red)" onclick="event.stopPropagation(); openLoanAction('${r.source}', 'repay')">
+                Repay
+            </button>
+         </div>
+         `;
                 rList.appendChild(card);
             });
         }
@@ -292,7 +320,7 @@
 
     function openWizard() {
         document.getElementById('modalWizard').style.display = 'flex';
-        wizBack();
+        wizBack(); // Resets to step 1
     }
     function closeWizard() { document.getElementById('modalWizard').style.display = 'none'; }
 
@@ -300,6 +328,10 @@
         wizProto = proto; wizType = type;
         document.getElementById('wizStep1').classList.add('hidden');
         document.getElementById('wizStep2').classList.remove('hidden');
+
+        // Stepper Update
+        document.getElementById('wizDot2').classList.add('active');
+
         document.getElementById('wizProtoLabel').innerText = `${proto} (${type})`;
 
         document.getElementById('wizInputStock').classList.add('hidden');
@@ -312,6 +344,10 @@
     function wizBack() {
         document.getElementById('wizStep1').classList.remove('hidden');
         document.getElementById('wizStep2').classList.add('hidden');
+
+        // Stepper Update
+        document.getElementById('wizDot1').classList.add('active');
+        document.getElementById('wizDot2').classList.remove('active');
     }
 
     function initWizStock() {
