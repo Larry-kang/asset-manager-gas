@@ -463,6 +463,22 @@
 
             // --- MOUNT HANDLER ---
             onMounted(() => {
+                // Remove Loading Spinner
+                const loader = document.getElementById('loading');
+                if (loader) loader.style.display = 'none';
+
+                // Show App
+                const appRoot = document.getElementById('app');
+                if (appRoot) {
+                    appRoot.style.display = 'block';
+                    // Optional: Fade In
+                    appRoot.style.opacity = 0;
+                    requestAnimationFrame(() => {
+                        appRoot.style.transition = 'opacity 0.5s';
+                        appRoot.style.opacity = 1;
+                    });
+                }
+
                 // Force correct initial theme class
                 if (state.theme === 'light') {
                     document.body.classList.add('light-mode');

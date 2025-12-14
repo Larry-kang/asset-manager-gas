@@ -3,18 +3,58 @@
 
 <head>
   <base target="_top">
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- ROBUST CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <meta name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
   <?!= include('css'); ?>
   <title>Asset Manager v4.1.0</title>
+
+  <style>
+    /* CRITICAL LOADING SPINNER */
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: #070707;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #C6A775;
+      font-family: sans-serif;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(198, 167, 117, 0.3);
+      border-radius: 50%;
+      border-top-color: #C6A775;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-  <div id="app" class="app-root" v-cloak>
+  <!-- LOADING STATE -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <div>Loading Funds...</div>
+  </div>
+
+  <!-- APP ROOT (Hidden by default to prevent raw mustache) -->
+  <div id="app" class="app-root" style="display:none">
 
     <!-- MOBILE HEADER -->
     <div class="mobile-header">
@@ -22,6 +62,8 @@
       <div class="logo-text" style="font-size:16px">ASSET MANAGER</div>
       <div style="width:20px"></div><!-- Spacer -->
     </div>
+
+    <!-- ... (Content skipped for brevity, standard vue) ... -->
 
     <!-- SIDEBAR (Drawer Mode on Mobile) -->
     <div class="sidebar" :class="{ 'open': state.menuOpen }">
@@ -83,7 +125,6 @@
       <!-- Mobile Drawer Overlay -->
       <div v-if="state.menuOpen" class="drawer-overlay" @click="state.menuOpen = false"></div>
 
-      <!-- DASHBOARD -->
       <!-- DASHBOARD -->
       <div v-show="state.currentView === 'dash'" class="view active">
 
@@ -215,7 +256,6 @@
       </div>
 
       <!-- VAULT / LOANS -->
-      <!-- VAULT / LOANS -->
       <div v-show="state.currentView === 'loan'" class="view">
         <div class="top-header">
           <div class="section-title">{{ t('Vault') }}</div>
@@ -300,12 +340,10 @@
           </div>
 
           <!-- FALLBACK: If a source has loans but NO risk entry (e.g. manual entry without API data), show separate card -->
-          <!-- Currently skipping for simplicity as risk usually covers all sources used -->
           <div v-for="(loans, src) in loanGroups" :key="src + '_orphan'">
             <div v-if="!state.risks.find(r => r.source === src)" class="card">
               <div class="section-title" style="margin-bottom:12px">{{ src }} (Unknown Risk)</div>
               <div v-for="l in loans" :key="l.row" class="asset-row" @click="clickLoan(l)">
-                <!-- Same Loan Row UI -->
                 <div>
                   <div style="font-weight:600">{{ l.col }}</div>
                   <div style="font-size:12px; color:var(--text-secondary)">Rate: {{ l.rate }}%</div>
@@ -318,8 +356,6 @@
 
       </div>
 
-      <!-- SETTINGS -->
-      <!-- SETTINGS -->
       <!-- SETTINGS -->
       <div v-show="state.currentView === 'settings'" class="view">
         <div class="top-header">
@@ -374,7 +410,9 @@
   </div>
 
   <!-- MODALS -->
-  <div v-if="state.txModal.show" class="modal-overlay" style="display:flex" @click.self="state.txModal.show = false">
+  <!-- MODAL FIX: Use :style to only set display:flex if Vue binds it. Default relies on CSS .modal-overlay { display: none } -->
+  <div v-if="state.txModal.show" class="modal-overlay" :style="{display: 'flex'}"
+    @click.self="state.txModal.show = false">
     <div class="modal-content">
       <h3 class="section-title" style="margin-top:0">{{ t('NewTx') }}</h3>
       <input type="date" v-model="state.txModal.date">
@@ -409,7 +447,7 @@
     </div>
   </div>
 
-  <div v-if="state.newLoanModal.show" class="modal-overlay" style="display:flex"
+  <div v-if="state.newLoanModal.show" class="modal-overlay" :style="{display: 'flex'}"
     @click.self="state.newLoanModal.show = false">
     <div class="modal-content">
       <div style="font-size:18px; font-weight:600; margin-bottom:16px">{{ state.isEditMode ? 'Update Loan' :
@@ -491,7 +529,7 @@
   </div>
 
   <!-- LOAN ACTION MODAL -->
-  <div v-if="state.loanModal.show" class="modal-overlay" style="display:flex"
+  <div v-if="state.loanModal.show" class="modal-overlay" :style="{display: 'flex'}"
     @click.self="state.loanModal.show = false">
     <div class="modal-content">
       <h3 class="section-title" style="margin-top:0">{{ state.loanModal.title }}</h3>
@@ -529,7 +567,7 @@
     </div>
   </div>
 
-  <div v-if="state.msg.show" class="modal-overlay" style="display:flex; z-index:300">
+  <div v-if="state.msg.show" class="modal-overlay" :style="{display: 'flex', zIndex: 300}">
     <div class="modal-content" style="text-align:center">
       <h3 class="section-title">{{ state.msg.title }}</h3>
       <p style="color:var(--text-secondary); margin-bottom:24px">{{ state.msg.body }}</p>
