@@ -20,3 +20,4 @@ const TYPE_CARD = '卡費';
 const ACT_BUY = '買入';
 const ACT_SELL = '賣出';
 const ACT_DIVIDEND = '配息';
+ 
