@@ -1,4 +1,7 @@
-const { getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker } = require('./setup');
+const {
+    getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
+    ACT_BUY, ACT_SELL, TYPE_STOCK
+} = require('./setup');
 
 describe('Helper Functions', () => {
     test('normalizeTicker should format correctly', () => {
@@ -26,12 +29,6 @@ describe('Logic.gs Tests', () => {
         ['BTC', '', 90000]
     ];
 
-    // Use Unicode escapes for Chinese: 
-    // 買入: \u8cb7\u5165, 賣出: \u8ce3\u51fa, 股票: \u80a1\u7968
-    const ACT_BUY = '\u8cb7\u5165';
-    const ACT_SELL = '\u8ce3\u51fa';
-    const TYPE_STOCK = '\u80a1\u7968';
-
     // Log Rows: [Date, Type, Ticker, Cat, Qty, Price, Currency, Note]
     const mockLogRows = [
         ['Header'],
@@ -43,7 +40,7 @@ describe('Logic.gs Tests', () => {
     // Loan Rows: [Source, Date, Amt, Rate, Col, Qty, Type, Warn, Liq, Note, Total, Paid, MonthPay, Curr]
     const mockLoanRows = [
         ['Header'],
-        // 借 10000 TWD, 抵押 100 股 2330 (Val: 100 * 1000 = 100,000), Luan: 10,000. Ratio: 1000%
+        //  10000 TWD, ╄┿ 100  2330 (Val: 100 * 1000 = 100,000), Luan: 10,000. Ratio: 1000%
         ['BankA', '2025-01-01', 10000, 2, '2330', 100, TYPE_STOCK, 160, 130, 'App', 12, 0, 0, 'TWD']
     ];
 

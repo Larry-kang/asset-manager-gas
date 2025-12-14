@@ -128,10 +128,10 @@ function calculatePortfolio(logRows, marketData, pledgedData) {
     if (freeQty > 0.000001) inventory[t] = freeQty;
 
     let currentPrice = marketData.prices[t];
-    if (h.cat === '現金') { currentPrice = 1; h.totalCost = h.qty; }
+    if (h.cat === TYPE_CASH) { currentPrice = 1; h.totalCost = h.qty; }
     else if (!currentPrice) { currentPrice = 0; }
 
-    let isUsdAsset = (h.currency === 'USD' || h.cat === '加密貨幣' || (h.cat === '股票' && !/^[0-9]/.test(t)));
+    let isUsdAsset = (h.currency === 'USD' || h.cat === TYPE_CRYPTO || (h.cat === TYPE_STOCK && !/^[0-9]/.test(t)));
     let marketValue = h.qty * currentPrice;
     let avgCost = h.qty > 0 ? (h.totalCost / h.qty) : 0;
     let pnl = marketValue - h.totalCost;
@@ -197,7 +197,7 @@ function calculateLoans(loanRows, marketData) {
       totalDebtTWD += debtTWD;
 
       let price = marketData.prices[col] || 0;
-      let isUsd = (type === '加密貨幣' || (type === '股票' && !/^[0-9]/.test(col)));
+      let isUsd = (type === TYPE_CRYPTO || (type === TYPE_STOCK && !/^[0-9]/.test(col)));
       let colValTWD = colQty * price * (isUsd ? marketData.fx : 1);
 
       contracts.push({
@@ -230,12 +230,12 @@ function calculateLoans(loanRows, marketData) {
     let r = riskMap[src];
     let ratio = 0, status = 'Safe', label = '';
 
-    if (r.type === '股票') {
+    if (r.type === TYPE_STOCK) {
       label = '維持率';
       ratio = r.debtTWD > 0 ? (r.colValTWD / r.debtTWD * 100) : 999;
       if (ratio < r.liq) status = 'Danger'; else if (ratio < r.warn) status = 'Warning';
     }
-    else if (r.type === '加密貨幣') {
+    else if (r.type === TYPE_CRYPTO) {
       label = 'LTV';
       ratio = r.colValTWD > 0 ? (r.debtTWD / r.colValTWD * 100) : 0;
       if (ratio > r.liq) status = 'Danger'; else if (ratio > r.warn) status = 'Warning';
@@ -246,9 +246,9 @@ function calculateLoans(loanRows, marketData) {
 
     risks.push({
       source: src, type: r.type, label: label,
-      ratio: (r.type === '信用貸款' || r.type === '卡費') ? '-' : ratio.toFixed(2),
+      ratio: (r.type === TYPE_CREDIT || r.type === TYPE_CARD) ? '-' : ratio.toFixed(2),
       debtTWD: r.debtTWD, colValTWD: r.colValTWD, status: status,
-      termInfo: (r.type === '信用貸款') ? `${r.paidTerm}/${r.totalTerm}` : ''
+      termInfo: (r.type === TYPE_CREDIT) ? `${r.paidTerm}/${r.totalTerm}` : ''
     });
   }
 

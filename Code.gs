@@ -1,19 +1,6 @@
-// --- 設定區 ---
-const TAB_LOG = '交易紀錄';
-const TAB_LOAN = '借貸紀錄';
-const TAB_MARKET = 'MarketData';
-const TAB_HISTORY = '資產歷程';
+// --- 設定區 & 常數定義 ---
+// 已移至 Constants.gs
 
-// --- 常數定義 (Backend) ---
-const TYPE_STOCK = '股票';
-const TYPE_CRYPTO = '加密貨幣';
-const TYPE_CASH = '現金';
-const TYPE_CREDIT = '信用貸款';
-const TYPE_CARD = '卡費';
-
-const ACT_BUY = '買入';
-const ACT_SELL = '賣出';
-const ACT_DIVIDEND = '配息';
 
 function onOpen() {
   SpreadsheetApp.getUi()
