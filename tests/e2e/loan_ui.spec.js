@@ -29,7 +29,16 @@ test('Dashboard Loads and Shows Risks', async ({ page }) => {
     await page.click('div[onclick="go(\'settings\', this)"]');
     await expect(page.locator('#settings')).toBeVisible();
     await expect(page.locator('text=Dark Mode')).toBeVisible();
-    await page.click('#themeToggle'); // Toggle Theme
+
+    // Check restored "System" card
+    await expect(page.locator('text=System')).toBeVisible();
+    await expect(page.locator('text=Run Diagnostics')).toBeVisible();
+
+    // Toggle Theme
+    await page.click('#themeToggle');
+
+    // Toggle Language (Mock Check)
+    await page.click('text=Language');
 
     // 6. Test Loan Wizard Flow
     await page.click('div[onclick="go(\'loan\', this)"]'); // Back to vault

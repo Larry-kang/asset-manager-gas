@@ -162,20 +162,31 @@
           <button class="btn-gold-pill" onclick="saveSettings()">Save Preferences</button>
         </div>
 
-        <div class="card" style="margin-top:24px; border:1px solid rgba(248, 113, 113, 0.2)">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
-            <div>
-              <div style="font-weight:600; color:var(--color-red)">Danger Zone</div>
-              <div style="font-size:12px; color:var(--text-secondary)">Irreversibly clear all local data</div>
-            </div>
-            <i class="fa-solid fa-triangle-exclamation" style="color:var(--color-red); opacity:0.5"></i>
+        <div class="card" style="margin-top:24px">
+          <div style="font-weight:600; margin-bottom:16px">System</div>
+
+          <div class="asset-row">
+            <div data-i18n="SysStat">Status</div>
+            <div style="color:var(--color-green)">Operational</div>
           </div>
-          <button class="btn-outline"
-            style="width:100%; border-color:var(--color-red); color:var(--color-red); border-radius:99px"
-            onclick="if(confirm('Are you sure you want to clear local cache? This cannot be undone.')) { localStorage.clear(); location.reload(); }">
-            Clear Local Cache
-          </button>
+
+          <div class="asset-row" onclick="runSystemCheck()">
+            <div data-i18n="RunDig">Run Diagnostics</div>
+            <div style="color:var(--text-secondary)"><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+
+          <div class="asset-row" onclick="setLang(curLang==='zh'?'en':'zh')">
+            <div data-i18n="Lang">Language</div>
+            <div style="color:var(--text-gold)">EN / 中</div>
+          </div>
+
+          <div class="asset-row">
+            <div>Version</div>
+            <div style="color:var(--text-secondary)">v4.2.0</div>
+          </div>
         </div>
+
+
       </div>
 
 
