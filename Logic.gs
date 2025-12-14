@@ -266,3 +266,4 @@ function normalizeTicker(t) {
   }
   return t;
 }
+// utf-8 fixed

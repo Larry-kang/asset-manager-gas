@@ -282,3 +282,4 @@ function fetchCryptoPrice(ticker, logs) {
   } catch (e) { }
   return null;
 }
+// utf-8 fixed
