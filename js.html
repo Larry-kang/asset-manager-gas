@@ -470,7 +470,7 @@
                 // Show App
                 const appRoot = document.getElementById('app');
                 if (appRoot) {
-                    appRoot.style.display = 'block';
+                    appRoot.style.display = ''; // Revert to CSS (flex)
                     // Optional: Fade In
                     appRoot.style.opacity = 0;
                     requestAnimationFrame(() => {
