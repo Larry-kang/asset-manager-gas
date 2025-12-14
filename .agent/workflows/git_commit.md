@@ -17,4 +17,5 @@ git commit -m "{{type}}: {{message}}"
 > [!IMPORTANT]
 > - **Type**: `feat`, `fix`, `refactor`, `test`, `chore`
 > - **Message**: Short description of the change
-> - If tests fail, the commit process should generally be halted (though manual intervention might be needed if this script runs sequentially).
+> - If tests fail, the commit process should generally be halted.
+> - **Deployment**: Run `git push` or the `/deploy` workflow to trigger the CI/CD pipeline.
