@@ -13,6 +13,7 @@
                 risks: [],
                 contracts: [],
                 knownTickers: [],
+                logs: [], // Developer Logs
 
                 // Settings & UI
                 lang: localStorage.getItem('app_lang') || 'zh',
@@ -265,7 +266,9 @@
                     state.recentTx = d.recentTx || [];
                     state.risks = d.risks || [];
                     state.contracts = d.contracts || [];
+                    state.contracts = d.contracts || [];
                     state.knownTickers = d.knownTickers || [];
+                    state.logs = d.debug || []; // Capture Debug Logs
 
                     // Chart Update
                     let alloc = {};

@@ -353,173 +353,189 @@
             </div>
           </div>
         </div>
-      </div>
 
-    </div>
-
-    <!-- MODALS -->
-    <div v-if="state.txModal.show" class="modal-overlay" style="display:flex" @click.self="state.txModal.show = false">
-      <div class="modal-content">
-        <h3 class="section-title" style="margin-top:0">{{ t('NewTx') }}</h3>
-        <input type="date" v-model="state.txModal.date">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-          <select v-model="state.txModal.type">
-            <option>買入</option>
-            <option>賣出</option>
-            <option>配息</option>
-          </select>
-          <select v-model="state.txModal.cat">
-            <option>股票</option>
-            <option>加密貨幣</option>
-            <option>現金</option>
-          </select>
-        </div>
-        <input type="text" v-model="state.txModal.ticker" placeholder="Ticker (e.g. BTC)" list="tickerList">
-        <datalist id="tickerList">
-          <option v-for="t in state.knownTickers" :value="t"></option>
-        </datalist>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-          <input type="number" v-model="state.txModal.qty" placeholder="Qty">
-          <input type="number" v-model="state.txModal.price" placeholder="Price">
-        </div>
-        <div style="margin-bottom:16px">
-          <label>{{ t('Currency') }}</label>
-          <select v-model="state.txModal.currency">
-            <option>TWD</option>
-            <option>USD</option>
-          </select>
-        </div>
-        <button class="btn-gold-pill" style="width:100%" id="btnTx" @click="subTx()">{{ t('ConfirmTx') }}</button>
-      </div>
-    </div>
-
-    <div v-if="state.newLoanModal.show" class="modal-overlay" style="display:flex"
-      @click.self="state.newLoanModal.show = false">
-      <div class="modal-content">
-        <div style="font-size:18px; font-weight:600; margin-bottom:16px">{{ state.isEditMode ? 'Update Loan' :
-          t('NewLoan') }}</div>
-
-        <!-- TYPE SELECTOR (Disabled in Edit Mode) -->
-        <div style="display:flex; gap:8px; margin-bottom:16px; overflow-x:auto"
-          :style="{pointerEvents: state.isEditMode ? 'none' : 'auto', opacity: state.isEditMode ? 0.6 : 1}">
-          <div v-for="tag in ['Credit Card', 'Personal Loan', 'Stock Loan', 'Crypto Loan']" :key="tag"
-            @click="state.newLoanModal.type = tag; state.newLoanModal.col = ''; state.newLoanModal.colQty = ''"
-            class="tag" :class="{active: state.newLoanModal.type === tag}" style="white-space:nowrap">
-            {{ t(tag.replace(/\s/g, '')) }}
+        <!-- DEBUG LOGS -->
+        <div style="margin-top:20px; padding:0 4px">
+          <div
+            style="font-size:12px; color:var(--text-secondary); margin-bottom:8px; display:flex; justify-content:space-between"
+            @click="state.showDebug = !state.showDebug">
+            <span>Developer Logs</span>
+            <span>{{ state.showDebug ? 'Hide' : 'Show' }}</span>
           </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-          <!-- Source (Disabled in Edit Mode) -->
-          <input type="text" v-model="state.newLoanModal.source" :placeholder="t('Source') + ' (e.g. Fubon)'"
-            list="sourceList" :disabled="state.isEditMode">
-          <datalist id="sourceList">
-            <option value="Fubon"></option>
-            <option value="CTBC"></option>
-            <option value="Binance"></option>
-            <option value="Aave"></option>
-          </datalist>
-          <input type="date" v-model="state.newLoanModal.date">
-        </div>
-
-        <input type="number" v-model="state.newLoanModal.amount" :placeholder="t('Amt')" style="margin-top:12px">
-
-        <!-- CONDITIONAL: Rate & Period (For Personal Loan or Crypto/Stock) -->
-        <div v-if="state.newLoanModal.type !== 'Credit Card'"
-          style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px">
-          <input type="number" v-model="state.newLoanModal.rate" :placeholder="t('Rate')">
-          <select v-model="state.newLoanModal.currency">
-            <option value="TWD">TWD</option>
-            <option value="USD">USD</option>
-          </select>
-        </div>
-
-        <!-- CONDITIONAL: Personal Loan Extras -->
-        <div v-if="state.newLoanModal.type === 'Personal Loan'"
-          style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px">
-          <input type="number" v-model="state.newLoanModal.period" :placeholder="t('Period')">
-          <input type="number" v-model="state.newLoanModal.fee" :placeholder="t('Fee')">
-        </div>
-
-        <!-- CONDITIONAL: Collateral (Stock/Crypto Only) -->
-        <div v-if="state.newLoanModal.type === 'Stock Loan' || state.newLoanModal.type === 'Crypto Loan'">
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
-            <input type="text" v-model="state.newLoanModal.col" :placeholder="t('Ticker') + ' (e.g. ETH)'">
-            <input type="number" v-model="state.newLoanModal.colQty" :placeholder="t('ColQty')">
+          <div v-if="state.showDebug"
+            style="background:#111; padding:12px; border-radius:8px; font-family:monospace; font-size:10px; color:#aaa; max-height:200px; overflow-y:auto">
+            <div v-for="(l, i) in state.logs" :key="i">{{ l }}</div>
+            <div v-if="state.logs.length===0">No logs available</div>
           </div>
-          <div style="display:flex; gap:4px; margin-bottom:12px">
-            <div v-for="m in ['Cross', 'Isolated']" :key="m" @click="state.newLoanModal.marginMode = m" class="tag"
-              :class="{active: state.newLoanModal.marginMode === m}" style="padding:4px 12px; font-size:12px">{{ t(m) }}
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
-            <input type="number" v-model="state.newLoanModal.warn" :placeholder="t('Warn')">
-            <input type="number" v-model="state.newLoanModal.liq" :placeholder="t('Liq')">
-          </div>
-        </div>
-
-        <!-- ADVICE -->
-        <div v-if="maxBorrowAdvice"
-          style="margin-top:12px; background:rgba(255,215,0,0.1); padding:8px; border-radius:4px; font-size:13px; color:var(--color-gold); display:flex; align-items:center; gap:8px">
-          <i class="fa-regular fa-lightbulb"></i>
-          <span>{{ t('MaxSafe') }}: {{ fmt(maxBorrowAdvice) }} {{ state.newLoanModal.currency }}</span>
-        </div>
-        <div style="display:flex; gap:16px; margin-top:24px">
-          <button id="newLoanBtn" class="btn-gold-block" style="flex:1" :disabled="!isLoanValid"
-            :style="{opacity: isLoanValid ? 1 : 0.5}" @click="subNewLoan()">{{ state.isEditMode ? 'Update' : t('Create')
-            }}</button>
-          <button class="btn-outline-block" style="flex:1" @click="state.newLoanModal.show = false">{{ t('Cancel')
-            }}</button>
         </div>
       </div>
     </div>
 
-    <!-- LOAN ACTION MODAL -->
-    <div v-if="state.loanModal.show" class="modal-overlay" style="display:flex"
-      @click.self="state.loanModal.show = false">
-      <div class="modal-content">
-        <h3 class="section-title" style="margin-top:0">{{ state.loanModal.title }}</h3>
+  </div>
 
-        <label>{{ t('ActionType') }}</label>
-        <select v-model="state.loanModal.type">
-          <option value="repay">Repay (還款)</option>
-          <option value="addCol">Add Collateral (補抵押)</option>
-          <option value="increaseLoan">Increase Loan (增貸)</option>
-          <option value="payPeriod">Pay Interest (繳息/繳期)</option>
-          <option value="sell">Sell to Repay (賣出還款)</option>
+  <!-- MODALS -->
+  <div v-if="state.txModal.show" class="modal-overlay" style="display:flex" @click.self="state.txModal.show = false">
+    <div class="modal-content">
+      <h3 class="section-title" style="margin-top:0">{{ t('NewTx') }}</h3>
+      <input type="date" v-model="state.txModal.date">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+        <select v-model="state.txModal.type">
+          <option>買入</option>
+          <option>賣出</option>
+          <option>配息</option>
         </select>
+        <select v-model="state.txModal.cat">
+          <option>股票</option>
+          <option>加密貨幣</option>
+          <option>現金</option>
+        </select>
+      </div>
+      <input type="text" v-model="state.txModal.ticker" placeholder="Ticker (e.g. BTC)" list="tickerList">
+      <datalist id="tickerList">
+        <option v-for="t in state.knownTickers" :value="t"></option>
+      </datalist>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+        <input type="number" v-model="state.txModal.qty" placeholder="Qty">
+        <input type="number" v-model="state.txModal.price" placeholder="Price">
+      </div>
+      <div style="margin-bottom:16px">
+        <label>{{ t('Currency') }}</label>
+        <select v-model="state.txModal.currency">
+          <option>TWD</option>
+          <option>USD</option>
+        </select>
+      </div>
+      <button class="btn-gold-pill" style="width:100%" id="btnTx" @click="subTx()">{{ t('ConfirmTx') }}</button>
+    </div>
+  </div>
 
-        <div>
-          <label>
-            {{ state.loanModal.type === 'repay' ? t('RepayAmt') :
-            state.loanModal.type === 'addCol' ? t('ColQty') :
-            state.loanModal.type === 'increaseLoan' ? t('LoanAmt') :
-            state.loanModal.type === 'payPeriod' ? 'N/A' : t('SellQty') }}
-          </label>
-          <input type="number" v-model="state.loanModal.val" placeholder="Amount or Qty"
-            :disabled="state.loanModal.type === 'payPeriod'">
+  <div v-if="state.newLoanModal.show" class="modal-overlay" style="display:flex"
+    @click.self="state.newLoanModal.show = false">
+    <div class="modal-content">
+      <div style="font-size:18px; font-weight:600; margin-bottom:16px">{{ state.isEditMode ? 'Update Loan' :
+        t('NewLoan') }}</div>
 
-          <div v-if="state.loanModal.type !== 'repay' && state.loanModal.type !== 'payPeriod'">
-            <label>
-              {{ state.loanModal.type === 'addCol' ? t('NewRate') :
-              state.loanModal.type === 'increaseLoan' ? t('Rate') : t('LimitPrice') }}
-            </label>
-            <input type="number" v-model="state.loanModal.price" placeholder="Price">
+      <!-- TYPE SELECTOR (Disabled in Edit Mode) -->
+      <div style="display:flex; gap:8px; margin-bottom:16px; overflow-x:auto"
+        :style="{pointerEvents: state.isEditMode ? 'none' : 'auto', opacity: state.isEditMode ? 0.6 : 1}">
+        <div v-for="tag in ['Credit Card', 'Personal Loan', 'Stock Loan', 'Crypto Loan']" :key="tag"
+          @click="state.newLoanModal.type = tag; state.newLoanModal.col = ''; state.newLoanModal.colQty = ''"
+          class="tag" :class="{active: state.newLoanModal.type === tag}" style="white-space:nowrap">
+          {{ t(tag.replace(/\s/g, '')) }}
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+        <!-- Source (Disabled in Edit Mode) -->
+        <input type="text" v-model="state.newLoanModal.source" :placeholder="t('Source') + ' (e.g. Fubon)'"
+          list="sourceList" :disabled="state.isEditMode">
+        <datalist id="sourceList">
+          <option value="Fubon"></option>
+          <option value="CTBC"></option>
+          <option value="Binance"></option>
+          <option value="Aave"></option>
+        </datalist>
+        <input type="date" v-model="state.newLoanModal.date">
+      </div>
+
+      <input type="number" v-model="state.newLoanModal.amount" :placeholder="t('Amt')" style="margin-top:12px">
+
+      <!-- CONDITIONAL: Rate & Period (For Personal Loan or Crypto/Stock) -->
+      <div v-if="state.newLoanModal.type !== 'Credit Card'"
+        style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px">
+        <input type="number" v-model="state.newLoanModal.rate" :placeholder="t('Rate')">
+        <select v-model="state.newLoanModal.currency">
+          <option value="TWD">TWD</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
+
+      <!-- CONDITIONAL: Personal Loan Extras -->
+      <div v-if="state.newLoanModal.type === 'Personal Loan'"
+        style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px">
+        <input type="number" v-model="state.newLoanModal.period" :placeholder="t('Period')">
+        <input type="number" v-model="state.newLoanModal.fee" :placeholder="t('Fee')">
+      </div>
+
+      <!-- CONDITIONAL: Collateral (Stock/Crypto Only) -->
+      <div v-if="state.newLoanModal.type === 'Stock Loan' || state.newLoanModal.type === 'Crypto Loan'">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px">
+          <input type="text" v-model="state.newLoanModal.col" :placeholder="t('Ticker') + ' (e.g. ETH)'">
+          <input type="number" v-model="state.newLoanModal.colQty" :placeholder="t('ColQty')">
+        </div>
+        <div style="display:flex; gap:4px; margin-bottom:12px">
+          <div v-for="m in ['Cross', 'Isolated']" :key="m" @click="state.newLoanModal.marginMode = m" class="tag"
+            :class="{active: state.newLoanModal.marginMode === m}" style="padding:4px 12px; font-size:12px">{{ t(m) }}
           </div>
         </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px">
+          <input type="number" v-model="state.newLoanModal.warn" :placeholder="t('Warn')">
+          <input type="number" v-model="state.newLoanModal.liq" :placeholder="t('Liq')">
+        </div>
+      </div>
 
-        <button class="btn-gold-pill" id="btnLoan" style="width:100%; margin-top:20px" @click="subLoan()">{{
-          t('SubAction') }}</button>
+      <!-- ADVICE -->
+      <div v-if="maxBorrowAdvice"
+        style="margin-top:12px; background:rgba(255,215,0,0.1); padding:8px; border-radius:4px; font-size:13px; color:var(--color-gold); display:flex; align-items:center; gap:8px">
+        <i class="fa-regular fa-lightbulb"></i>
+        <span>{{ t('MaxSafe') }}: {{ fmt(maxBorrowAdvice) }} {{ state.newLoanModal.currency }}</span>
+      </div>
+      <div style="display:flex; gap:16px; margin-top:24px">
+        <button id="newLoanBtn" class="btn-gold-block" style="flex:1" :disabled="!isLoanValid"
+          :style="{opacity: isLoanValid ? 1 : 0.5}" @click="subNewLoan()">{{ state.isEditMode ? 'Update' : t('Create')
+          }}</button>
+        <button class="btn-outline-block" style="flex:1" @click="state.newLoanModal.show = false">{{ t('Cancel')
+          }}</button>
       </div>
     </div>
+  </div>
 
-    <div v-if="state.msg.show" class="modal-overlay" style="display:flex; z-index:300">
-      <div class="modal-content" style="text-align:center">
-        <h3 class="section-title">{{ state.msg.title }}</h3>
-        <p style="color:var(--text-secondary); margin-bottom:24px">{{ state.msg.body }}</p>
-        <button class="btn-outline-block" style="width:100%" @click="state.msg.show = false">{{ t('Close') }}</button>
+  <!-- LOAN ACTION MODAL -->
+  <div v-if="state.loanModal.show" class="modal-overlay" style="display:flex"
+    @click.self="state.loanModal.show = false">
+    <div class="modal-content">
+      <h3 class="section-title" style="margin-top:0">{{ state.loanModal.title }}</h3>
+
+      <label>{{ t('ActionType') }}</label>
+      <select v-model="state.loanModal.type">
+        <option value="repay">Repay (還款)</option>
+        <option value="addCol">Add Collateral (補抵押)</option>
+        <option value="increaseLoan">Increase Loan (增貸)</option>
+        <option value="payPeriod">Pay Interest (繳息/繳期)</option>
+        <option value="sell">Sell to Repay (賣出還款)</option>
+      </select>
+
+      <div>
+        <label>
+          {{ state.loanModal.type === 'repay' ? t('RepayAmt') :
+          state.loanModal.type === 'addCol' ? t('ColQty') :
+          state.loanModal.type === 'increaseLoan' ? t('LoanAmt') :
+          state.loanModal.type === 'payPeriod' ? 'N/A' : t('SellQty') }}
+        </label>
+        <input type="number" v-model="state.loanModal.val" placeholder="Amount or Qty"
+          :disabled="state.loanModal.type === 'payPeriod'">
+
+        <div v-if="state.loanModal.type !== 'repay' && state.loanModal.type !== 'payPeriod'">
+          <label>
+            {{ state.loanModal.type === 'addCol' ? t('NewRate') :
+            state.loanModal.type === 'increaseLoan' ? t('Rate') : t('LimitPrice') }}
+          </label>
+          <input type="number" v-model="state.loanModal.price" placeholder="Price">
+        </div>
       </div>
+
+      <button class="btn-gold-pill" id="btnLoan" style="width:100%; margin-top:20px" @click="subLoan()">{{
+        t('SubAction') }}</button>
     </div>
+  </div>
+
+  <div v-if="state.msg.show" class="modal-overlay" style="display:flex; z-index:300">
+    <div class="modal-content" style="text-align:center">
+      <h3 class="section-title">{{ state.msg.title }}</h3>
+      <p style="color:var(--text-secondary); margin-bottom:24px">{{ state.msg.body }}</p>
+      <button class="btn-outline-block" style="width:100%" @click="state.msg.show = false">{{ t('Close') }}</button>
+    </div>
+  </div>
   </div>
 
   <!-- SCRIPTS -->
