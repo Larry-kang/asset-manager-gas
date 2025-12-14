@@ -1,23 +1,24 @@
 /**
  * Constants.gs
- * ¨t²Î¦@¥Î±`¼Æ©w¸q
+ * ç³»çµ±å…±ç”¨å¸¸æ•¸å®šç¾©
  */
 
 // --- Sheet Names ---
-const TAB_LOG = '¥æ©ö¬ö¿ı';
-const TAB_LOAN = '­É¶U¬ö¿ı';
+const TAB_LOG = 'äº¤æ˜“ç´€éŒ„';
+const TAB_LOAN = 'å€Ÿè²¸ç´€éŒ„';
 const TAB_MARKET = 'MarketData';
-const TAB_HISTORY = '¸ê²£¾úµ{';
+const TAB_HISTORY = 'è³‡ç”¢æ­·ç¨‹';
 
 // --- Transaction Types ---
-const TYPE_STOCK = 'ªÑ²¼';
-const TYPE_CRYPTO = '¥[±K³f¹ô';
-const TYPE_CASH = '²{ª÷';
-const TYPE_CREDIT = '«H¥Î¶U´Ú';
-const TYPE_CARD = '¥d¶O';
+const TYPE_STOCK = 'è‚¡ç¥¨';
+const TYPE_CRYPTO = 'åŠ å¯†è²¨å¹£';
+const TYPE_CASH = 'ç¾é‡‘';
+const TYPE_CREDIT = 'ä¿¡ç”¨è²¸æ¬¾';
+const TYPE_CARD = 'å¡è²»';
 
 // --- Action Types ---
-const ACT_BUY = '¶R¤J';
-const ACT_SELL = '½æ¥X';
-const ACT_DIVIDEND = '°t®§';
- 
+const ACT_BUY = 'è²·å…¥';
+const ACT_SELL = 'è³£å‡º';
+const ACT_DIVIDEND = 'é…æ¯';
+
+// utf-8 fixed
