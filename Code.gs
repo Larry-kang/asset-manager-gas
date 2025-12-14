@@ -5,8 +5,44 @@
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('資產管家')
-    .addItem('執行系統檢查', 'runSystemCheck')
+    .addItem('執行系統檢查 (System Check)', 'runSystemCheck')
     .addToUi();
+}
+
+function runSystemCheck() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ss.getSheets().map(s => s.getName());
+
+  let report = "【系統診斷報告】\n\n";
+
+  const checks = [
+    { name: '交易紀錄', key: TAB_LOG },
+    { name: '借貸合約', key: TAB_LOAN },
+    { name: 'MarketData', key: TAB_MARKET },
+    { name: '資產走勢', key: TAB_HISTORY }
+  ];
+
+  let missing = [];
+
+  checks.forEach(c => {
+    if (sheets.includes(c.key)) {
+      report += `✅ ${c.name}: Found (${c.key})\n`;
+    } else {
+      report += `❌ ${c.name}: MISSING! (Expected: ${c.key})\n`;
+      missing.push(c.key);
+    }
+  });
+
+  report += "\n現有工作表:\n" + sheets.join(", ");
+
+  if (missing.length > 0) {
+    report += `\n\n⚠️ 警告: 發現 ${missing.length} 個必要工作表遺失！這可能導致畫面空白。\n請手動建立或重新命名對應的工作表。`;
+  } else {
+    report += "\n\n✅ 系統架構正常。";
+  }
+
+  SpreadsheetApp.getUi().alert(report);
+  return report; // Return for logging if needed
 }
 
 function doGet() {
