@@ -33,26 +33,30 @@
   /* LIGHT MODE OVERRIDES */
   @media (prefers-color-scheme: light) {
     :root {
-      --bg-dark: #F9FAFB;
+      --bg-dark: #FAF9F6;
+      /* Soft Off-White (Paper) */
       --bg-card: #FFFFFF;
-      --bg-card-hover: #F3F4F6;
-      --border-color: rgba(0, 0, 0, 0.08);
-      --text-primary: #111827;
-      --text-secondary: #6B7280;
-      /* Gold remains, maybe slightly darker for contrast */
+      --bg-card-hover: #F5F5F4;
+      --border-color: #E7E5E4;
+      /* Warm Stone */
+      --text-primary: #1C1917;
+      /* Soft Black */
+      --text-secondary: #57534E;
+      /* Warm Grey */
+      /* Gold remains but adjusted for light background visibility if needed */
       --text-gold: #B45309;
     }
   }
 
   /* Manual Light Mode Toggle Class */
   body.light-mode {
-    --bg-dark: #F9FAFB;
-    --bg-card: #FFFFFF;
-    --bg-card-hover: #F3F4F6;
-    --border-color: rgba(0, 0, 0, 0.08);
-    --text-primary: #111827;
-    --text-secondary: #6B7280;
-    --text-gold: #B45309;
+    --bg-dark: #FAF9F6 !important;
+    --bg-card: #FFFFFF !important;
+    --bg-card-hover: #F5F5F4 !important;
+    --border-color: #E7E5E4 !important;
+    --text-primary: #1C1917 !important;
+    --text-secondary: #57534E !important;
+    --text-gold: #B45309 !important;
   }
 
   body {
