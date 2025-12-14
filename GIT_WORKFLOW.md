@@ -74,13 +74,29 @@ git checkout -b feat/your-feature-name
 
 ---
 
-## 4. 常見指令速查表
+## 5. Agent 協作協議 (Agent Protocol)
+
+為確保多代理 (Multi-Agent) 環境下的協作順暢，所有 Agent 必須遵守：
+
+1.  **嚴禁直接 Commit 到 Main**:
+    *   所有修改 **必須** 在 `feat/...` 或 `fix/...` 分支進行。
+    *   使用 `/new_feature` 或 `/new_fix` 確保從最新的 `main` 同步。
+2.  **原子化提交 (Atomic Commits)**:
+    *   每個 Commit 應只解決一個問題。
+    *   嚴格遵守 Conventional Commits。
+3.  **自動化驗證**:
+    *   Commit 前 **必須** 通過 `npm test` (使用 `/git_commit` 流程)。
+4.  **Pull Before Push**:
+    *   在推送前，確認與遠端沒有衝突。
+
+---
+
+## 6. 常見指令速查表
 
 | 動作 | 指令 | 說明 |
 | :--- | :--- | :--- |
-| **開始工作** | `git checkout -b <branch>` | 建立並切換到新分支 |
-| **暫存檔案** | `git add .` | 加入所有變更 |
-| **提交** | `git commit -m "type: msg"` | 提交變更 |
-| **同步** | `git pull origin main` | 將遠端最新進度拉回當前分支 (避免衝突) |
-| **上傳** | `git push` | 推送當前分支到 GitHub |
-| **狀態** | `git status` | 查看目前檔案狀態 |
+| **開始新功能** | `/new_feature` | 建立 `feat/...` 分支 (自動同步 main) |
+| **開始修復** | `/new_fix` | 建立 `fix/...` 分支 (自動同步 main) |
+| **提交檢查** | `/git_commit` | 執行測試並提交 (含 Branch 檢查) |
+| **部署** | `/deploy` | 推送至 GitHub 觸發自動部署 |
+
