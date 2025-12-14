@@ -2,7 +2,16 @@
 description: Validate changes and commit to git (Quality Control)
 ---
 
-1. Run automated tests first (Rule #2: Automated Verification)
+1. Check Branch (Safety First)
+// turbo-all
+git branch --show-current
+
+> [!CAUTION]
+> **STOP if you are on `main` or `master`!**
+> You must create a new branch (`/new_feature` or `/new_fix`) before committing.
+> Direct commits to main are PROHIBITED.
+
+2. Run automated tests (Rule #2: Automated Verification)
 // turbo-all
 npm test
 
@@ -17,4 +26,5 @@ git commit -m "{{type}}: {{message}}"
 > [!IMPORTANT]
 > - **Type**: `feat`, `fix`, `refactor`, `test`, `chore`
 > - **Message**: Short description of the change
-> - If tests fail, the commit process should generally be halted (though manual intervention might be needed if this script runs sequentially).
+> - If tests fail, the commit process should generally be halted.
+> - **Deployment**: Run `git push` or the `/deploy` workflow to trigger the CI/CD pipeline.
