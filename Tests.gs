@@ -168,7 +168,7 @@ function test_GasStore() {
     const sheet = ss.getSheetByName('_DB_STORE');
     if (!sheet) throw new Error('_DB_STORE Sheet 尚未建立');
 
-    const finder = sheet.createQueryFinder(KEY).matchEntireCell(true);
+    const finder = sheet.createTextFinder(KEY).matchEntireCell(true);
     const result = finder.findNext();
     if (!result) throw new Error('Commit 後無法在 Sheet 找到 Key');
 
