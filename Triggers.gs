@@ -41,8 +41,8 @@ function trigger_RecordDailyHistory() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   // 先更新一次市價確保數據最新
-  syncMarketData(ss, true);
-  let marketData = getMarketData(ss);
+  let result = syncMarketData(ss, true);
+  let marketData = result.data;
 
   let loanData = calculateLoans(ss, marketData);
   let portfolio = calculatePortfolio(ss, marketData, loanData.pledged);

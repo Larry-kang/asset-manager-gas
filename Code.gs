@@ -106,7 +106,7 @@ function getRecentTransactions(ss, limit = 10) {
 // --- Setup & Auth ---
 function doSetup(password) {
   if (!password) return "Password cannot be empty";
-  PropertiesService.getScriptProperties().setProperty('APP_PASSWORD', password);
+  PropertiesService.getScriptProperties().setProperty('APP_PASSWORD', String(password).trim());
   return "Setup Complete. Password Saved.";
 }
 
