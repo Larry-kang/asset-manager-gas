@@ -100,7 +100,8 @@ function test_Integration() {
   try {
     // 模擬前端呼叫 getDashboardData
     // 注意: 這裡傳入 false 以避免觸發耗時的網路爬蟲更新
-    let jsonString = getDashboardData(false);
+    const pass = PropertiesService.getScriptProperties().getProperty('APP_PASSWORD');
+    let jsonString = getDashboardData(pass, false);
     let data = JSON.parse(jsonString);
 
     if (data.status === 'error') throw new Error(data.message);

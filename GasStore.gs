@@ -108,7 +108,7 @@ const GasStore = (function () {
     function _loadFromSheet(key) {
         const sheet = _getDbSheet();
         // Use TextFinder for faster lookup than reading all data
-        const finder = sheet.createQueryFinder(key).matchEntireCell(true);
+        const finder = sheet.createTextFinder(key).matchEntireCell(true);
         const result = finder.findNext();
 
         if (result) {

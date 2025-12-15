@@ -112,7 +112,7 @@ function doSetup(password) {
 function checkAuth(password) {
   const stored = PropertiesService.getScriptProperties().getProperty('APP_PASSWORD');
   if (!stored) return true;
-  return String(password) === String(stored);
+  return String(password).trim() === String(stored).trim();
 }
 
 function getDashboardData(password, forceRefresh) {
