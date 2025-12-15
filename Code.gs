@@ -6,7 +6,28 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('資產管家')
     .addItem('執行系統檢查', 'runSystemCheck')
+    .addItem('設定密碼', 'showSetupDialog')
     .addToUi();
+}
+
+function showSetupDialog() {
+  var ui = SpreadsheetApp.getUi();
+  var result = ui.prompt(
+    '安全性設定',
+    '請輸入您想設定的新密碼:',
+    ui.ButtonSet.OK_CANCEL);
+
+  var button = result.getSelectedButton();
+  var text = result.getResponseText();
+
+  if (button == ui.Button.OK) {
+    if (text) {
+      doSetup(text);
+      ui.alert('密碼已更新！');
+    } else {
+      ui.alert('密碼不能為空。');
+    }
+  }
 }
 
 function doGet() {
