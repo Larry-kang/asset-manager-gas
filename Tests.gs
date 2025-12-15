@@ -206,3 +206,50 @@ function test_GasStore() {
     return "? [GasStore] 失敗: " + e.message + "\nStack: " + e.stack;
   }
 }
+
+function runGasStorePerfTest() {
+  const ui = SpreadsheetApp.getUi();
+  const COUNT = 20; // 測試筆數
+  let report = ["=== GasStore 效能檢測報告 ==="];
+  let log = (msg) => report.push(msg);
+
+  try {
+    GasStore.init({ use_lock: false });
+
+    // 1. 寫入測試 (L1 + L2)
+    let t1 = new Date().getTime();
+    for (let i = 0; i < COUNT; i++) {
+      GasStore.set('PERF_' + i, { idx: i, time: t1 });
+    }
+    let t2 = new Date().getTime();
+    log(`? 寫入 (L1+L2): ${t2 - t1}ms (Avg: ${((t2 - t1) / COUNT).toFixed(2)}ms) - ${COUNT} 筆`);
+
+    // 2. 提交測試 (L3 Write / IO)
+    let t3 = new Date().getTime();
+    GasStore.commit();
+    let t4 = new Date().getTime();
+    log(`? 提交 (L3 IO): ${t4 - t3}ms - (Batch Commit)`);
+
+    // 3. 讀取測試 (L1 Hit)
+    let t5 = new Date().getTime();
+    for (let i = 0; i < COUNT; i++) {
+      GasStore.get('PERF_' + i);
+    }
+    let t6 = new Date().getTime();
+    log(`? 讀取 (L1 Hit): ${t6 - t5}ms (Avg: ${((t6 - t5) / COUNT).toFixed(2)}ms)`);
+
+    // 4. 清理
+    for (let i = 0; i < COUNT; i++) GasStore.del('PERF_' + i);
+    GasStore.commit();
+
+    log("-----------------------------");
+    log("結論: GasStore 運作正常");
+
+  } catch (e) {
+    log("? 測試失敗: " + e.message);
+  }
+
+  const output = report.join('\n');
+  Logger.log(output);
+  ui.alert(output);
+}

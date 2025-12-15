@@ -6,6 +6,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('資產管家')
     .addItem('執行系統檢查', 'runSystemCheck')
+    .addItem('檢測 GasStore 效能', 'runGasStorePerfTest')
     .addItem('設定密碼', 'showSetupDialog')
     .addToUi();
 }
