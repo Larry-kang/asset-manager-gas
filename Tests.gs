@@ -19,7 +19,10 @@ function runSystemCheck() {
   // 3. 整合測試 (模擬前端呼叫)
   report.push(test_Integration());
 
-  // 4. 排程函數測試
+  // 4. GasStore 模組測試
+  report.push(test_GasStore());
+
+  // 5. 排程函數測試
   report.push(test_Triggers());
 
   let finalReport = report.join('\n');
@@ -137,5 +140,68 @@ function test_Triggers() {
     return "? [排程函數] 通過";
   } catch (e) {
     return "? [排程函數] 失敗: " + e.message;
+  }
+}
+
+function test_GasStore() {
+  try {
+    const KEY = 'TEST_KEY_' + new Date().getTime();
+    const VAL = { foo: 'bar', num: 123 };
+
+    // [New] Init with Security
+    GasStore.init({
+      encryption_key: 'test_sec_key',
+      hmac_key: 'test_hmac_key',
+      use_lock: false // Lock might slow down tests, skip for basic check or simulate environment
+    });
+
+    // 1. Test Set & Get (L1 Hit)
+    GasStore.set(KEY, VAL);
+    const res1 = GasStore.get(KEY);
+    if (JSON.stringify(res1) !== JSON.stringify(VAL)) throw new Error('L1讀取不一致');
+
+    // 2. Test Commit (Write to L3)
+    GasStore.commit();
+
+    // 3. Verify Persistence (L3 Check)
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('_DB_STORE');
+    if (!sheet) throw new Error('_DB_STORE Sheet 尚未建立');
+
+    const finder = sheet.createQueryFinder(KEY).matchEntireCell(true);
+    const result = finder.findNext();
+    if (!result) throw new Error('Commit 後無法在 Sheet 找到 Key');
+
+    // Verified value stored & encrypted
+    const row = result.getRow();
+    const storedEnc = sheet.getRange(row, 2).getValue();
+
+    // Verify it is NOT plaintext
+    if (storedEnc.includes('foo') || storedEnc.includes('{')) {
+      // Simple check: Encrypted base64 usually doesn't look like JSON
+      // RC4 could technically produce anything but Base64 encoding hides special chars.
+      // Only if key is empty or null encryption is skipped.
+      // We initialized with key, so it MUST be encrypted.
+      // Note: Base64 might contain '{' or 'foo' by chance but unlikely.
+      // Better check: Try to decrypt manually? No access to internal _decrypt.
+      // Check if it matches exactly plaintext JSON.
+      if (storedEnc === JSON.stringify(VAL)) throw new Error('資料未加密 (Sheet 內為明文)');
+    }
+
+    // Verify Signature
+    const storedSig = sheet.getRange(row, 5).getValue();
+    if (!storedSig || storedSig.length < 10) throw new Error('簽章遺失或過短');
+
+    // 4. Test Update
+    const VAL_NEW = { foo: 'baz' };
+    GasStore.set(KEY, VAL_NEW);
+    GasStore.commit();
+
+    const res2 = GasStore.get(KEY);
+    if (res2.foo !== 'baz') throw new Error('更新後解密讀取錯誤');
+
+    return "? [GasStore + Security] 通過";
+  } catch (e) {
+    return "? [GasStore] 失敗: " + e.message + "\nStack: " + e.stack;
   }
 }

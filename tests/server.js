@@ -9,13 +9,14 @@ if (!fs.existsSync(reportDir)) {
     fs.mkdirSync(reportDir, { recursive: true });
 }
 
-app.use(express.static(path.join(__dirname, '../')));
+
 
 function renderTemplate(filename) {
     let content = fs.readFileSync(path.join(__dirname, `../${filename}.html`), 'utf8');
 
-    // Improved Regex to capturing "js" or 'js' inside include
-    content = content.replace(/<\?!=\s*include\(['"]([^'"]+)['"]\);\s*\?>/g, (match, p1) => {
+    // Improved Regex to capturing "js" or 'js' inside include with flexible spacing/semicolon
+    // <?!= include('js'); ?> or <?!= include( "js" ) ?>
+    content = content.replace(/<\?!=\s*include\s*\(\s*['"]([^'"]+)['"]\s*\)\s*;?\s*\?>/gi, (match, p1) => {
         const includePath = path.join(__dirname, `../${p1}.html`);
         if (fs.existsSync(includePath)) {
             console.log(`[Server] Included: ${p1}`);
@@ -43,12 +44,25 @@ window.google = {
                 this._failureHandler = callback;
                 return this;
             },
-            getDashboardData: function() {
-                console.log('[Client] getDashboardData called');
+            getDashboardData: function(pass) {
+                console.log('[Client] getDashboardData called with pass:', pass);
+                
+                // Mock Auth Logic
+                if (pass !== '1234' && pass !== 'demo') {
+                     // Simulate Auth Failure first (for demo purpose, maybe?)
+                     // Or just allow everything if pass is empty?
+                     // Let's enforce it to show the modal!
+                     if (!pass) {
+                         const err = { status: '403', message: 'Unauthorized' };
+                         if (this._successHandler) setTimeout(() => this._successHandler(err), 500);
+                         return;
+                     }
+                }
+
                 const mockData = {
                      status: 'success',
-                     netWorthTWD: 1500000,
-                     dailyChange: 12000,
+                     netWorthTWD: 1580000,
+                     dailyChange: 12500,
                      holdings: [
                          { ticker: 'TSLA', cat: 'Stock', qty: 10, valTWD: 50000, pnl: 5000, roi: 10, isUsd: true },
                          { ticker: 'BTC', cat: 'Crypto', qty: 0.5, valTWD: 1000000, pnl: 200000, roi: 20, isUsd: true }
@@ -67,7 +81,14 @@ window.google = {
                 }
             },
             processContractAction: function(d) { 
+                console.log('[Client] processContractAction', d);
                 if (this._successHandler) setTimeout(() => this._successHandler({ success: true }), 500); 
+            },
+            processWizard: function(d) {
+                console.log('[Client] processWizard called', d);
+                // Mock Wizard Response
+                var msg = '[Mock] Created ' + d.proto + ' Loan. ' + (d.amount ? 'Amt:' + d.amount : '');
+                if (this._successHandler) setTimeout(() => this._successHandler(msg), 800);
             },
             addTx: function(tx) { 
                 if (this._successHandler) setTimeout(() => this._successHandler({ success: true }), 500); 
@@ -84,6 +105,8 @@ app.get('/', (req, res) => {
     html = html.replace('</body>', `${mockClientScript}</body>`);
     res.send(html);
 });
+
+app.use(express.static(path.join(__dirname, '../')));
 
 app.listen(PORT, () => {
     console.log(`Mock Server running at http://localhost:${PORT}`);

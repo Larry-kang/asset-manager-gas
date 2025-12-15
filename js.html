@@ -8,6 +8,17 @@
         load();
     };
 
+    let CACHED_PASS = localStorage.getItem('am_pass') || '';
+
+    function doLogin() {
+        const pass = document.getElementById('loginPass').value;
+        if (pass) {
+            CACHED_PASS = pass;
+            localStorage.setItem('am_pass', pass);
+            load(true);
+        }
+    }
+
     function load(refresh = false) {
         if (refresh) setVal('netWorth', 'Loading...');
 
@@ -16,6 +27,16 @@
                 let d;
                 try { d = (typeof res === 'string') ? JSON.parse(res) : res; }
                 catch (e) { showMsg('Parse Error', 'Failed to parse server response'); return; }
+
+                // Auth Check
+                if (d.status === '403') {
+                    document.getElementById('loginModal').style.display = 'flex';
+                    setVal('netWorth', 'Locked');
+                    return;
+                }
+
+                // Login Success
+                document.getElementById('loginModal').style.display = 'none';
 
                 if (d.status === 'success' || d.success === true) {
                     DATA = d;
@@ -48,7 +69,7 @@
             .withFailureHandler(err => {
                 showMsg('Server Error', err.message);
             })
-            .getDashboardData(refresh);
+            .getDashboardData(CACHED_PASS, refresh);
     }
 
     function setVal(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
@@ -81,9 +102,9 @@
         const list = document.getElementById('assetList');
         if (list) {
             list.innerHTML = `
-             <div class="asset-row"><div>Stocks</div><div>${fmt(stock)}</div></div>
-             <div class="asset-row"><div>Crypto</div><div>${fmt(crypto)}</div></div>
-             <div class="asset-row"><div>Cash</div><div>${fmt(cash)}</div></div>
+             <div class="asset-row"><div>Stocks</div><div>${fmt(getVal(stock))}</div></div>
+             <div class="asset-row"><div>Crypto</div><div>${fmt(getVal(crypto))}</div></div>
+             <div class="asset-row"><div>Cash</div><div>${fmt(getVal(cash))}</div></div>
           `;
         }
 
@@ -180,8 +201,8 @@
                  </div>
                </div>
                <div style="text-align:right">
-                 <div style="font-weight:600; font-size:15px">${fmt(h.valTWD)}</div>
-                 <div style="font-size:12px; color:${pnlColor}">${pnlText}</div>
+                 <div style="font-weight:600; font-size:15px">${fmt(getVal(h.valTWD))}</div>
+                 <div style="font-size:12px; color:${pnlColor}">${isCash ? '' : `${h.pnl >= 0 ? '+' : ''}${fmt(getVal(h.pnl))} (${h.roi.toFixed(2)}%)`}</div>
                </div>
              `;
                 card.appendChild(row);
@@ -238,7 +259,11 @@
          <div style="margin-bottom:20px">
              <div style="display:flex; justify-content:space-between; align-items:baseline">
                  <div style="color:var(--text-secondary); font-size:12px">Health Factor</div>
-                 <div class="card-value" style="font-size:24px; color:${riskColor}">${r.ratio}${r.ratio === '-' ? '' : '%'}</div>
+                 // Display Unit Logic
+                 const isCrypto = r.source.includes('AAVE') || r.source.includes('Crypto');
+                 const unit = (r.ratio === '-' || isCrypto) ? '' : '%';
+                 
+                 <div class="card-value" style="font-size:24px; color:${riskColor}">${r.ratio}${unit}</div>
              </div>
              <div class="health-bar-container">
                  <div class="health-bar-fill" style="width:${barPct}%; background: linear-gradient(90deg, ${riskColor}, ${riskColor}); box-shadow: 0 0 8px ${riskColor}"></div>
@@ -250,12 +275,12 @@
              <!-- Collateral Col -->
              <div>
                 <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px"><i class="fa-solid fa-layer-group" style="margin-right:6px"></i>Collateral</div>
-                <div style="font-weight:600; font-size:15px; color:white">${fmt(r.colValTWD)}</div>
+                <div style="font-weight:600; font-size:15px; color:white">${fmt(getVal(r.colValTWD))}</div>
              </div>
              <!-- Debt Col -->
              <div style="text-align:right">
                 <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px"><i class="fa-solid fa-file-invoice-dollar" style="margin-right:6px"></i>Debt</div>
-                <div style="font-weight:600; font-size:15px; color:white">${fmt(r.debtTWD)}</div>
+                <div style="font-weight:600; font-size:15px; color:white">${fmt(getVal(r.debtTWD))}</div>
              </div>
          </div>
 
@@ -405,51 +430,186 @@
     }
 
     function subWizard() {
-        // Mock Implementation
-        alert(`Requesting Loan for ${wizProto}...`);
-        closeWizard();
-        google.script.run.withSuccessHandler(() => load(true)).getDashboardData();
+        setVal('wizBtn', 'Processing...');
+
+        let payload = {};
+
+        if (wizProto === 'Sinopac') {
+            const tTicker = document.getElementById('wizStockTicker').value;
+            const tAmt = document.getElementById('wizStockLoan').value;
+            if (!tTicker || !tAmt) { showMsg('Error', 'Missing fields'); return; }
+
+            // Extract ticker from "2330 (Qty: 1000)"
+            const realTicker = tTicker.split(' ')[0];
+
+            payload = {
+                proto: 'Sinopac',
+                col: realTicker,
+                qty: 1000, // TODO: Logic to get Max or User Input? 
+                // Current UI only has "Avail: 0" label, no input for Qty? 
+                // Wait, the UI in index.html (wizInputStock) only has a SELECT and Amount Input. 
+                // It assumes PLEDGING ALL AVAILABLE? Or user needs input?
+                // Let's look at lines 272-278 of index.html. 
+                // There is NO input for Quantity. Just "Select Stock" (which implies All?) 
+                // and "Loan Amount".
+                // Let's assume we pledge ALL available for simplicity, or we default to 1000?
+                // Actually, let's look at initWizStock(). 
+                // It confirms avail qty. 
+                // Let's grab the Qty from DATA for safe measure.
+                amount: tAmt
+            };
+
+            // Find Qty from DATA
+            const h = DATA.holdings.find(h => h.ticker === realTicker);
+            if (h) payload.qty = h.qty;
+        }
+        else if (wizProto === 'LineBank') {
+            // UI for LineBank? index.html lines 257 select proto. 
+            // But wizStep2 shares "wizInputStock" or "wizInputCrypto".
+            // We need a "wizInputCredit" or reuse Stock?
+            // The UI code `setWizProto` only inits Stock or Crypto. 
+            // LineBank (Credit) is missing a tailored UI.
+            // Hack: Reuse Stock UI but hide Collateral? 
+            // For now, let's just make it simple: Credit Loan = Stock Loan UI but ignore ticker.
+
+            const tAmt = document.getElementById('wizStockLoan').value;
+            payload = { proto: 'LineBank', amount: tAmt };
+        }
+        else if (wizProto === 'AAVE') {
+            // Collect Rows
+            const rows = document.querySelectorAll('#wizCryptoRows > div');
+            let assets = [];
+            rows.forEach(r => {
+                const t = r.querySelector('.wiz-c-asset').value;
+                const q = r.querySelector('.wiz-c-amt').value;
+                if (t && q) assets.push({ ticker: t, qty: q });
+            });
+
+            // Where is Debt Amount input for Crypto?
+            // It's not in the UI (wizInputCrypto). 
+            // We need to add it or prompt it.
+            // Actually, let's assume the user enters negative USDT in the asset list? 
+            // No, wizard usually asks "How much to borrow".
+            // Let's add a prompt for now or assume 0 debt (just deposit).
+            // Better: Add a prompt.
+            let debt = document.getElementById('wizCryptoBorrow').value;
+            if (!debt) { showMsg('Error', 'Please enter borrow amount'); return; }
+
+            payload = {
+                proto: 'AAVE',
+                assets: assets,
+                amount: debt
+            };
+        }
+
+        google.script.run.withSuccessHandler(res => {
+            closeWizard();
+            showMsg('Success', res);
+            load(true);
+        }).processWizard(payload);
     }
 
-    /* --- SETTINGS LOGIC --- */
-    function toggleTheme() {
-        document.body.classList.toggle('light-mode');
-        const tog = document.getElementById('themeToggle');
-        if (tog) tog.checked = !document.body.classList.contains('light-mode');
+    /* --- DEPRECATED THEME LOGIC --- */
+    // Dark mode is now standard. toggleTheme removed.
+
+    /* --- CURRENCY & I18N LOGIC --- */
+    let CURRENCY = 'TWD';
+    let curLang = 'zh';
+
+    function setCurrency(val) {
+        CURRENCY = val;
+
+        // UI Visual Update
+        document.getElementById('btnTWD').classList.toggle('active', val === 'TWD');
+        document.getElementById('btnUSD').classList.toggle('active', val === 'USD');
+
+        // Save Prefs
         autoSaveSettings();
+
+        // Re-render everything with new currency
+        if (DATA && DATA.status) {
+            // Recalculate Dashboard Value
+            let total = DATA.netWorthTWD;
+            if (val === 'USD' && DATA.fx) total = total / DATA.fx;
+            setVal('netWorth', fmt(total));
+
+            let daily = DATA.dailyChange;
+            if (val === 'USD' && DATA.fx) daily = daily / DATA.fx;
+
+            const dc = document.getElementById('dailyChange');
+            if (dc) {
+                const color = DATA.dailyChange >= 0 ? 'var(--success)' : 'var(--danger)';
+                dc.innerHTML = `<span style="color:${color}">${DATA.dailyChange >= 0 ? '+' : ''}${fmt(daily)}</span> Today`;
+            }
+
+            renderAssets(DATA);
+            renderTx(DATA);
+            renderHoldings(DATA);
+            renderLoan(DATA);
+        }
     }
 
+    function toggleLang() {
+        setLang(curLang === 'zh' ? 'en' : 'zh');
+    }
+
+    function fmt(n) {
+        if (!n && n !== 0) return '-';
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: CURRENCY,
+            minimumFractionDigits: 0
+        }).format(n);
+    }
+
+    // Helper to get Value in Current Currency
+    function getVal(valTWD) {
+        if (CURRENCY === 'USD' && DATA.fx) return valTWD / DATA.fx;
+        return valTWD;
+    }
+
+    /* --- SETTINGS PERSISTENCE --- */
     function autoSaveSettings() {
-        const isDark = !document.body.classList.contains('light-mode');
-        const curr = document.getElementById('setCurrency').value;
-        const prefs = { dark: isDark, currency: curr };
+        const prefs = { currency: CURRENCY, lang: curLang };
         localStorage.setItem('am_prefs', JSON.stringify(prefs));
-        // Silent save - no alert
     }
 
     function loadSettings() {
         try {
             const p = JSON.parse(localStorage.getItem('am_prefs'));
             if (p) {
-                if (p.dark === false) document.body.classList.add('light-mode');
-                if (p.currency) {
-                    const sel = document.getElementById('setCurrency');
-                    if (sel) sel.value = p.currency;
-                }
-                const tog = document.getElementById('themeToggle');
-                if (tog) tog.checked = (p.dark !== false);
+                if (p.currency) setCurrency(p.currency);
+                if (p.lang) setLang(p.lang);
             }
         } catch (e) { console.error('Error loading settings', e); }
     }
 
-    /* --- RESTORED LOGIC --- */
+    /* --- REAL i18n LOGIC --- */
+    const i18nData = {
+        'SysStat': { zh: '系統狀態', en: 'System Status' },
+        'RunDig': { zh: '執行診斷', en: 'Run Diagnostics' },
+        'Lang': { zh: '語言', en: 'Language' },
+        'Vault': { zh: '金庫', en: 'Vault' },
+        'Dash': { zh: '儀表板', en: 'Dashboard' },
+        'Tx': { zh: '交易', en: 'Transactions' },
+        'Set': { zh: '設定', en: 'Settings' }
+    };
+
     let curLang = 'zh'; // Default
     function setLang(lang) {
         curLang = lang;
-        // Simple mock for language toggle visual feedback
+
+        // Update Text
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (i18nData[key] && i18nData[key][lang]) {
+                el.innerText = i18nData[key][lang];
+            }
+        });
+
+        // Update Toggle Text (Visual Feedback)
         const el = document.querySelector('[data-i18n="Lang"] + div');
         if (el) el.innerText = lang === 'zh' ? '中文' : 'English';
-        // Silent update - no alert
     }
 
     function runSystemCheck() {
@@ -457,5 +617,8 @@
     }
 
     // Init
-    loadSettings();
+    window.onload = function () {
+        load(); // Fetch Data
+        loadSettings(); // Apply Prefs
+    };
 </script>

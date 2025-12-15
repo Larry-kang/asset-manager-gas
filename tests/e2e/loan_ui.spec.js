@@ -6,10 +6,16 @@ let serverProcess;
 
 test.beforeAll(async () => {
     const serverPath = path.join(__dirname, '../server.js');
+    serverProcess = spawn('node', [serverPath], { stdio: 'inherit' });
     console.log(`Starting Mock Server from ${serverPath}...`);
+    // Give server time to start
+    await new Promise(resolve => setTimeout(resolve, 2000));
 });
 
-test.afterAll(async () => {
+test.afterAll(() => {
+    if (serverProcess) {
+        serverProcess.kill();
+    }
 });
 
 test('Dashboard Loads and Shows Risks', async ({ page }) => {
@@ -19,11 +25,12 @@ test('Dashboard Loads and Shows Risks', async ({ page }) => {
     // 2. Check Title
     await expect(page).toHaveTitle(/Asset Manager/);
 
-    // 3. Navigate to Loan Vault
-    await page.click('div[onclick="go(\'loan\', this)"]');
+    // 3. Verify Risk Card ("Sinopac") on Dashboard
+    await expect(page.locator('text=Sinopac')).first().toBeVisible();
 
-    // 4. Verify Risk Card ("Sinopac")
-    await expect(page.locator('text=Sinopac')).toBeVisible();
+    // 4. Navigate to Loan Vault
+    await page.click('div[onclick="go(\'loan\', this)"]');
+    await expect(page.locator('#loan')).not.toBeHidden();
 
     // 5. Test Settings Page (New)
     await page.click('div[onclick="go(\'settings\', this)"]');
@@ -37,13 +44,15 @@ test('Dashboard Loads and Shows Risks', async ({ page }) => {
     // Toggle Theme (Instant)
     await page.click('#themeToggle');
 
-    // Toggle Language (Instant)
-    await page.click('text=Language');
+    // Toggle Currency (App-Like Switch)
+    // Use robust selector for segmented control
+    await page.click('#setCurrencyCtrl .seg-btn:has-text("USD")');
+    await expect(page.locator('#setCurrencyCtrl .seg-btn.active')).toHaveText('USD');
 
-    // Toggle Currency (Instant Auto-Save)
-    await page.selectOption('#setCurrency', 'USD');
-    // Assert no alert appeared (implicit, Playwright would fail if untracked dialog pops up without handler, 
-    // or we can just proceed to verify navigation matches expectation)
+    // Toggle Language (Real i18n Check)
+    await page.click('text=Language');
+    // Verify i18n text change (simple check that UI didn't crash and text exists)
+    await expect(page.locator('text=Run Diagnostics')).toBeVisible();
 
     // 6. Test Loan Wizard Flow
     await page.click('div[onclick="go(\'loan\', this)"]'); // Back to vault
@@ -54,7 +63,6 @@ test('Dashboard Loads and Shows Risks', async ({ page }) => {
     // Click Sinopac card
     await page.click('text=Stock Loan (Sinopac)');
     await expect(page.locator('#wizStep2')).not.toBeHidden();
-    // await expect(page.locator('#wizStockTicker')).toBeVisible();
 
     // Take Final Screenshot
     await page.screenshot({ path: 'tests/e2e/report/qa_verification.png', fullPage: true });

@@ -35,9 +35,9 @@
           <i class="fa-solid fa-landmark"></i>
           <span data-i18n="Vault">Vault</span>
         </div>
-        <div class="nav-item" onclick="go('settings', this)">
-          <i class="fa-solid fa-gear"></i>
-          <span data-i18n="Sett">Settings</span>
+        <div class="nav-item" onclick="go('viewTx', this)">
+          <i class="fa-solid fa-list"></i>
+          <span data-i18n="Tx">Transactions</span>
         </div>
       </div>
 
@@ -46,6 +46,10 @@
           style="width:32px; height:32px; border-radius:50%; background:#333; display:flex; align-items:center; justify-content:center; font-size:12px">
           MK</div>
         <div style="font-size:13px; color:var(--text-secondary)">Ming-Hao</div>
+        <div style="margin-left:auto; cursor:pointer; color:var(--text-secondary)" onclick="toggleLang()"
+          title="Switch Language">
+          <i class="fa-solid fa-earth-americas"></i>
+        </div>
       </div>
     </div>
 
@@ -54,7 +58,6 @@
 
       <!-- DASHBOARD -->
       <div id="dash" class="view active">
-
         <!-- Centered Balance Header -->
         <div class="dash-header">
           <div class="dash-label" data-i18n="NetWarning">Total Vault Balance</div>
@@ -62,11 +65,18 @@
           <div id="dailyChange"
             style="margin-top:-16px; margin-bottom:24px; font-family:var(--font-sans); font-weight:500"></div>
 
-          <div class="dash-actions">
+          <div class="dash-actions" style="align-items:center">
+            <!-- Currency Toggle -->
+            <div class="segmented-control"
+              style="margin-right:12px; height:48px; display:flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid var(--border-color)">
+              <div class="seg-btn active" id="btnTWD" onclick="setCurrency('TWD')">TWD</div>
+              <div class="seg-btn" id="btnUSD" onclick="setCurrency('USD')">USD</div>
+            </div>
+
             <button class="btn-gold-pill" onclick="openTxModal()"><i class="fa-solid fa-plus"
                 style="margin-right:8px"></i> <span data-i18n="AddF">Add Funds</span></button>
             <button class="btn-outline" onclick="openTxModal()"><i class="fa-solid fa-arrow-up"></i></button>
-            <button class="btn-outline" onclick="load(true)"><i class="fa-solid fa-rotate"></i></button>
+            <button class="btn-outline" onclick="load(true)" title="Reload"><i class="fa-solid fa-rotate"></i></button>
           </div>
         </div>
 
@@ -108,7 +118,11 @@
 
           <!-- Transactions Section -->
           <div>
-            <div class="section-title" data-i18n="Tx">Transactions</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+              <div class="section-title" style="margin:0" data-i18n="Tx">Transactions</div>
+              <div style="font-size:12px; color:var(--text-gold); cursor:pointer"
+                onclick="go('viewTx', document.querySelectorAll('.nav-item')[3])">View All</div>
+            </div>
             <div class="card" id="recentTxList">
               <!-- Injected by JS -->
             </div>
@@ -134,61 +148,27 @@
         <button class="btn-gold-pill floating-btn" onclick="openWizard()">+ New Loan</button>
       </div>
 
-      <!-- SETTINGS -->
-      <div id="settings" class="view hidden">
-        <div class="section-title" data-i18n="Sett">Settings</div>
-
+      <!-- TRANSACTIONS VIEW (NEW) -->
+      <div id="viewTx" class="view hidden">
+        <div class="top-header">
+          <div class="section-title" data-i18n="Tx">Transactions</div>
+          <button class="btn-gold-pill" onclick="openTxModal()">+ New</button>
+        </div>
         <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
-            <div>
-              <div style="font-weight:600">Dark Mode</div>
-              <div style="font-size:12px; color:var(--text-secondary)">Toggle application theme</div>
-            </div>
-            <!-- Simple Toggle Switch -->
-            <label class="switch">
-              <input type="checkbox" id="themeToggle" checked onchange="toggleTheme()">
-              <span class="slider round"></span>
-            </label>
+          <div
+            style="display:grid; grid-template-columns: 100px 80px 100px 1fr 100px 80px; gap:16px; padding-bottom:12px; border-bottom:1px solid var(--border-color); color:var(--text-secondary); font-size:12px; font-weight:600">
+            <div>Date</div>
+            <div>Type</div>
+            <div>Ticker</div>
+            <div>Note</div>
+            <div style="text-align:right">Amount</div>
+            <div style="text-align:center">Action</div>
           </div>
-
-          <div style="margin-bottom:24px">
-            <div style="font-weight:600; margin-bottom:8px">Base Currency</div>
-            <select id="setCurrency" style="max-width:200px" onchange="autoSaveSettings()">
-              <option value="TWD" selected>TWD (NT$)</option>
-              <option value="USD">USD ($)</option>
-            </select>
-          </div>
-          <!-- Save button removed for fluent auto-save UX -->
-        </div>
-
-        <div class="card" style="margin-top:24px">
-          <div style="font-weight:600; margin-bottom:16px">System</div>
-
-          <div class="asset-row">
-            <div data-i18n="SysStat">Status</div>
-            <div style="color:var(--color-green)">Operational</div>
-          </div>
-
-          <div class="asset-row" onclick="runSystemCheck()">
-            <div data-i18n="RunDig">Run Diagnostics</div>
-            <div style="color:var(--text-secondary)"><i class="fa-solid fa-chevron-right"></i></div>
-          </div>
-
-          <div class="asset-row" onclick="setLang(curLang==='zh'?'en':'zh')">
-            <div data-i18n="Lang">Language</div>
-            <div style="color:var(--text-gold)">EN / 中</div>
-          </div>
-
-          <div class="asset-row">
-            <div>Version</div>
-            <div style="color:var(--text-secondary)">v4.2.0</div>
+          <div id="fullTxList" style="max-height: calc(100vh - 200px); overflow-y:auto">
+            <div style="padding:24px; text-align:center; color:#666">Loading...</div>
           </div>
         </div>
-
-
       </div>
-
-
 
     </div>
   </div>
@@ -199,18 +179,22 @@
   <!-- MODALS -->
   <div id="modalOverlay" class="modal-overlay" onclick="if(event.target===this) closeTxModal()">
     <div class="modal-content">
-      <h3 class="section-title" style="margin-top:0">New Transaction</h3>
+      <h3 class="section-title" style="margin-top:0" id="txModalTitle">New Transaction</h3>
+      <input type="hidden" id="editTxRow"> <!-- For Edit Mode -->
       <input type="date" id="tDate">
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
         <select id="tType">
           <option>買入</option>
           <option>賣出</option>
           <option>配息</option>
+          <option>支出</option>
+          <option>收入</option>
         </select>
         <select id="tCat">
           <option>股票</option>
           <option>加密貨幣</option>
           <option>現金</option>
+          <option>費用</option>
         </select>
       </div>
       <input type="text" id="tTicker" placeholder="Ticker (e.g. BTC)" list="tickerList">
@@ -227,6 +211,8 @@
         </select>
       </div>
       <button class="btn-gold-pill" style="width:100%" id="btnTx" onclick="subTx()">Confirm Transaction</button>
+      <button class="btn-outline" style="width:100%; margin-top:8px; display:none" id="btnDeleteTx"
+        onclick="delTx()">Delete Transaction</button>
     </div>
   </div>
 
@@ -281,26 +267,54 @@
           <div style="font-size:12px; color:var(--text-secondary); text-align:right" id="wizStockLTV">LTV: 0%</div>
         </div>
 
-        <!-- Crypto Input -->
-        <div id="wizInputCrypto" class="hidden">
-          <label>Values (USD)</label>
-          <div id="wizCryptoRows">
-            <!-- Dynamic Rows -->
-          </div>
-          <button class="btn-outline" style="width:100%; margin-top:8px; border-style:dashed" onclick="addCryptoRow()">+
-            Add Asset</button>
+        <!-- Credit Input (NEW) -->
+        <div id="wizInputCredit" class="hidden">
+          <label>Loan Amount (TWD)</label>
+          <input type="number" id="wizCreditLoan" placeholder="Enter amount"
+            style="font-size:24px; color:var(--text-gold); margin-bottom:12px">
 
-          <div style="margin-top:16px; padding:12px; background:#222; border-radius:8px">
+          <div style="background:#222; padding:12px; border-radius:8px">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px">
+              <span style="color:#888">Interest Rate</span>
+              <span>2.88% (Fixed)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px">
+              <span style="color:#888">Term</span>
+              <span>84 Months</span>
+            </div>
             <div style="display:flex; justify-content:space-between">
-              <span>Est. Health Factor</span>
-              <span id="wizEstHF" style="font-weight:600">---</span>
+              <span style="color:#888">Monthly Pay</span>
+              <span id="wizCreditMonthly">---</span>
             </div>
           </div>
         </div>
 
-        <button class="btn-gold-pill" style="width:100%; margin-top:24px" onclick="subWizard()">Create Loan</button>
+        <!-- Crypto Input -->
+        <div id="wizInputCrypto" class="hidden">
+          <label style="font-size:12px; color:var(--text-secondary); margin-bottom:8px; display:block">Collateral
+            Assets</label>
+          <div id="wizCryptoRows"></div>
+          <button class="btn-outline"
+            style="width:100%; border-radius:8px; height:36px; margin-bottom:16px; font-size:13px"
+            onclick="addWizCryptoRow()">
+            <i class="fas fa-plus"></i> Add Asset
+          </button>
+
+          <label style="font-size:12px; color:var(--text-secondary); margin-bottom:8px; display:block">Borrow Amount
+            (USDT)</label>
+          <input type="number" id="wizCryptoBorrow" placeholder="e.g. 5000">
+        </div>
+        <div style="margin-top:16px; padding:12px; background:#222; border-radius:8px">
+          <div style="display:flex; justify-content:space-between">
+            <span>Est. Health Factor</span>
+            <span id="wizEstHF" style="font-weight:600">---</span>
+          </div>
+        </div>
       </div>
+
+      <button class="btn-gold-pill" style="width:100%; margin-top:24px" onclick="subWizard()">Create Loan</button>
     </div>
+  </div>
   </div>
 
   <!-- LOAN ACTION MODAL -->
@@ -341,6 +355,18 @@
       <p id="msgBody" style="color:var(--text-secondary); margin-bottom:24px"></p>
       <button class="btn-outline" style="width:100%; border-radius:99px"
         onclick="document.getElementById('msgModal').style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <div id="loginModal" class="modal-overlay" style="z-index:999; display:flex">
+    <div class="modal-content" style="text-align:center; max-width:320px">
+      <h3 class="section-title">Security Check</h3>
+      <p style="color:var(--text-secondary); margin-bottom:24px; font-size:13px">
+        This instance is password protected.<br>Please enter your access key.
+      </p>
+      <input type="password" id="loginPass" placeholder="Enter Password" style="text-align:center; letter-spacing:4px">
+      <button class="btn-gold-pill" style="width:100%" onclick="doLogin()">Unlock</button>
+      <div style="margin-top:16px; font-size:11px; color:#555">First time? Run doSetup('pass') in Editor.</div>
     </div>
   </div>
 

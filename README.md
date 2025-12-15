@@ -1,16 +1,61 @@
-# 資產管家 (Asset Manager) - Project README
+# Asset Manager (資產管家) - Self-Hosted Edition
 
-## 專案簡介
-這是一個基於 Google Apps Script (GAS) 與 Google Sheets 的個人資產管理系統。
-具備資產記帳、借貸管理、即時報價抓取、損益計算、風險監控與多幣別顯示功能。
+這是一個專為「重視數據隱私」的投資者設計的 Google Apps Script (GAS) 資產管理系統。
+不同於 SaaS 服務，您的所有財務數據都完整保存在您自己的 **Google Sheets** 中，沒有外流風險。
 
-## 版本資訊
-**目前版本**: v3.1.1 (UX Enhanced + Mobile Fix)
-**更新日期**: 2025-12-08
+---
+
+## 🚀 快速開始 (Self-Hosted 安裝)
+
+### 方法 A: 建立副本 (最快)
+*(此處預留公開副本連結，若有)*
+
+### 方法 B: 手動部署 (進階)
+如果您擁有原始碼 (Clasp)，請執行以下步驟：
+
+1.  **環境準備**:
+    *   安裝 Node.js & Clasp: `npm install -g @google/clasp`
+    *   登入 Google: `clasp login`
+
+2.  **建立專案**:
+    ```bash
+    clasp create --type sheets --title "My Asset Manager"
+    clasp push
+    ```
+
+3.  **啟用權限**:
+    *   在 GAS 編輯器中執行 `doSetup('您的密碼')` 以啟用密碼鎖。
+    *   執行 `doGet` 並核准 Google 權限。
+
+4.  **發布**:
+    *   點擊 "部署" -> "新增部署" -> "網頁應用程式"。
+    *   **執行身分**: `我 (Me)`。
+    *   **存取權**: `任何人 (Anyone)` (別擔心，我們有內建密碼鎖)。
+
+---
+
+## 🔒 安全性設定 (Security)
+本系統內建 **Application-Level Password Gate**。
+即使 Web App 網址外流，沒有密碼的人也無法查看任何數據。
+
+*   **設定密碼**: 在 GAS 編輯器執行 `doSetup('my_secret_pass')`。
+*   **重設密碼**: 隨時再次執行 `doSetup()` 即可覆蓋舊密碼。
+
+---
+
+## ✨ 核心功能
+*   **🛡️ 借貸風控 (USP)**: 
+    *   **多協議支援**: 股票 (維持率)、加密貨幣 (LTV)、信貸 (攤還)。
+    *   **借貸精靈 (New)**: 引導式介面，自動查詢庫存並建立合約。
+*   **📊 自動記帳**:
+    *   **利息分離**: 還款時自動將利息計入支出。
+    *   **每日快照**: 自動記錄每日淨值變動。
+*   **📱 極致隱私**: 數據在您手，程式在您手。
 
 ---
 
 ## 檔案結構
+
 
 1. **Code.gs** (後端核心)
    - 負責與 Google Sheets 資料庫互動。
@@ -109,7 +154,13 @@
 
 ## 變更歷程 (Changelog)
 
-### v3.1.1 (Current)
+### v3.2.0 (Self-Hosted Release)
+- [Sec] **密碼鎖 (Security Gate)**: 新增 `doSetup()` 與前端 Login Modal，防止未授權存取。
+- [Feat] **借貸精靈 (Smart Wizard)**: 實作 `Sinopac` (股票質押) 與 `AAVE` (加密貨幣) 的自動開倉邏輯。
+- [Fix] **利息記帳**: 修正還款時利息未被記錄為支出的會計錯誤。
+- [Arch] **自部署準備**: 移除對特定試算表 ID 的硬編碼依賴。
+
+### v3.1.1 (UX Enhanced + Mobile Fix)
 - [Fix] **手機版優化**：將抵押品輸入框改為原生 `<select>`，解決手機版無法選取的問題。
 - [UI] **統一介面**：全面移除 `alert/confirm`，改用自定義 Modal，包含刪除確認視窗。
 - [Feature] **交易管理**：實作完整的交易紀錄修改 (Edit) 與刪除 (Delete) 功能。
