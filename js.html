@@ -2,20 +2,16 @@
     let CASH = 0;
     let DATA = {};
 
-    window.onload = () => {
-        const dateInput = document.getElementById('tDate');
-        if (dateInput) dateInput.valueAsDate = new Date();
-        load();
-    };
-
-    let CACHED_PASS = localStorage.getItem('am_pass') || '';
-
     function doLogin() {
+        const btn = document.querySelector('#loginModal button');
         const pass = document.getElementById('loginPass').value;
         if (pass) {
+            if (btn) btn.innerText = 'Verifying...';
             CACHED_PASS = pass;
             localStorage.setItem('am_pass', pass);
             load(true);
+        } else {
+            alert('Please enter a password');
         }
     }
 
@@ -24,6 +20,9 @@
 
         google.script.run
             .withSuccessHandler(res => {
+                const btn = document.querySelector('#loginModal button');
+                if (btn) btn.innerText = 'Unlock'; // Reset button
+
                 let d;
                 try { d = (typeof res === 'string') ? JSON.parse(res) : res; }
                 catch (e) { showMsg('Parse Error', 'Failed to parse server response'); return; }
@@ -32,6 +31,7 @@
                 if (d.status === '403') {
                     document.getElementById('loginModal').style.display = 'flex';
                     setVal('netWorth', 'Locked');
+                    if (CACHED_PASS) alert('Password Incorrect'); // Only alert if we tried to login
                     return;
                 }
 
@@ -41,36 +41,56 @@
                 if (d.status === 'success' || d.success === true) {
                     DATA = d;
                     setVal('netWorth', fmt(d.netWorthTWD));
-
-                    const dc = document.getElementById('dailyChange');
-                    if (dc) {
-                        const color = d.dailyChange >= 0 ? '#4ADE80' : '#F87171';
-                        dc.innerHTML = `<span style="color:${color}">${d.dailyChange >= 0 ? '+' : ''}${fmt(d.dailyChange)}</span> Today`;
-                    }
-
-                    renderAssets(d);
-                    renderTx(d);
-                    renderHoldings(d);
-                    renderLoan(d);
-
-                    const tList = document.getElementById('tickerList');
-                    if (tList && d.knownTickers) {
-                        tList.innerHTML = '';
-                        d.knownTickers.forEach(t => {
-                            const opt = document.createElement('option');
-                            opt.value = t;
-                            tList.appendChild(opt);
-                        });
-                    }
+                    // ... rest of render logic ...
+                    renderDashboard(d); // Refactored for cleanliness
                 } else {
                     showMsg('Error', d.message || 'Unknown error');
                 }
             })
             .withFailureHandler(err => {
+                const btn = document.querySelector('#loginModal button');
+                if (btn) btn.innerText = 'Unlock';
                 showMsg('Server Error', err.message);
             })
             .getDashboardData(CACHED_PASS, refresh);
     }
+
+    // Refactored Render Function
+    function renderDashboard(d) {
+        const dc = document.getElementById('dailyChange');
+        if (dc) {
+            const color = d.dailyChange >= 0 ? '#4ADE80' : '#F87171';
+            dc.innerHTML = `<span style="color:${color}">${d.dailyChange >= 0 ? '+' : ''}${fmt(d.dailyChange)}</span> Today`;
+        }
+
+        renderAssets(d);
+        renderTx(d);
+        renderHoldings(d);
+        renderLoan(d);
+
+        const tList = document.getElementById('tickerList');
+        if (tList && d.knownTickers) {
+            tList.innerHTML = '';
+            d.knownTickers.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                tList.appendChild(opt);
+            });
+        }
+    }
+
+    // ... existing helpers ...
+
+    // Fix CSS Label glitch
+    // ... in renderHoldings ...
+    // Fix window.onload (Merge)
+    window.onload = function () {
+        const dateInput = document.getElementById('tDate');
+        if (dateInput) dateInput.valueAsDate = new Date();
+
+        loadSettings(); // Apply Prefs
+        load(); // Fetch Data
+    };
 
     function setVal(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
     function fmt(n) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TWD', minimumFractionDigits: 0 }).format(n); }
@@ -172,7 +192,8 @@
             const hdr = document.createElement('div');
             hdr.className = 'section-title';
             hdr.style.fontSize = '16px';
-            hdr.style.marginTop = '24px'; css: 'color: var(--text-gold) !important';
+            hdr.style.marginTop = '24px';
+            hdr.style.color = 'var(--text-gold)'; // Fixed invalid css label
             hdr.innerText = c;
             list.appendChild(hdr);
 
@@ -595,7 +616,7 @@
         'Set': { zh: '設定', en: 'Settings' }
     };
 
-    let curLang = 'zh'; // Default
+    // let curLang = 'zh'; // Default (Removed duplicate)
     function setLang(lang) {
         curLang = lang;
 
@@ -617,8 +638,6 @@
     }
 
     // Init
-    window.onload = function () {
-        load(); // Fetch Data
-        loadSettings(); // Apply Prefs
-    };
+    // Init merged into top window.onload
+
 </script>
