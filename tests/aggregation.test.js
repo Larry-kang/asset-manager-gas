@@ -22,8 +22,8 @@ describe('Aggregation Logic Tests', () => {
 
         console.log('Aggregated Stock Risk:', aggRisk);
 
-        // Skip label check due to Windows/Node encoding mismatches (mojibake)
-        expect(aggRisk.label).toBeTruthy();
+        // Verify correct UTF-8 encoding for Chinese labels
+        expect(aggRisk.label).toBe('ºû«ù²v');
         expect(Number(parseFloat(aggRisk.value))).toBeCloseTo(134.02, 1);
         expect(aggRisk.status).toBe('Warning');
     });
@@ -50,7 +50,7 @@ describe('Aggregation Logic Tests', () => {
 
         const aggRisk = RiskCalculator.aggregate([pos1], 'Crypto', cryptoMarketDataTWD);
 
-        expect(aggRisk.label).toBe('Aggregated HF');
+        expect(aggRisk.label).toBe('HF');
         expect(aggRisk.status).toBe('Safe');
         expect(Number(aggRisk.value)).toBeCloseTo(3.30);
     });

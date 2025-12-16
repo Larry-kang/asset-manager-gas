@@ -18,67 +18,40 @@
           - generic [ref=e15]: 
           - generic [ref=e16]: Vault
         - generic [ref=e17] [cursor=pointer]:
-          - generic [ref=e18]: 
-          - generic [ref=e19]: Settings
+          - generic [ref=e18]: 
+          - generic [ref=e19]: Transactions
       - generic [ref=e20]:
         - generic [ref=e21]: MK
         - generic [ref=e22]: Ming-Hao
-    - generic [ref=e23]:
-      - text: +  
-      - generic [ref=e24]:
-        - generic [ref=e25]: Vault (Loans)
-        - generic [ref=e26]:
-          - generic [ref=e27]:
-            - generic [ref=e28]:
-              - generic [ref=e29]:
-                - generic [ref=e30]: 
-                - text: Sinopac
-              - generic [ref=e31]: Safe
-            - generic [ref=e33]:
-              - generic [ref=e34]: Health Factor
-              - generic [ref=e35]: 160.00%
-            - generic [ref=e38]:
-              - generic [ref=e39]:
-                - generic [ref=e40]:
-                  - generic [ref=e41]: 
-                  - text: Collateral
-                - generic [ref=e42]: NT$800,000
-              - generic [ref=e43]:
-                - generic [ref=e44]:
-                  - generic [ref=e45]: 
-                  - text: Debt
-                - generic [ref=e46]: NT$500,000
-            - generic [ref=e47]:
-              - button "+ Add Col" [ref=e48] [cursor=pointer]:
-                - generic [ref=e49]: +
-                - text: Add Col
-              - button "Repay" [ref=e50] [cursor=pointer]
-          - generic [ref=e51]:
-            - generic [ref=e52]:
-              - generic [ref=e53]:
-                - generic [ref=e54]: 
-                - text: AAVE
-              - generic [ref=e55]: Warning
-            - generic [ref=e57]:
-              - generic [ref=e58]: Health Factor
-              - generic [ref=e59]: 1.25%
-            - generic [ref=e62]:
-              - generic [ref=e63]:
-                - generic [ref=e64]:
-                  - generic [ref=e65]: 
-                  - text: Collateral
-                - generic [ref=e66]: NT$1,250,000
-              - generic [ref=e67]:
-                - generic [ref=e68]:
-                  - generic [ref=e69]: 
-                  - text: Debt
-                - generic [ref=e70]: NT$1,000,000
-            - generic [ref=e71]:
-              - button "+ Add Col" [ref=e72] [cursor=pointer]:
-                - generic [ref=e73]: +
-                - text: Add Col
-              - button "Repay" [ref=e74] [cursor=pointer]
-        - button "+ New Loan" [ref=e75] [cursor=pointer]
-      - text: 
-  - text:   
+        - generic "Switch Language" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: 
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]: Total Vault Balance
+        - generic [ref=e29]: ...
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e32]: TWD
+            - generic [ref=e33]: USD
+          - button "+ Add Funds" [ref=e34] [cursor=pointer]:
+            - generic [ref=e35]: +
+            - generic [ref=e36]: Add Funds
+          - button "" [ref=e37] [cursor=pointer]:
+            - generic [ref=e38]: 
+          - button "" [ref=e39] [cursor=pointer]:
+            - generic [ref=e40]: 
+      - generic [ref=e41]:
+        - generic [ref=e43]: Assets
+        - generic [ref=e51]:
+          - generic [ref=e52]: Transactions
+          - generic [ref=e53] [cursor=pointer]: View All
+  - text:    +
+  - generic [ref=e56]:
+    - heading "Security Check" [level=3] [ref=e57]
+    - paragraph [ref=e58]:
+      - text: This instance is password protected.
+      - text: Please enter your access key.
+    - textbox "Enter Password" [ref=e59]
+    - button "Unlock" [ref=e60] [cursor=pointer]
+    - generic [ref=e61]: First time? Run doSetup('pass') in Editor.
 ```

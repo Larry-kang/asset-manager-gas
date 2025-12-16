@@ -8,7 +8,8 @@
 ## 🚀 快速開始 (使用手冊)
 
 ### 1. 部署與安裝
-您目前已完成自動部署。請開啟 **Web App URL** (Apps Script 部署網址)。
+詳細部署流程請參閱 [開發者指南](docs/developer/DEVELOPMENT.md)。
+目前已完成自動部署，請開啟 Web App URL。
 
 ### 2. 初始設定 (First Run)
 首次開啟時，系統處於「無密碼保護」狀。

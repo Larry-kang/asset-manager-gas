@@ -23,4 +23,5 @@ Write-Host "? Opening Browser..."
 Start-Process "http://localhost:3002"
 
 # Run Server
-node tests/server.js
+# Run Server
+npm start

@@ -16,6 +16,9 @@ describe('LogRepository Tests', () => {
         // Access the MockSS from context
         const mockSS = context.MockSS;
         // Pre-populate data
+        if (!mockSS.getSheetByName(TAB_LOG)) {
+            mockSS.insertSheet(TAB_LOG);
+        }
         mockSheet = mockSS.getSheetByName(TAB_LOG);
         mockSheet.data = []; // Reset
         mockSheet.appendRow(['Date', 'Type', 'Ticker', 'Cat', 'Qty', 'Price', 'Currency', 'Note']); // Row 1 with 8 cols

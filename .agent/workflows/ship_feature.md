@@ -1,26 +1,25 @@
 ---
-description: Automate the entire feature delivery (Test -> Commit -> Merge -> Deploy)
+description: Automate the delivery (Test -> Commit -> Merge -> Deploy)
 ---
 
-1. Validate System
+1. Final Validation
 // turbo-all
 npm test
+npm run test:e2e
 
-2. Commit Changes (Feature Branch)
+2. Commit Changes
 // turbo-all
 git add .
-git commit -m "feat: complete feature implementation"
+git commit -m "feat: complete {{feature_name}}"
 
 3. Merge to Main
 // turbo-all
 git checkout main
 git merge -
 
-4. Deploy to Production
+4. Deploy
 // turbo-all
-clasp push
 git push
 
 > [!IMPORTANT]
-> - Run this ONLY when you are on a **Feature Branch** and ready to ship.
-> - It assumes the previous branch (`-`) is the feature branch you want to merge.
+> GitHub Actions will handle the actual deployment to Google Apps Script.

@@ -1,163 +1,159 @@
 /**
  * Repository.gs
- * ï¿½ï¿½Æ¦sï¿½ï¿½ï¿½h (Data Access Layer)
- * 
- * Â¾ï¿½dï¿½G
- * 1. ï¿½Ê¸Ë©Ò¦ï¿½ SpreadsheetApp ï¿½ï¿½ï¿½Iï¿½s
- * 2. ï¿½Ş²z Sheet ï¿½ï¿½ Schema ï¿½Pï¿½ï¿½ï¿½Mï¿½g
- * 3. ï¿½ï¿½ï¿½Ñ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æªï¿½ï¿½ï¿½ (DTO)
+ * ¸ê®Æ¦s¨ú¼h (Data Access Layer)
+ *
+ * Â¾³d:
+ * 1. «Ê¸Ë SpreadsheetApp ªº©I¥s
+ * 2. ºŞ²z Sheet ªº Schema »P¯Á¤Ş
+ * 3. ´£¨Ñª«¥ó¾É¦V (DTO) ªº¸ê®Æ¦s¨ú
  */
 
 // --- Base Repository ---
 
 class SheetRepository {
-  /**
-   * @param {string} tabName - Sheet ï¿½Wï¿½ï¿½
-   * @param {Object} schema - ï¿½ï¿½ï¿½wï¿½q { KEY: Index } (0-based for array mapping, 1-based for Sheet)
-   */
-  constructor(tabName, schema) {
-    this.tabName = tabName;
-    this.schema = schema;
-    this._sheet = null;
-  }
-
-  get sheet() {
-    if (!this._sheet) {
-      const ss = SpreadsheetApp.getActiveSpreadsheet();
-      this._sheet = ss.getSheetByName(this.tabName);
-      if (!this._sheet) throw new Error(`Sheet not found: ${this.tabName}`);
+    /**
+     * @param {string} tabName - Sheet ¦WºÙ
+     * @param {Object} schema - ©w¸q { KEY: Index } (0-based for array mapping, 1-based for Sheet)
+     */
+    constructor(tabName, schema) {
+        this.tabName = tabName;
+        this.schema = schema;
+        this._sheet = null;
     }
-    return this._sheet;
-  }
 
-  /**
-   * Åªï¿½ï¿½ï¿½Ò¦ï¿½ï¿½ï¿½ï¿½ (ï¿½Æ°ï¿½ Header)
-   * @returns {Array<Object>} ï¿½à´«ï¿½áªºï¿½ï¿½ï¿½ï¿½}ï¿½C
-   */
-  findAll() {
-    const lastRow = this.sheet.getLastRow();
-    if (lastRow <= 1) return [];
-
-    const numCols = this.sheet.getLastColumn();
-    // ï¿½ï¿½ï¿½] Header ï¿½ï¿½ï¿½ï¿½ 1 ï¿½C
-    const data = this.sheet.getRange(2, 1, lastRow - 1, numCols).getValues();
-
-    return data.map((row, index) => this._mapRowToEntity(row, index + 2));
-  }
-
-  /**
-   * ï¿½N Row Array ï¿½à´«ï¿½ï¿½ Entity Object
-   */
-  _mapRowToEntity(row, rowNum) {
-    const entity = { _row: rowNum };
-    for (const [key, colIdx] of Object.entries(this.schema)) {
-      // colIdx is 1-based column index. Array index is colIdx - 1.
-      entity[key] = row[colIdx - 1];
+    get sheet() {
+        if (!this._sheet) {
+            const ss = SpreadsheetApp.getActiveSpreadsheet();
+            this._sheet = ss.getSheetByName(this.tabName);
+            if (!this._sheet) throw new Error(`Sheet not found: ${this.tabName}`);
+        }
+        return this._sheet;
     }
-    return entity;
-  }
+
+    /**
+     * Åª¨ú©Ò¦³¸ê®Æ (±Æ°£ Header)
+     * @returns {Array<Object>} Âà´««áªºª«¥ó°}¦C
+     */
+    findAll() {
+        const lastRow = this.sheet.getLastRow();
+        if (lastRow <= 1) return [];
+
+        const numCols = this.sheet.getLastColumn();
+        // ±Æ°£ Header ±q²Ä 2 ¦æ¶}©l
+        const data = this.sheet.getRange(2, 1, lastRow - 1, numCols).getValues();
+
+        return data.map((row, index) => this._mapRowToEntity(row, index + 2));
+    }
+
+    /**
+     * ±N Row Array Âà´«¬° Entity Object
+     */
+    _mapRowToEntity(row, rowNum) {
+        const entity = { _row: rowNum };
+        for (const [key, colIdx] of Object.entries(this.schema)) {
+            // colIdx is 1-based column index. Array index is colIdx - 1.
+            entity[key] = row[colIdx - 1];
+        }
+        return entity;
+    }
 }
 
 // --- Specific Repositories ---
 
 const SCHEMA_LOG = {
-  date: 1,      // A
-  type: 2,      // B
-  ticker: 3,    // C
-  cat: 4,       // D
-  qty: 5,       // E
-  price: 6,     // F
-  currency: 7,  // G
-  note: 8       // H
+    date: 1,      // A
+    type: 2,      // B
+    ticker: 3,    // C
+    cat: 4,       // D
+    qty: 5,       // E
+    price: 6,     // F
+    currency: 7,  // G
+    note: 8       // H
 };
 
 class LogRepository extends SheetRepository {
-  constructor() {
-    super(TAB_LOG, SCHEMA_LOG);
-  }
+    constructor() {
+        super(TAB_LOG, SCHEMA_LOG);
+    }
 
-  findByTicker(ticker) {
-    const all = this.findAll();
-    return all.filter(item => item.ticker === ticker);
-  }
+    findByTicker(ticker) {
+        const all = this.findAll();
+        return all.filter(item => item.ticker === ticker);
+    }
 }
 
 const SCHEMA_LOAN = {
-  source: 1,
-  date: 2,
-  amount: 3,
-  rate: 4,
-  collateral: 5,
-  colQty: 6,
-  type: 7,
-  warn: 8,
-  liq: 9,
-  note: 10,
-  totalTerm: 11,
-  paidTerm: 12,
-  monthlyPay: 13,
-  currency: 14
+    source: 1,
+    date: 2,
+    amount: 3,
+    rate: 4,
+    collateral: 5,
+    colQty: 6,
+    type: 7,
+    warn: 8,
+    liq: 9,
+    note: 10,
+    totalTerm: 11,
+    paidTerm: 12,
+    monthlyPay: 13,
+    currency: 14
 };
 
 class LoanRepository extends SheetRepository {
-  constructor() {
-    super(TAB_LOAN, SCHEMA_LOAN);
-  }
+    constructor() {
+        super(TAB_LOAN, SCHEMA_LOAN);
+    }
 }
 
 // --- Factory / Locator ---
 
 const RepositoryFactory = {
-  getLogRepo: () => new LogRepository(),
-  getLoanRepo: () => new LoanRepository()
+    getLogRepo: () => new LogRepository(),
+    getLoanRepo: () => new LoanRepository()
 };
+
+/*
+ * ­É¶U¬y¤ô±b Repository (Event Sourcing)
+ */
+class LoanActionRepository extends SheetRepository {
+    constructor() {
+        super(TAB_LOAN_ACTIONS);
+    }
+
+    // ½T«O Header ¦s¦b
+    _ensureHeader(sheet) {
+        if (sheet.getLastRow() === 0) {
+            sheet.appendRow(['Time', 'LoanID', 'Type', 'Protocol', 'Action', 'Asset', 'Amount', 'Note']);
+        }
+    }
+
+    appendAction(action) {
+        // action: { loanId, type, protocol, actionStr, asset, amount, note }
+        const time = new Date();
+        this.append([
+            time,
+            action.loanId,
+            action.type, // e.g., 'Stock', 'Crypto'
+            action.protocol, // e.g., 'Sinopac', 'AAVE'
+            action.actionStr, // 'OPEN', 'BORROW', 'SUPPLY', 'REPAY'
+            action.asset,
+            action.amount,
+            action.note || ''
+        ]);
+    }
+
+    findByLoanId(loanId) {
+        const all = this.findAll();
+        return all.filter(row => row.LoanID === loanId);
+    }
+}
 
 // --- Testing / Debugging ---
 function testRepository() {
-  const repo = RepositoryFactory.getLogRepo();
-  const data = repo.findAll();
-  Logger.log(`Found ${data.length} records in Log.`);
-  if (data.length > 0) {
-    Logger.log("First Record: " + JSON.stringify(data[0]));
-  }
-}
-/*
- * å€Ÿè²¸æµæ°´å¸³ Repository (Event Sourcing)
- */
-class LoanActionRepository extends SheetRepository {
-  constructor() {
-    super(TAB_LOAN_ACTIONS);
-  }
-
-  // è¦†å¯«ä»¥æ”¯æ´è‡ªå‹• Header æª¢æŸ¥
-  _ensureHeader(sheet) {
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['Time', 'LoanID', 'Type', 'Protocol', 'Action', 'Asset', 'Amount', 'Note']);
+    const repo = RepositoryFactory.getLogRepo();
+    const data = repo.findAll();
+    Logger.log(`Found ${data.length} records in Log.`);
+    if (data.length > 0) {
+        Logger.log("First Record: " + JSON.stringify(data[0]));
     }
-  }
-
-  appendAction(action) {
-    // action: { loanId, type, protocol, actionStr, asset, amount, note }
-    const time = new Date();
-    // ä¾åºå¯«å…¥: Time, LoanID, Type, Protocol, Action, Asset, Amount, Note
-    this.append([
-      time,
-      action.loanId,
-      action.type, // e.g., 'Stock', 'Crypto'
-      action.protocol, // e.g., 'Sinopac', 'AAVE'
-      action.actionStr, // 'OPEN', 'BORROW', 'SUPPLY', 'REPAY'
-      action.asset,
-      action.amount,
-      action.note || ''
-    ]);
-  }
-
-  findByLoanId(loanId) {
-    // ç°¡å–®å¯¦ä½œ: å…¨æƒ (æœªä¾†å¯å„ªåŒ–ç‚º Cache æˆ– Query)
-    const all = this.findAll(); // Base method returns objects mapped from header
-    return all.filter(row => row.LoanID === loanId);
-  }
 }
-
-// ç‚ºäº†è®“èˆŠç¨‹å¼ç¢¼ç›¸å®¹ï¼Œé€™è£¡æš«ä¸åˆªé™¤ LogRepository / LoanRepository
-// utf-8 fixed

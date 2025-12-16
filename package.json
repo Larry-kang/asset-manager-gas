@@ -5,7 +5,8 @@
   "scripts": {
     "test": "jest",
     "test:e2e": "playwright test tests/e2e",
-    "test:e2e:install": "playwright install chromium"
+    "test:e2e:install": "playwright install chromium",
+    "start": "node tests/server.js"
   },
   "devDependencies": {
     "express": "^4.21.2",

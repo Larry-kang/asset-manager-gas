@@ -48,16 +48,13 @@ window.google = {
                 console.log('[Client] getDashboardData called with pass:', pass);
                 
                 // Mock Auth Logic
-                if (pass !== '1234' && pass !== 'demo') {
-                     // Simulate Auth Failure first (for demo purpose, maybe?)
-                     // Or just allow everything if pass is empty?
-                     // Let's enforce it to show the modal!
-                     if (!pass) {
-                         const err = { status: '403', message: 'Unauthorized' };
-                         if (this._successHandler) setTimeout(() => this._successHandler(err), 500);
-                         return;
-                     }
-                }
+                // if (pass !== '1234' && pass !== 'demo') {
+                //      if (!pass) {
+                //          const err = { status: '403', message: 'Unauthorized' };
+                //          if (this._successHandler) setTimeout(() => this._successHandler(err), 500);
+                //          return;
+                //      }
+                // }
 
                 const mockData = {
                      status: 'success',

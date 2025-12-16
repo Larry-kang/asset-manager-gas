@@ -1,6 +1,7 @@
 ﻿<script>
     let CASH = 0;
     let DATA = {};
+    let CACHED_PASS = '';
 
     function doLogin() {
         const btn = document.querySelector('#loginModal button');
@@ -21,7 +22,7 @@
         google.script.run
             .withSuccessHandler(res => {
                 const btn = document.querySelector('#loginModal button');
-                if (btn) btn.innerText = 'Unlock'; // Reset button
+                if (btn) btn.innerText = 'Unlock';
 
                 let d;
                 try { d = (typeof res === 'string') ? JSON.parse(res) : res; }
@@ -31,7 +32,7 @@
                 if (d.status === '403') {
                     document.getElementById('loginModal').style.display = 'flex';
                     setVal('netWorth', 'Locked');
-                    if (CACHED_PASS) alert('Password Incorrect'); // Only alert if we tried to login
+                    if (CACHED_PASS) alert('Password Incorrect');
                     return;
                 }
 
@@ -41,8 +42,7 @@
                 if (d.status === 'success' || d.success === true) {
                     DATA = d;
                     setVal('netWorth', fmt(d.netWorthTWD));
-                    // ... rest of render logic ...
-                    renderDashboard(d); // Refactored for cleanliness
+                    renderDashboard(d);
                 } else {
                     showMsg('Error', d.message || 'Unknown error');
                 }
@@ -52,10 +52,9 @@
                 if (btn) btn.innerText = 'Unlock';
                 showMsg('Server Error', err.message);
             })
-            .getDashboardData(CACHED_PASS, refresh);
+            .getDashboardData(CACHED_PASS); // refresh arg not in signature usually
     }
 
-    // Refactored Render Function
     function renderDashboard(d) {
         const dc = document.getElementById('dailyChange');
         if (dc) {
@@ -79,21 +78,19 @@
         }
     }
 
-    // ... existing helpers ...
-
-    // Fix CSS Label glitch
-    // ... in renderHoldings ...
-    // Fix window.onload (Merge)
     window.onload = function () {
         const dateInput = document.getElementById('tDate');
         if (dateInput) dateInput.valueAsDate = new Date();
 
-        loadSettings(); // Apply Prefs
-        load(); // Fetch Data
+        loadSettings();
+        load();
     };
 
     function setVal(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
-    function fmt(n) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TWD', minimumFractionDigits: 0 }).format(n); }
+    function fmt(n) {
+        if (n === undefined || n === null) return '-';
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TWD', minimumFractionDigits: 0 }).format(n);
+    }
     function showMsg(title, body) {
         document.getElementById('msgTitle').innerText = title;
         document.getElementById('msgBody').innerText = body;
@@ -101,7 +98,6 @@
     }
 
     function renderAssets(d) {
-        // Hide Skeleton
         const skel = document.getElementById('assetSkeleton');
         if (skel) skel.style.display = 'none';
 
@@ -115,8 +111,6 @@
             else if (h.cat === '加密貨幣') crypto += h.valTWD;
             else cash += h.valTWD;
         });
-
-        // Cache variable CASH for simple logic use
         CASH = cash;
 
         const list = document.getElementById('assetList');
@@ -193,7 +187,7 @@
             hdr.className = 'section-title';
             hdr.style.fontSize = '16px';
             hdr.style.marginTop = '24px';
-            hdr.style.color = 'var(--text-gold)'; // Fixed invalid css label
+            hdr.style.color = 'var(--text-gold)';
             hdr.innerText = c;
             list.appendChild(hdr);
 
@@ -205,7 +199,6 @@
                 if (h.qty <= 0.0001 && h.cat !== '現金') return;
                 const isCash = h.cat === '現金';
                 const pnlColor = h.pnl >= 0 ? 'var(--color-green)' : 'var(--color-red)';
-                const pnlText = isCash ? '' : `${h.pnl >= 0 ? '+' : ''}${fmt(h.pnl)} (${h.roi.toFixed(2)}%)`;
 
                 const row = document.createElement('div');
                 row.className = 'asset-row';
@@ -216,14 +209,14 @@
                  <div>
                    <div style="font-weight:600; font-size:15px; display:flex; align-items:center; gap:8px">
                       ${h.ticker} 
-                      ${h.isUsd ? `<span style="font-size:10px; background:#333; padding:2px 4px; border-radius:4px">USD</span>` : ''}
+                      ${h.currency === 'USD' ? `<span style="font-size:10px; background:#333; padding:2px 4px; border-radius:4px">USD</span>` : ''}
                    </div>
-                   <div style="font-size:12px; color:var(--text-secondary)">${h.qty} @ ${fmt(h.qty > 0 ? (h.marketValue / h.qty) : 0)}</div> 
+                   <div style="font-size:12px; color:var(--text-secondary)">${h.qty} @ ${fmt(h.qty > 0 ? (h.marketPrice || 0) : 0)}</div> 
                  </div>
                </div>
                <div style="text-align:right">
-                 <div style="font-weight:600; font-size:15px">${fmt(getVal(h.valTWD))}</div>
-                 <div style="font-size:12px; color:${pnlColor}">${isCash ? '' : `${h.pnl >= 0 ? '+' : ''}${fmt(getVal(h.pnl))} (${h.roi.toFixed(2)}%)`}</div>
+                 <div style="font-weight:600; font-size:15px">${fmt(getVal(h.marketValTWD || h.valTWD))}</div>
+                 <div style="font-size:12px; color:${pnlColor}">${isCash ? '' : `${h.profitTWD >= 0 ? '+' : ''}${fmt(getVal(h.profitTWD || h.pnl))} (${h.roi})`}</div>
                </div>
              `;
                 card.appendChild(row);
@@ -252,20 +245,17 @@
         if (d.risks) {
             d.risks.forEach(r => {
                 const riskColor = r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? '#FBBF24' : 'var(--color-red)');
-                const ratio = r.ratio === '-' ? 0 : parseFloat(r.ratio);
+                let ratio = parseFloat(r.rate); // Logic returns '50.2%' or 'N/A'
+                if (isNaN(ratio)) ratio = 0;
 
-                // Visual Bar Logic: 110%~200% mapped to bar width
-                let barPct = 0;
-                if (ratio > 0) {
-                    barPct = Math.min(Math.max((ratio - 110) / (200 - 110) * 100, 5), 100);
-                }
-                if (ratio > 300) barPct = 100;
+                let barPct = Math.min(Math.max(ratio, 0), 100);
 
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.style.position = 'relative';
                 card.onclick = () => openLoanAction(r.source, 'repay');
 
+                // Construct HTML carefully
                 card.innerHTML = `
          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
              <div class="card-label" style="font-size:16px; font-weight:600; color:white">
@@ -275,37 +265,25 @@
                 ${r.status}
              </div>
          </div>
-
-         <!-- Health Bar Section -->
          <div style="margin-bottom:20px">
              <div style="display:flex; justify-content:space-between; align-items:baseline">
-                 <div style="color:var(--text-secondary); font-size:12px">Health Factor</div>
-                 // Display Unit Logic
-                 const isCrypto = r.source.includes('AAVE') || r.source.includes('Crypto');
-                 const unit = (r.ratio === '-' || isCrypto) ? '' : '%';
-                 
-                 <div class="card-value" style="font-size:24px; color:${riskColor}">${r.ratio}${unit}</div>
+                 <div style="color:var(--text-secondary); font-size:12px">Ratio</div>
+                 <div class="card-value" style="font-size:24px; color:${riskColor}">${r.rate}</div>
              </div>
              <div class="health-bar-container">
                  <div class="health-bar-fill" style="width:${barPct}%; background: linear-gradient(90deg, ${riskColor}, ${riskColor}); box-shadow: 0 0 8px ${riskColor}"></div>
              </div>
          </div>
-         
-         <!-- Split Data Grid -->
          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding-top:16px; border-top:1px solid var(--border-color)">
-             <!-- Collateral Col -->
              <div>
-                <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px"><i class="fa-solid fa-layer-group" style="margin-right:6px"></i>Collateral</div>
-                <div style="font-weight:600; font-size:15px; color:white">${fmt(getVal(r.colValTWD))}</div>
+                <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px">Collateral</div>
+                <div style="font-weight:600; font-size:15px; color:white">${fmt(getVal(r.collateral))}</div>
              </div>
-             <!-- Debt Col -->
              <div style="text-align:right">
-                <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px"><i class="fa-solid fa-file-invoice-dollar" style="margin-right:6px"></i>Debt</div>
-                <div style="font-weight:600; font-size:15px; color:white">${fmt(getVal(r.debtTWD))}</div>
+                <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px">Debt</div>
+                <div style="font-weight:600; font-size:15px; color:white">${fmt(getVal(r.debt))}</div>
              </div>
          </div>
-
-         <!-- Actions -->
          <div style="margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:12px">
             <button class="btn-gold-pill" style="width:100%; height:40px; font-size:14px; padding:0" onclick="event.stopPropagation(); openLoanAction('${r.source}', 'addCol')">
                 <i class="fa-solid fa-plus" style="margin-right:4px"></i>Add Col
@@ -313,8 +291,7 @@
             <button class="btn-outline" style="width:100%; height:40px; border-radius:99px; font-size:14px; color:var(--text-secondary); border-color:var(--border-color)" onclick="event.stopPropagation(); openLoanAction('${r.source}', 'repay')">
                 Repay
             </button>
-         </div>
-         `;
+         </div>`;
                 rList.appendChild(card);
             });
         }
@@ -326,7 +303,6 @@
         document.getElementById('tCat').value = cat;
     }
 
-    /* --- LOAN ACTION HANDLERS --- */
     function openLoanAction(source, type) {
         document.getElementById('modalLoan').style.display = 'flex';
         document.getElementById('lSource').value = source;
@@ -351,8 +327,8 @@
         google.script.run.withSuccessHandler(res => {
             setVal('btnLoan', 'Submit Action');
             document.getElementById('modalLoan').style.display = 'none';
-            if (res.success) { showMsg('Success', 'Action Recorded'); load(true); }
-            else showMsg('Error', res.message);
+            if (res.success || res === 'Success') { showMsg('Success', 'Action Recorded'); load(true); }
+            else showMsg('Error', res.message || res);
         }).processContractAction(payload);
     }
 
@@ -367,12 +343,12 @@
             currency: document.getElementById('tCurrency').value
         };
         google.script.run.withSuccessHandler(res => {
-            if (res.success) {
+            if (res.success || res === 'Transaction Added') {
                 closeTxModal();
                 showMsg('Success', 'Transaction Added');
                 load(true);
-            } else showMsg('Error', res.message);
-        }).addTx(payload);
+            } else showMsg('Error', res.message || res);
+        }).addTransaction(payload); // Updated to match Actions.gs
     }
 
     /* --- WIZARD LOGIC --- */
@@ -381,7 +357,7 @@
 
     function openWizard() {
         document.getElementById('modalWizard').style.display = 'flex';
-        wizBack(); // Resets to step 1
+        wizBack();
     }
     function closeWizard() { document.getElementById('modalWizard').style.display = 'none'; }
 
@@ -389,24 +365,20 @@
         wizProto = proto; wizType = type;
         document.getElementById('wizStep1').classList.add('hidden');
         document.getElementById('wizStep2').classList.remove('hidden');
-
-        // Stepper Update
         document.getElementById('wizDot2').classList.add('active');
-
         document.getElementById('wizProtoLabel').innerText = `${proto} (${type})`;
-
         document.getElementById('wizInputStock').classList.add('hidden');
         document.getElementById('wizInputCrypto').classList.add('hidden');
+        document.getElementById('wizInputCredit').classList.add('hidden');
 
         if (type === 'Stock') initWizStock();
         else if (type === 'Crypto') initWizCrypto();
+        else if (type === 'Credit') document.getElementById('wizInputCredit').classList.remove('hidden');
     }
 
     function wizBack() {
         document.getElementById('wizStep1').classList.remove('hidden');
         document.getElementById('wizStep2').classList.add('hidden');
-
-        // Stepper Update
         document.getElementById('wizDot1').classList.add('active');
         document.getElementById('wizDot2').classList.remove('active');
     }
@@ -416,7 +388,7 @@
         const sel = document.getElementById('wizStockTicker');
         sel.innerHTML = '<option disabled selected>Select Stock</option>';
         if (DATA.holdings) {
-            DATA.holdings.filter(h => h.cat === '股票').forEach(h => {
+            DATA.holdings.forEach(h => {
                 const opt = document.createElement('option');
                 opt.value = h.ticker;
                 opt.innerText = `${h.ticker} (Qty: ${h.qty})`;
@@ -431,8 +403,7 @@
 
     function initWizCrypto() {
         document.getElementById('wizInputCrypto').classList.remove('hidden');
-        const box = document.getElementById('wizCryptoRows');
-        box.innerHTML = '';
+        document.getElementById('wizCryptoRows').innerHTML = '';
         addCryptoRow();
     }
 
@@ -452,52 +423,20 @@
 
     function subWizard() {
         setVal('wizBtn', 'Processing...');
-
         let payload = {};
 
         if (wizProto === 'Sinopac') {
             const tTicker = document.getElementById('wizStockTicker').value;
             const tAmt = document.getElementById('wizStockLoan').value;
             if (!tTicker || !tAmt) { showMsg('Error', 'Missing fields'); return; }
-
-            // Extract ticker from "2330 (Qty: 1000)"
             const realTicker = tTicker.split(' ')[0];
-
-            payload = {
-                proto: 'Sinopac',
-                col: realTicker,
-                qty: 1000, // TODO: Logic to get Max or User Input? 
-                // Current UI only has "Avail: 0" label, no input for Qty? 
-                // Wait, the UI in index.html (wizInputStock) only has a SELECT and Amount Input. 
-                // It assumes PLEDGING ALL AVAILABLE? Or user needs input?
-                // Let's look at lines 272-278 of index.html. 
-                // There is NO input for Quantity. Just "Select Stock" (which implies All?) 
-                // and "Loan Amount".
-                // Let's assume we pledge ALL available for simplicity, or we default to 1000?
-                // Actually, let's look at initWizStock(). 
-                // It confirms avail qty. 
-                // Let's grab the Qty from DATA for safe measure.
-                amount: tAmt
-            };
-
-            // Find Qty from DATA
-            const h = DATA.holdings.find(h => h.ticker === realTicker);
-            if (h) payload.qty = h.qty;
+            payload = { proto: 'Sinopac', col: realTicker, qty: 1000, amount: tAmt };
         }
         else if (wizProto === 'LineBank') {
-            // UI for LineBank? index.html lines 257 select proto. 
-            // But wizStep2 shares "wizInputStock" or "wizInputCrypto".
-            // We need a "wizInputCredit" or reuse Stock?
-            // The UI code `setWizProto` only inits Stock or Crypto. 
-            // LineBank (Credit) is missing a tailored UI.
-            // Hack: Reuse Stock UI but hide Collateral? 
-            // For now, let's just make it simple: Credit Loan = Stock Loan UI but ignore ticker.
-
-            const tAmt = document.getElementById('wizStockLoan').value;
+            const tAmt = document.getElementById('wizCreditLoan').value;
             payload = { proto: 'LineBank', amount: tAmt };
         }
         else if (wizProto === 'AAVE') {
-            // Collect Rows
             const rows = document.querySelectorAll('#wizCryptoRows > div');
             let assets = [];
             rows.forEach(r => {
@@ -505,22 +444,8 @@
                 const q = r.querySelector('.wiz-c-amt').value;
                 if (t && q) assets.push({ ticker: t, qty: q });
             });
-
-            // Where is Debt Amount input for Crypto?
-            // It's not in the UI (wizInputCrypto). 
-            // We need to add it or prompt it.
-            // Actually, let's assume the user enters negative USDT in the asset list? 
-            // No, wizard usually asks "How much to borrow".
-            // Let's add a prompt for now or assume 0 debt (just deposit).
-            // Better: Add a prompt.
             let debt = document.getElementById('wizCryptoBorrow').value;
-            if (!debt) { showMsg('Error', 'Please enter borrow amount'); return; }
-
-            payload = {
-                proto: 'AAVE',
-                assets: assets,
-                amount: debt
-            };
+            payload = { proto: 'AAVE', assets: assets, amount: debt };
         }
 
         google.script.run.withSuccessHandler(res => {
@@ -530,69 +455,27 @@
         }).processWizard(payload);
     }
 
-    /* --- DEPRECATED THEME LOGIC --- */
-    // Dark mode is now standard. toggleTheme removed.
-
-    /* --- CURRENCY & I18N LOGIC --- */
+    /* --- SETTINGS --- */
     let CURRENCY = 'TWD';
     let curLang = 'zh';
 
     function setCurrency(val) {
         CURRENCY = val;
-
-        // UI Visual Update
         document.getElementById('btnTWD').classList.toggle('active', val === 'TWD');
         document.getElementById('btnUSD').classList.toggle('active', val === 'USD');
-
-        // Save Prefs
         autoSaveSettings();
-
-        // Re-render everything with new currency
-        if (DATA && DATA.status) {
-            // Recalculate Dashboard Value
-            let total = DATA.netWorthTWD;
-            if (val === 'USD' && DATA.fx) total = total / DATA.fx;
-            setVal('netWorth', fmt(total));
-
-            let daily = DATA.dailyChange;
-            if (val === 'USD' && DATA.fx) daily = daily / DATA.fx;
-
-            const dc = document.getElementById('dailyChange');
-            if (dc) {
-                const color = DATA.dailyChange >= 0 ? 'var(--success)' : 'var(--danger)';
-                dc.innerHTML = `<span style="color:${color}">${DATA.dailyChange >= 0 ? '+' : ''}${fmt(daily)}</span> Today`;
-            }
-
-            renderAssets(DATA);
-            renderTx(DATA);
-            renderHoldings(DATA);
-            renderLoan(DATA);
-        }
+        if (DATA && DATA.status) renderDashboard(DATA);
     }
 
-    function toggleLang() {
-        setLang(curLang === 'zh' ? 'en' : 'zh');
-    }
+    function toggleLang() { setLang(curLang === 'zh' ? 'en' : 'zh'); }
 
-    function fmt(n) {
-        if (!n && n !== 0) return '-';
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: CURRENCY,
-            minimumFractionDigits: 0
-        }).format(n);
-    }
-
-    // Helper to get Value in Current Currency
     function getVal(valTWD) {
         if (CURRENCY === 'USD' && DATA.fx) return valTWD / DATA.fx;
         return valTWD;
     }
 
-    /* --- SETTINGS PERSISTENCE --- */
     function autoSaveSettings() {
-        const prefs = { currency: CURRENCY, lang: curLang };
-        localStorage.setItem('am_prefs', JSON.stringify(prefs));
+        localStorage.setItem('am_prefs', JSON.stringify({ currency: CURRENCY, lang: curLang }));
     }
 
     function loadSettings() {
@@ -602,10 +485,9 @@
                 if (p.currency) setCurrency(p.currency);
                 if (p.lang) setLang(p.lang);
             }
-        } catch (e) { console.error('Error loading settings', e); }
+        } catch (e) { }
     }
 
-    /* --- REAL i18n LOGIC --- */
     const i18nData = {
         'SysStat': { zh: '系統狀態', en: 'System Status' },
         'RunDig': { zh: '執行診斷', en: 'Run Diagnostics' },
@@ -616,28 +498,11 @@
         'Set': { zh: '設定', en: 'Settings' }
     };
 
-    // let curLang = 'zh'; // Default (Removed duplicate)
     function setLang(lang) {
         curLang = lang;
-
-        // Update Text
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
-            if (i18nData[key] && i18nData[key][lang]) {
-                el.innerText = i18nData[key][lang];
-            }
+            if (i18nData[key] && i18nData[key][lang]) el.innerText = i18nData[key][lang];
         });
-
-        // Update Toggle Text (Visual Feedback)
-        const el = document.querySelector('[data-i18n="Lang"] + div');
-        if (el) el.innerText = lang === 'zh' ? '中文' : 'English';
     }
-
-    function runSystemCheck() {
-        showMsg('System Check', 'Diagnostics running... All systems nominal. Connection to Google Apps Script: Active.');
-    }
-
-    // Init
-    // Init merged into top window.onload
-
 </script>

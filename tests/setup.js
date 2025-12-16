@@ -29,6 +29,7 @@ const MockSheet = class {
     }
     getName() { return this.name; }
     getLastRow() { return this.data.length; }
+    getLastColumn() { return (this.data[0] || []).length; }
     getRange(row, col, numRows, numCols) {
         return new MockRange(this, row, col, numRows, numCols);
     }
@@ -100,6 +101,7 @@ const MockSS = {
 };
 
 // 3. Create VM Context
+// 3. Create VM Context
 const context = {
     SpreadsheetApp: {
         getActiveSpreadsheet: jest.fn(() => MockSS),
@@ -132,21 +134,29 @@ const context = {
     mockSheets: {},
     console: console,
     exports: {},
-    module: { exports: {} }
+    module: { exports: {} },
+    MockSS: MockSS // Inject MockSS explicitely
 };
 
 vm.createContext(context);
 
 // Include Constants first
-vm.runInContext(constantsContent, context);
+// Convert 'const' to 'var' to ensure they attach to global context in VM
+const constantsWithVar = constantsContent.replace(/const /g, 'var ');
+vm.runInContext(constantsWithVar, context);
 
 // Explicitly export Classes from Logic.gs to Context
 // Class declarations in VM might not automatically hoist to 'this'
-const logicWithExports = logicContent +
-    "\n; this.LoanPosition = LoanPosition; this.RiskCalculator = RiskCalculator;";
+// Explicitly export Classes from Logic.gs to Context
+// Class declarations in VM might not automatically hoist to 'this'
+const logicWithExports = logicContent;
 
 vm.runInContext(logicWithExports, context);
-vm.runInContext(repoContent, context);
+
+// Explicitly export Classes from Repository.gs to Context
+const repoWithExports = repoContent +
+    "\n; this.SheetRepository = SheetRepository; this.LogRepository = LogRepository; this.LoanRepository = LoanRepository; this.LoanActionRepository = LoanActionRepository;";
+vm.runInContext(repoWithExports, context);
 vm.runInContext(actionsContent, context); // Actions depend on logic/repo
 
 // Export context for tests
@@ -155,10 +165,8 @@ const {
     MockSS: MockSSRef,
     // Logic
     getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
-    LoanPosition, RiskCalculator, // New Logic
-    ACT_BUY, ACT_SELL, TYPE_STOCK,
     // Actions
-    getDashboardData, addTx, addLoan, processContractAction,
+    getDashboardData, addTransaction, processLoanAction,
     // Repository
     SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
     // Constants
@@ -171,10 +179,8 @@ module.exports = {
     MockSheet, MockSS,
     // Logic
     getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
-    LoanPosition, RiskCalculator,
-    ACT_BUY, ACT_SELL, TYPE_STOCK,
     // Actions
-    getDashboardData, addTx, addLoan, processContractAction,
+    getDashboardData, addTransaction, processLoanAction,
     // Repository
     SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
     // Constants

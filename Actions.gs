@@ -1,387 +1,329 @@
 /**
  * Actions.gs
- * Ë≤†Ë≤¨ËôïÁêÜÊâÄÊúâÁöÑÂØ´ÂÖ•Êìç‰Ωú (Create/Update/Delete)
- * ÂåÖÂê´‰∫§ÊòìÁ¥ÄÈåÑËàáÂÄüË≤∏ÂêàÁ¥ÑÁöÑÁï∞Âãï
- * 
- * [Refactor Notes]:
- * 1. ÂºïÂÖ• LockService Èò≤Ê≠¢‰∏¶ÁôºÂØ´ÂÖ•Ë°ùÁ™Å
- * 2. Áµ±‰∏ÄÂõûÂÇ≥Ê†ºÂºèÁÇ∫ { success: boolean, message: string }
- * 3. ÈÖçÂêà Logic.gs ÈáçÊßãÔºåÂÖàËÆÄÂèñË≥áÊñôÂÜçÂëºÂè´ getInventoryMap
+ * ≥B≤z®”¶€´e∫›™∫Ω–®D°A®√ºg§J GasStore
  */
 
 /**
- * Actions.gs
- * Ë≤†Ë≤¨ËôïÁêÜÊâÄÊúâÁöÑÂØ´ÂÖ•Êìç‰Ωú (Create/Update/Delete) - GasStore Edition
+ * ≥B≤z∑sºW•Ê©ˆ (Logs)
+ * @param {Object} d - ´e∫›∂«®”™∫™Ì≥Ê∏ÍÆ∆ {date, type, ticker, ...}
  */
+function addTransaction(d) {
+    return withLock(() => {
+        let logs = GasStore.get('DB:LOG', []);
 
-function withLock(callback) {
-  const lock = LockService.getScriptLock();
-  try {
-    const success = lock.tryLock(10000);
-    if (!success) return { success: false, message: "System Busy (Lock Timeout)" };
+        // ≈Á√“
+        if (!d.ticker || !d.qty || !d.price) return "Error: Missing Fields";
 
-    // Init Store if not already
-    GasStore.init({ sheet_name: '_DB_STORE', encryption_key: 'AssetManager_V4', use_lock: false });
-    // We handle lock externally here for the transactional logic, so internal lock can be false or true.
-    // Actually, allowing internal lock is safer for the commit phase.
+        logs.push({
+            date: d.date,
+            type: d.type,
+            ticker: normalizeTicker(d.ticker),
+            cat: d.cat,
+            qty: Number(d.qty),
+            price: Number(d.price),
+            currency: d.currency,
+            note: d.note || ''
+        });
 
-    const resultMsg = callback();
-
-    // Auto Commit after action
-    GasStore.commit();
-
-    return { success: true, message: resultMsg };
-
-  } catch (e) {
-    Logger.log("Action Error: " + e.toString());
-    return { success: false, message: "Error: " + e.toString() };
-  } finally {
-    lock.releaseLock();
-  }
+        GasStore.set('DB:LOG', logs);
+        return "Transaction Added"; // Return success message
+    });
 }
 
-function addTx(d) {
-  return withLock(() => {
-    let logs = GasStore.get('DB:LOG', []);
+/**
+ * ≥B≤z≠…∂U¨€√ˆæﬁß@
+ * @param {Object} d - {action, source, ...}
+ */
+function processLoanAction(d) {
+    return withLock(() => {
+        let loans = GasStore.get('DB:LOAN', []);
 
-    const newTx = {
-      date: d.date,
-      type: d.type,
-      ticker: normalizeTicker(d.ticker),
-      cat: d.cat,
-      qty: Number(d.qty),
-      price: Number(d.price),
-      currency: d.currency,
-      note: 'App'
-    };
+        // --- ∑sºW¶X¨˘ (New Loan) ---
+        if (d.action === 'new') {
+            loans.push({
+                source: d.source,
+                date: d.date,
+                amount: Number(d.amount),
+                rate: Number(d.rate),
+                col: normalizeTicker(d.collateral),
+                colQty: Number(d.colQty),
+                type: d.type,
+                warn: Number(d.warn),
+                liq: Number(d.liq),
+                note: d.note,
+                totalTerm: Number(d.totalTerm || 0),
+                paidTerm: 0,
+                monthlyPay: Number(d.monthlyPay || 0),
+                currency: d.currency || 'TWD'
+            });
+            GasStore.set('DB:LOAN', loans);
+            return 'Loan Contract Added';
+        }
 
-    logs.push(newTx);
-    GasStore.set('DB:LOG', logs);
-    return '‰∫§ÊòìÁ¥ÄÈåÑÊñ∞Â¢ûÊàêÂäü';
-  });
+        return "Unknown Action";
+    });
 }
 
-function addLoan(d) {
-  return withLock(() => {
-    let loans = GasStore.get('DB:LOAN', []);
+/**
+ * ≥B≤z¡Ÿ¥⁄/Ω’æ„ (Repay/Adjust)
+ * ≥o¨O≥ÃΩ∆¬¯™∫≥°§¿°Aª›≠n≠◊ßÔ≤{¶≥ Loan°A®√≤£•Õ Log
+ */
+function processRepayment(d) {
+    return withLock(() => {
+        let loans = GasStore.get('DB:LOAN', []);
+        let logs = GasStore.get('DB:LOG', []);
 
-    let warn = d.warn ? Number(d.warn) : 160;
-    let liq = d.liq ? Number(d.liq) : 130;
+        // ¥Mß‰•ÿº–¶X¨˘ (Source + Collateral + Note Match)
+        // ¬≤≥Ê∞_®£°A≥o∏Ã•Œ¬≤©ˆ§«∞t°AπÍª⁄¿≥¶≥ ID
+        let targetSource = d.source;
+        let targetCol = normalizeTicker(d.collateral);
 
-    if (!d.warn && !d.liq) {
-      if (d.type === '‰ø°Áî®Ë≤∏Ê¨æ' || d.type === 'Âç°Ë≤ª') { warn = 0; liq = 0; }
-      else if (d.type === 'Âä†ÂØÜË≤®Âπ£') { warn = 80; liq = 90; }
-    }
+        let matches = loans
+            .map((l, i) => ({ l, i }))
+            .filter(x => x.l.source === targetSource && (x.l.col === targetCol || !targetCol) && !String(x.l.note).includes('§wµ≤≤M'));
 
-    let loanCurr = d.currency || 'TWD';
+        if (matches.length === 0) return "Error: No Active Contract Found";
 
-    // Â∫´Â≠òÊ™¢Ê†∏
-    if (d.type !== '‰ø°Áî®Ë≤∏Ê¨æ' && d.type !== 'Âç°Ë≤ª') {
-      let t = normalizeTicker(d.col);
-      let q = Number(d.colQty);
+        // Logic: ¿u•˝¡Ÿ¥⁄ßQ≤v∞™™∫? ≥o∏Ã∞≤≥]•uπÔ≤ƒ§@≠”§«∞t™∫¶X¨˘æﬁß@
+        let m = matches[0];
+        // d.amount ¨O•ª¶∏¡Ÿ¥⁄¡`√B
+        let repayAmt = Number(d.amount);
+        let logMsg = [];
 
-      const logs = GasStore.get('DB:LOG', []);
-      // Logic.gs expects arrays for legacy compatibility or we update getInventoryMap?
-      // Step 350 Code.gs maps to arrays. 
-      // Let's assume Logic.gs is NOT updated yet. We must provide Arrays.
-      // Or we temporarily map here.
-      const logRows = [[]].concat(logs.map(r => [r.date, r.type, r.ticker, r.cat, r.qty, r.price, r.currency, r.note]));
-      const loanRows = [[]].concat(loans.map(r => [r.source, r.date, r.amount, r.rate, r.col, r.colQty, r.type, r.warn, r.liq, r.note, r.totalTerm, r.paidTerm, r.monthlyPay, r.currency]));
+        // 1. ≠p∫‚¿≥•IßQÆß (Accrued Interest)
+        // ª›≠´∑s≠p∫‚ßQÆß... ≥o∏Ã¬≤§∆°A∞≤≥]´e∫›©Œ Logic ∫‚¶n∂«®”? 
+        // ≥o∏Ã≠´∫‚•H®D¶w•˛
+        let now = new Date();
+        let startDate = new Date(m.l.date);
+        let days = Math.floor((now - startDate) / (1000 * 3600 * 24));
+        let interest = Math.round((m.l.amount * (m.l.rate / 100) / 365) * days);
 
-      let invMap = getInventoryMap(logRows, loanRows);
-      let free = invMap.inventory[t] || 0;
-      if (q > free) throw new Error(`Â∫´Â≠ò‰∏çË∂≥ÔºÅ ${t} ÈñíÁΩÆÂ∫´Â≠òÂÉÖÂâ© ${free}`);
-    }
+        if (interest < 0) interest = 0;
 
-    const newLoan = {
-      source: d.source,
-      date: d.date,
-      amount: Number(d.amount),
-      rate: Number(d.rate),
-      col: normalizeTicker(d.col),
-      colQty: Number(d.colQty),
-      type: d.type,
-      warn: warn,
-      liq: liq,
-      note: 'App',
-      totalTerm: Number(d.totalTerm || 0),
-      paidTerm: 0,
-      monthlyPay: Number(d.monthlyPay || 0),
-      currency: loanCurr
-    };
+        let remainingRepay = repayAmt;
 
-    loans.push(newLoan);
-    GasStore.set('DB:LOAN', loans);
-    return 'ÂêàÁ¥ÑÂª∫Á´ãÊàêÂäü';
-  });
+        // •˝•IßQÆß
+        if (remainingRepay > 0) {
+            if (remainingRepay >= m.l.amount + interest) {
+                // •˛√Bµ≤≤M
+                remainingRepay -= (m.l.amount + interest);
+
+                loans[m.i].amount = 0;
+                loans[m.i].note = (loans[m.i].note || '') + ' [§wµ≤≤M]';
+
+                logMsg.push(`Paid Off w/ Int ${interest}`);
+
+                if (interest > 0) {
+                    logs.push({
+                        date: new Date(), type: '§‰•X', ticker: 'ßQÆß', cat: '∂O•Œ', qty: 1, price: interest,
+                        currency: m.l.currency, note: `Repay Int - ${m.l.source}`
+                    });
+                }
+            } else {
+                // ≥°§¿¡Ÿ¥⁄
+                if (remainingRepay < interest) return "Error: Repayment < Accrued Interest";
+
+                let principal = remainingRepay - interest;
+                loans[m.i].amount -= principal;
+                loans[m.i].date = new Date().toISOString().split('T')[0]; // Reset date for interest calc
+
+                logMsg.push(`Partial Pay ${principal} (Int ${interest})`);
+
+                if (interest > 0) {
+                    logs.push({
+                        date: new Date(), type: '§‰•X', ticker: 'ßQÆß', cat: '∂O•Œ', qty: 1, price: interest,
+                        currency: m.l.currency, note: `Repay Int - ${m.l.source}`
+                    });
+                }
+            }
+        }
+
+        GasStore.set('DB:LOAN', loans);
+        GasStore.set('DB:LOG', logs);
+        return `Repay Success: ${logMsg.join(', ')}`;
+    });
 }
 
 function processContractAction(d) {
-  return withLock(() => {
-    let loans = GasStore.get('DB:LOAN', []);
-    let logs = GasStore.get('DB:LOG', []);
+    return withLock(() => {
+        let loans = GasStore.get('DB:LOAN', []);
+        let logs = GasStore.get('DB:LOG', []);
 
-    // Row Index Mapping: Sheet Row 2 = Array Index 0
-    let idx = d.row ? Number(d.row) - 2 : -1;
-    let loan = null;
+        // ¶A¶∏¥Mß‰
+        let matches = loans
+            .map((l, i) => ({ l, i }))
+            .filter(x => x.l.source === d.source && !String(x.l.note).includes('§wµ≤≤M'));
 
-    if (idx >= 0 && idx < loans.length) {
-      loan = loans[idx];
-    } else if (d.source) {
-      // Find by Source (First Match? Logic used simple loops before)
-      idx = loans.findIndex(l => l.source === d.source && !String(l.note).includes('ÁµêÊ∏Ö'));
-      if (idx !== -1) loan = loans[idx];
-      else {
-        // Default template if not found?
-        loan = { type: 'ËÇ°Á•®', warn: 160, liq: 130, currency: 'TWD', rate: 2.5 };
-        idx = -1; // New
-      }
-    }
-
-    if (!loan && d.type !== 'repay' && d.type !== 'addCol') throw new Error("Loan not found");
-
-    // --- Action: Add Collateral ---
-    if (d.type === 'addCol') {
-      let addQ = Number(d.val);
-      let addTicker = normalizeTicker(d.addTicker);
-      let addRate = d.price ? Number(d.price) : loan.rate; // Use loan rate if not provided?
-
-      // Stock Check
-      const logRows = [[]].concat(logs.map(r => [r.date, r.type, r.ticker, r.cat, r.qty, r.price, r.currency, r.note]));
-      const loanRows = [[]].concat(loans.map(r => [r.source, r.date, r.amount, r.rate, r.col, r.colQty, r.type, r.warn, r.liq, r.note, r.totalTerm, r.paidTerm, r.monthlyPay, r.currency]));
-      let invMap = getInventoryMap(logRows, loanRows);
-      let free = invMap.inventory[addTicker] || 0;
-      if (addQ > free) throw new Error(`Stock Not Enough: ${free}`);
-
-      if (idx !== -1 && addTicker === loan.col && addRate === loan.rate) {
-        loans[idx].colQty += addQ;
-        GasStore.set('DB:LOAN', loans);
-        return `Added ${addQ} ${addTicker}`;
-      } else {
-        loans.push({
-          source: loan.source || d.source,
-          date: new Date().toISOString().split('T')[0],
-          amount: 0,
-          rate: addRate,
-          col: addTicker,
-          colQty: addQ,
-          type: loan.type || 'ËÇ°Á•®',
-          warn: loan.warn, liq: loan.liq, note: 'Add Col',
-          totalTerm: 0, paidTerm: 0, monthlyPay: 0, currency: loan.currency || 'TWD'
-        });
-        GasStore.set('DB:LOAN', loans);
-        return `New Collateral Contract Added`;
-      }
-    }
-
-    if (idx === -1 && d.type !== 'repay') throw new Error("Operation requires existing contract");
-
-    // --- Action: Repay ---
-    if (d.type === 'repay') {
-      let repayTotal = Number(d.val);
-      let targetSource = d.source || loan.source;
-      let targetCol = d.col || loan.col;
-      let logMsg = [];
-
-      // Filter matches
-      let matches = loans.map((l, i) => ({ l, i }))
-        .filter(x => x.l.source === targetSource && x.l.col === targetCol && !String(x.l.note).includes('ÁµêÊ∏Ö') && x.l.amount > 0)
-        .sort((a, b) => new Date(a.l.date) - new Date(b.l.date));
-
-      if (matches.length === 0) throw new Error("No active loan found for repayment");
-
-      let remainingRepay = repayTotal;
-
-      for (let m of matches) {
-        if (remainingRepay <= 0) break;
-        let l = m.l;
-        let amt = l.amount;
-
-        let now = new Date();
-        let days = Math.floor((now - new Date(l.date)) / (1000 * 3600 * 24));
-        if (days < 0) days = 0;
-        let interest = amt * (l.rate / 100) * (days / 365);
-        if (l.currency === 'TWD') interest = Math.round(interest);
-
-        let debt = amt + interest;
-
-        if (remainingRepay >= debt) {
-          loans[m.i].amount = 0;
-          loans[m.i].note = (loans[m.i].note || '') + ' [Â∑≤ÁµêÊ∏Ö]';
-          remainingRepay -= debt;
-          logMsg.push(`Paid Off w/ Int ${interest}`);
-
-          if (interest > 0) {
-            logs.push({
-              date: new Date(), type: 'ÊîØÂá∫', ticker: 'Âà©ÊÅØ', cat: 'Ë≤ªÁî®', qty: 1, price: interest,
-              currency: l.currency, note: `Repay Int - ${l.source}`
-            });
-          }
-        } else {
-          let principal = remainingRepay > interest ? (remainingRepay - interest) : 0;
-          if (principal > amt) principal = amt;
-
-          if (remainingRepay < interest) throw new Error("Repayment < Interest");
-
-          loans[m.i].amount -= principal;
-          loans[m.i].date = new Date(); // Update date for interest calc reset
-          // Wait, if we keep same date, interest compounds? 
-          // Logic.gs calculates from 'date' field. Resetting date is correct method here ("Rollover").
-
-          remainingRepay = 0;
-          logMsg.push(`Partial Pay ${principal} (Int ${interest})`);
-
-          if (interest > 0) {
-            logs.push({
-              date: new Date(), type: 'ÊîØÂá∫', ticker: 'Âà©ÊÅØ', cat: 'Ë≤ªÁî®', qty: 1, price: interest,
-              currency: l.currency, note: `Repay Int - ${l.source}`
-            });
-          }
+        // --- Action: Add Collateral ---
+        if (d.type === 'addCol') {
+            if (matches.length === 0) return "Error: No Contract";
+            loans[matches[0].i].colQty += Number(d.colQty);
+            GasStore.set('DB:LOAN', loans);
+            return "Collateral Added";
         }
-      }
 
-      GasStore.set('DB:LOAN', loans);
-      GasStore.set('DB:LOG', logs);
-      return `Repay Success: ${logMsg.join(', ')}`;
-    }
+        // --- Action: Increase Loan ---
+        if (d.type === 'increaseLoan') {
+            let base = matches.length > 0 ? matches[0].l : {};
+            loans.push({
+                source: d.source || base.source,
+                date: new Date().toISOString().split('T')[0],
+                amount: Number(d.val),
+                rate: Number(d.price || base.rate),
+                col: normalizeTicker(d.col || base.col),
+                colQty: 0,
+                type: base.type || '™—≤º',
+                warn: base.warn || 160, liq: base.liq || 130,
+                note: 'Increase',
+                totalTerm: 0, paidTerm: 0, monthlyPay: 0, currency: base.currency || 'TWD'
+            });
+            GasStore.set('DB:LOAN', loans);
+            return "Loan Increased";
+        }
 
-    // --- Action: Increase Loan ---
-    if (d.type === 'increaseLoan') {
-      loans.push({
-        source: loan.source,
-        date: new Date().toISOString().split('T')[0],
-        amount: Number(d.val),
-        rate: Number(d.price),
-        col: loan.col,
-        colQty: 0, // No new col
-        type: loan.type, warn: loan.warn, liq: loan.liq, note: 'Increase',
-        totalTerm: 0, paidTerm: 0, monthlyPay: 0, currency: loan.currency
-      });
-      GasStore.set('DB:LOAN', loans);
-      return `Loan Increased by ${d.val}`;
-    }
+        // --- Action: Sell to Repay ---
+        if (d.type === 'sell') {
+            if (matches.length === 0) return "Error: No Contract";
+            let sellQty = Number(d.val);
+            loans[matches[0].i].colQty -= sellQty;
+            if (loans[matches[0].i].colQty < 0) loans[matches[0].i].colQty = 0;
 
-    // --- Action: Pay Period ---
-    if (d.type === 'payPeriod') {
-      let total = loan.totalTerm, paid = loan.paidTerm, mPay = loan.monthlyPay;
-      if (paid >= total) return "All Paid";
+            logs.push({
+                date: new Date(), type: 'ΩÊ•X', ticker: d.col, cat: '¡Ÿ¥⁄',
+                qty: sellQty, price: Number(d.price), currency: matches[0].l.currency, note: 'Sell to Repay'
+            });
 
-      let annualInt = loan.amount * (loan.rate / 100);
-      let mInt = annualInt / 12;
-      if (loan.currency === 'TWD') mInt = Math.round(mInt);
+            GasStore.set('DB:LOAN', loans);
+            GasStore.set('DB:LOG', logs);
+            return "Sold Collateral";
+        }
 
-      let principal = mPay - mInt; if (principal < 0) principal = 0;
+        // --- Action: Pay Period ---
+        if (d.type === 'payPeriod') {
+            if (matches.length === 0) return "Error: No Contract";
+            let idx = matches[0].i;
+            let loan = loans[idx];
+            let total = loan.totalTerm, paid = loan.paidTerm, mPay = loan.monthlyPay;
 
-      loans[idx].amount -= principal;
-      loans[idx].paidTerm += 1;
+            if (paid >= total) return "All Paid";
 
-      if (loans[idx].amount <= 0 || loans[idx].paidTerm >= total) {
-        loans.splice(idx, 1); // Delete completely or mark cleared?
-        // If we delete, idx shifts? 
-        // We fetched 'loans' array. Splice affects memory. 
-        // GasStore set saves modified array. Safe.
-        GasStore.set('DB:LOAN', loans);
-        return "Installment Paid (Cleared)";
-      }
-      GasStore.set('DB:LOAN', loans);
-      return `Paid Term ${paid + 1}`;
-    }
+            let annualInt = loan.amount * (loan.rate / 100);
+            let mInt = annualInt / 12;
+            if (loan.currency === 'TWD') mInt = Math.round(mInt);
 
-    // --- Action: Sell ---
-    if (d.type === 'sell') {
-      let sellQty = Number(d.val);
-      loans[idx].colQty -= sellQty;
-      // Repay logic? 
-      // For simplified sell, assume repayment logic handled elsewhere or via AddTx 
-      // Original code did repayment logic inside:
-      // "if (repayAmt <= accruedInterest)..."
-      // Let's implement basics:
-      if (loans[idx].colQty <= 0) loans[idx].colQty = 0;
+            let principal = mPay - mInt; if (principal < 0) principal = 0;
 
-      // Add Sell Log
-      logs.push({
-        date: new Date(), type: 'Ë≥£Âá∫', ticker: loan.col, cat: 'Ë≥£Âá∫ÈÇÑÊ¨æ',
-        qty: sellQty, price: Number(d.price), currency: loan.currency, note: 'Sell to Repay'
-      });
+            loans[idx].amount -= principal;
+            loans[idx].paidTerm += 1;
 
-      GasStore.set('DB:LOAN', loans);
-      GasStore.set('DB:LOG', logs);
-      return "Sold collateral";
-    }
+            if (loans[idx].amount <= 0 || loans[idx].paidTerm >= total) {
+                loans[idx].note = (loans[idx].note || '') + " [§wµ≤≤M]";
+                loans[idx].amount = 0;
+            }
 
-    return "Invalid Operation";
-  });
+            logs.push({
+                date: new Date(), type: '§‰•X', ticker: '´H∂U', cat: '¡Ÿ¥⁄',
+                qty: 1, price: mPay, currency: loan.currency, note: `Period ${paid + 1}/${total}`
+            });
+
+            GasStore.set('DB:LOAN', loans);
+            GasStore.set('DB:LOG', logs);
+            return `Paid Term ${paid + 1}`;
+        }
+
+        return "Invalid Operation";
+    });
 }
 
 function deleteTx(row) {
-  return withLock(() => {
-    let logs = GasStore.get('DB:LOG', []);
-    let idx = Number(row) - 2;
-    if (idx >= 0 && idx < logs.length) {
-      logs.splice(idx, 1);
-      GasStore.set('DB:LOG', logs);
-      return 'Transaction Deleted';
-    }
-    return 'Error: Invalid ID';
-  });
+    return withLock(() => {
+        let logs = GasStore.get('DB:LOG', []);
+        let idx = Number(row) - 2;
+        if (idx >= 0 && idx < logs.length) {
+            logs.splice(idx, 1);
+            GasStore.set('DB:LOG', logs);
+            return 'Transaction Deleted';
+        }
+        return 'Error: Invalid ID';
+    });
 }
 
 function editTx(d) {
-  return withLock(() => {
-    let logs = GasStore.get('DB:LOG', []);
-    let idx = Number(d.row) - 2;
-    if (idx >= 0 && idx < logs.length) {
-      logs[idx] = {
-        date: d.date, type: d.type, ticker: normalizeTicker(d.ticker),
-        cat: d.cat, qty: d.qty, price: d.price, currency: d.currency, note: 'App(Edit)'
-      };
-      GasStore.set('DB:LOG', logs);
-      return 'Transaction Updated';
-    }
-    return 'Error: Invalid ID';
-  });
+    return withLock(() => {
+        let logs = GasStore.get('DB:LOG', []);
+        let idx = Number(d.row) - 2;
+        if (idx >= 0 && idx < logs.length) {
+            logs[idx] = {
+                date: d.date, type: d.type, ticker: normalizeTicker(d.ticker),
+                cat: d.cat, qty: d.qty, price: d.price, currency: d.currency, note: 'App(Edit)'
+            };
+            GasStore.set('DB:LOG', logs);
+            return 'Transaction Updated';
+        }
+        return 'Error: Invalid ID';
+    });
 }
 
 function processWizard(d) {
-  return withLock(() => {
-    let loans = GasStore.get('DB:LOAN', []);
+    return withLock(() => {
+        let loans = GasStore.get('DB:LOAN', []);
 
-    if (d.proto === 'Sinopac' || d.proto === 'LineBank') {
-      let isCredit = d.proto === 'LineBank';
-      loans.push({
-        source: d.proto,
-        date: new Date().toISOString().split('T')[0],
-        amount: Number(d.amount),
-        rate: isCredit ? 2.88 : 2.5,
-        col: isCredit ? '' : normalizeTicker(d.col),
-        colQty: isCredit ? 0 : Number(d.qty || 0), // Fix: d.qty used for colQty
-        type: isCredit ? '‰ø°Áî®Ë≤∏Ê¨æ' : 'ËÇ°Á•®',
-        warn: isCredit ? 0 : 160,
-        liq: isCredit ? 0 : 130,
-        note: 'Wizard',
-        totalTerm: isCredit ? 84 : 0, paidTerm: 0, monthlyPay: 0, currency: 'TWD'
-      });
-      GasStore.set('DB:LOAN', loans);
-      return "Wizard: Contract Created";
+        if (d.proto === 'Sinopac' || d.proto === 'LineBank') {
+            let isCredit = d.proto === 'LineBank';
+            loans.push({
+                source: d.proto,
+                date: new Date().toISOString().split('T')[0],
+                amount: Number(d.amount),
+                rate: isCredit ? 2.88 : 2.5,
+                col: isCredit ? '' : normalizeTicker(d.col),
+                colQty: isCredit ? 0 : Number(d.qty || 0),
+                type: isCredit ? '´H∂U' : '™—≤º',
+                warn: isCredit ? 0 : 160,
+                liq: isCredit ? 0 : 130,
+                note: 'Wizard',
+                totalTerm: isCredit ? 84 : 0, paidTerm: 0, monthlyPay: 0, currency: 'TWD'
+            });
+            GasStore.set('DB:LOAN', loans);
+            return "Wizard: Contract Created";
+        }
+        else if (d.proto === 'AAVE') {
+            if (!d.assets) return "Error: No assets";
+            let totalDebt = Number(d.amount);
+            d.assets.forEach((a, i) => {
+                loans.push({
+                    source: 'AAVE',
+                    date: new Date().toISOString().split('T')[0],
+                    amount: (i === 0) ? totalDebt : 0,
+                    rate: 5.0,
+                    col: normalizeTicker(a.ticker),
+                    colQty: Number(a.qty),
+                    type: '•[±K≥fπÙ', warn: 80, liq: 90, note: 'Wizard(DeFi)',
+                    totalTerm: 0, paidTerm: 0, monthlyPay: 0, currency: 'USD'
+                });
+            });
+            GasStore.set('DB:LOAN', loans);
+            return "Wizard: AAVE Position Created";
+        }
+        return "Unknown Protocol";
+    });
+}
+
+function withLock(func) {
+    if (typeof LockService === 'undefined') {
+        const result = func();
+        GasStore.commit(); // Ensure commit in local/test env too
+        return result;
     }
-    else if (d.proto === 'AAVE') {
-      if (!d.assets) return "Error: No assets";
-      let totalDebt = Number(d.amount);
-      d.assets.forEach((a, i) => {
-        loans.push({
-          source: 'AAVE',
-          date: new Date().toISOString().split('T')[0],
-          amount: (i === 0) ? totalDebt : 0, // Debt attached to first asset entry
-          rate: 5.0,
-          col: normalizeTicker(a.ticker),
-          colQty: Number(a.qty),
-          type: 'Âä†ÂØÜË≤®Âπ£', warn: 80, liq: 90, note: 'Wizard(DeFi)',
-          totalTerm: 0, paidTerm: 0, monthlyPay: 0, currency: 'USD'
-        });
-      });
-      GasStore.set('DB:LOAN', loans);
-      return "Wizard: AAVE Position Created";
+    var lock = LockService.getScriptLock();
+    if (lock.tryLock(10000)) {
+        try {
+            const result = func();
+            GasStore.commit(); // CRITICAL: Flush L1 to L3 before exit
+            return result;
+        } finally {
+            lock.releaseLock();
+        }
+    } else {
+        throw new Error('Lock timeout');
     }
-    return "Unknown Protocol";
-  });
 }

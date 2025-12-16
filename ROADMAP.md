@@ -1,207 +1,219 @@
 # ROADMAP.md
 
-## �겣�ޮa (Asset Manager) - ���ӵo�i�Ź�
+## 資產管理程式 (Asset Manager) - 專案發展藍圖
 
-�����O���F�M�ת����Ӷ}�o��V�B�\��c�Q�P�޳N�u�ƥؼСC
-
----
-
-# ? �\��W���Ҭy�{ (Feature Specification Process)
-
-�b�}�o����s�\�ध�e�A�Ш̧ǫ�ҥH�U���Ӻ��סA�H�T�O�W�槹��B�i��G
-
-1.  **�֤ߥؼ� (Objective)**
-    *   �o�ӥ\��ѨM�F������D�H
-    *   �w�����įq�O����H�]�Ҧp�G�`�ٮɶ��B��ֿ��~�B���ѨM���̾ڡ^
-
-2.  **�ϥΪ̬y�{ (User Flow)**
-    *   �ϥΪ̦p��i�J���\��H
-    *   �ާ@�B�J����H�]Step-by-step�^
-    *   ��J�O����H��X�O����H
-
-3.  **�����]�p (UI/UX)**
-    *   �ݭn���� UI ����H�]���s�B��J�ءB�Ϫ��B�C���^
-    *   �����p��t�m�H�]Desktop vs Mobile�^
-    *   ���ʦ^�X�O����H�]Loading ���A�B���~�T���B���\���ܡ^
-
-4.  **��ƻP�޿� (Data & Logic)**
-    *   ��ƨӷ�����H�]�{���w�s�B�~�� API�B�ϥΪ̿�J�^
-    *   �ݭn�x�s���Ǹ�ơH�s�h���̡H�]Properties Service, Spreadsheet, LocalStorage�^
-    *   �֤ߺt��k�έp���޿謰��H
-
-5.  **�޳N���� (Constraints)**
-    *   GAS ������]����ɶ��B�t�B�BĲ�o����^�H
-    *   �e�ݭ���]�s�����ۮe�ʡBRWD�^�H
-    *   �O�_���~���̿୷�I�H
-
-6.  **�禬�з� (Acceptance Criteria)**
-    *   �\�৹�����w�q�O����H
-    *   ��������ɱ��p (Edge Cases) �ݭn���աH
-
-7.  **�į�P���c (Performance & Refactoring)**
-    *   �{���X�O�_�iŪ�B�ҲդơH�]�ܼƩR�W�B�禡����^
-    *   �O�_����b���į�~�V�H�]�Ҧp�G�j�餺�� API �I�s�B�j�q DOM �ާ@�^
-    *   �O�_�ݭn���c�J���{���X�H�䴩�s�\��H
+本文件記錄了專案的未來開發計畫、功能構想與技術優化目標。
 
 ---
 
-# ? ���ӵo�i�Ź� (Roadmap)
+# ? 功能規格撰寫流程 (Feature Specification Process)
 
-## ? �֤ߥ\���X�R (Core Features)
+在開發任何新功能前，請依循以下規格範本，以確保架構完整並符合需求：
 
-### 1. ���z�A���ŭp��� (Smart Rebalancing Calculator) ? **(Priority: High)**
-*   **1. �֤ߥؼ� (Objective)**
-    *   �N�t�αq�u�Q�ʰO�b�v�ɯŬ��u�D�ʨM���v�u��C
-    *   ��U�ϥΪ̺����겣�t�m���ߡA��ֱ����ާ@�C
-*   **2. �ϥΪ̬y�{ (User Flow)**
-    *   �i�J�u�A���šv���� -> �Ŀ�ѻP�A���Ū��겣 -> �]�w�ؼ��v�� (Target %) -> �t�έp�ⰾ�t -> ��ܫ�ĳ�R����B�C
-*   **3. �����]�p (UI/UX)**
-    *   **�d��������**�G�C�Ӹ겣�@�i�d���A�]�t�Ʊ� (Slider) �P��J�ءC
-    *   **��ı�iĵ**�G�����׶W�L�H�ȮɡA�d������ܦ� (��/��)�C
-    *   **�`�M�ˮ�**�G������ܥثe�v���`�M�A�Y�D 100% ���ĵ�i�C
-*   **4. ��ƻP�޿� (Data & Logic)**
-    *   **�ӷ�**�G`getInventoryMap` ���o�{�����ȡC
-    *   **�޿�**�G`�ؼЪ��B = �`�겣 * �ؼ�%`�A`��ĳ����B = �ؼЪ��B - �{������`�C
-    *   **�x�s**�G�ϥ� `localStorage` �x�s�ϥΪ̪��ؼаt�m�]�w (`rebalance_cfg`)�C
-*   **5. �޳N���� (Constraints)**
-    *   ��������Ŷ������A�Ʊ�ݩ���Ĳ���C
-    *   �ݳB�z�B�I�ƹB��~�t�C
-*   **6. �禬�з� (Acceptance Criteria)**
-    *   �v���`�M������ 100% �~���x�s�C
-    *   ��ĳ�R����B�p�⥿�T�]���ƶR�J�B�t�ƽ�X�^�C
-*   **7. �į�P���c (Performance & Refactoring)**
-    *   �e�ݧY�ɭp�� (Client-side calculation)�A���ݦ^�ǫ�ݡA�T�O�y�Z�סC
+1.  **核心目標 (Objective)**
+    *   這項功能解決了什麼問題？
+    *   期望的成效是什麼？(例如：節省時間、降低錯誤、提升決策品質)
 
-### 2. �t���P�Q�ʦ��J�����O (Dividend Dashboard)
-*   **1. �֤ߥؼ� (Objective)**
-    *   ��ı�Ʋ{���y�����A���ɦs�ѰʤO�C
-    *   ���R�U�겣���u��ާQ�v (Yield on Cost)�C
-*   **2. �ϥΪ̬y�{ (User Flow)**
-    *   �ݪO���� -> �����u�t�����ϡv -> �d�ݤ��/�~�׹Ϫ��P���ӡC
-*   **3. �����]�p (UI/UX)**
-    *   **�W����**�G��ܨC��/�C�u�t�����B���|�C
-    *   **KPI �d��**�G��ܡu�w���~�ƪѮ��v�B�u�����ާQ�v�v�C
-*   **4. ��ƻP�޿� (Data & Logic)**
-    *   **�ӷ�**�G�z���������� `Type = 'Dividend'` ����ơC
-    *   **�޿�**�G`Yield on Cost = �ֿn�Ѯ� / �`��J����`�C
-*   **5. �޳N���� (Constraints)**
-    *   �ݽT�{ Chart.js �O�_�䴩�һݪ��Ϫ������C
-*   **6. �禬�з� (Acceptance Criteria)**
-    *   �Ѯ��έp�ݻP��ӹ�b��@�P�C
-    *   ���P���O (USD/TWD) �ݥ��T������`�C
-*   **7. �į�P���c (Performance & Refactoring)**
-    *   �Y��������L�h�A�ݦb��ݹw�����E�X�B�� (Aggregation) �A�Ǧ^�e�ݡC
+2.  **使用者流程 (User Flow)**
+    *   使用者如何進入此功能？
+    *   操作步驟為何？(Step-by-step)
+    *   輸入是什麼？輸出是什麼？
 
-### 3. �[��M�� (Watchlist)
-*   **1. �֤ߥؼ� (Objective)**
-    *   �l�ܷP������|���������Ъ��C
-    *   �ֳt�����b�Ъ��P�{�����ܪ����{�C
-*   **2. �ϥΪ̬y�{ (User Flow)**
-    *   �I���u�s�W�[��v -> ��J�N�� -> �C����ܧY�ɳ����P���^�T�C
-*   **3. �����]�p (UI/UX)**
-    *   ²��C���A�]�t�G�N���B�{���B���^�T�B�Z���I�^�T�C
-    *   �䴩��ԱƧǡC
-*   **4. ��ƻP�޿� (Data & Logic)**
-    *   **�ӷ�**�G�@�β{������������ (Binance/Yahoo/Cnyes)�C
-    *   **�x�s**�G`UserProperties` �� `localStorage` �x�s�[��M��N���C
-*   **5. �޳N���� (Constraints)**
-    *   �~�� API �I�s�W�v���� (Rate Limiting)�C
-*   **6. �禬�з� (Acceptance Criteria)**
-    *   �s�W�L�ĥN���ɻݦ����~���ܡC
-    *   ������s����ݦb�i�����d�� (<10s)�C
-*   **7. �į�P���c (Performance & Refactoring)**
-    *   �ݹ�@�妸�����d�� (Batch Fetching) �H��� API �I�s���ơC
+3.  **介面設計 (UI/UX)**
+    *   需要新增哪些 UI 元件？(按鈕、輸入框、圖表)
+    *   版面如何配置？(Desktop vs Mobile)
+    *   互動回饋是什麼？(Loading 狀態、錯誤提示、成功訊息)
 
-### 4. �妸�פJ�\�� (CSV Import)
-*   **1. �֤ߥؼ� (Objective)**
-    *   �j�T���C��l���ɻP�w�����@���ɶ������C
-    *   ��֤�ʿ�J���~�C
-*   **2. �ϥΪ̬y�{ (User Flow)**
-    *   ������� -> �I���u�פJ�v -> �K�W CSV ��r -> �w���ѪR���G -> �T�{�פJ�C
-*   **3. �����]�p (UI/UX)**
-    *   �j�d���r��J�� (Textarea)�C
-    *   �ѪR���G�w������ (�]�t���A�G���\/����/����)�C
-*   **4. ��ƻP�޿� (Data & Logic)**
-    *   **�ѪR��**�G�w��`����� (e.g., Firstrade, ����) ���g Regex �ѪR�W�h�C
-    *   **����**�G�̾� (���+�N��+���B) �P�_�O�_�����ƥ���C
-*   **5. �޳N���� (Constraints)**
-    *   ���P��Ӯ榡�t���j�A�ݫO�d�X�R�u�ʡC
-*   **6. �禬�з� (Acceptance Criteria)**
-    *   �ॿ�T�ѪR�з� CSV �榡�C
-    *   �J��榡���~�ɤ��|���{���Y��A�ô��ܿ��~��ơC
-*   **7. �į�P���c (Performance & Refactoring)**
-    *   �g�J Spreadsheet �ɥ����ϥ� `setValues` �i��妸�g�J�A�T��j�餺 `appendRow`�C
+4.  **資料與邏輯 (Data & Logic)**
+    *   資料來源為何？(現有庫存、外部 API、使用者輸入)
+    *   需要儲存哪些資料？存去哪裡？(Properties Service, Spreadsheet, LocalStorage)
+    *   核心演算法或計算邏輯為何？
 
-### 5. �{���y/�w��޲z (Simple Expense Tracking)
-*   **1. �֤ߥؼ� (Objective)**
-    *   �Ϥ��u������J�v�P�u�ꥻ�Q�o�v�C
-    *   �p���T�������S�v (MWRR/TWRR)�C
-*   **2. �ϥΪ̬y�{ (User Flow)**
-    *   �s�W��� -> ���O��ܡu�J��(Deposit)�v�Ρu�X��(Withdraw)�v�C
-*   **3. �����]�p (UI/UX)**
-    *   �b������檺�u�ʧ@�v�U�Կ��W�[�ﶵ�C
-    *   �ݪO�W�[�u�b��J�����v���СC
-*   **4. ��ƻP�޿� (Data & Logic)**
-    *   **�޿�**�G`�b�겣 = ���� + �l�q` -> `�l�q = �b�겣 - ����`�C
-*   **5. �޳N���� (Constraints)**
-    *   �ݳB�z���O������D (�J�� USD vs TWD)�C
-*   **6. �禬�з� (Acceptance Criteria)**
-    *   �J����A�`�겣�W�[���l�q���ܡC
-*   **7. �į�P���c (Performance & Refactoring)**
-    *   �վ� `getInventoryMap` �޿�H�]�t�{���y�p��C
+5.  **技術限制 (Constraints)**
+    *   GAS 環境限制 (執行時間、Quota、觸發器頻率)
+    *   前端相容性 (瀏覽器支援度、RWD)
+    *   是否涉及外部 API 頻率限制？
+
+6.  **驗收標準 (Acceptance Criteria)**
+    *   功能完成的定義是什麼？
+    *   哪些邊界情境 (Edge Cases) 需要測試？
+
+7.  **效能與重構 (Performance & Refactoring)**
+    *   邏輯是否可讀、可擴展？(變數命名、函式拆分)
+    *   是否造成效能瓶頸？(大量迴圈 API 呼叫、過多 DOM 操作)
+    *   是否需要重構舊有代碼以支援新功能？
 
 ---
 
-## ?? �޳N�u�Ƥ�V (Technical Improvements)
+# ? 專案發展藍圖 (Roadmap)
 
-### 1. �į��u�ơG�ַӾ��� (Snapshotting)
-*   **1. �֤ߥؼ� (Objective)**
-    *   �ѨM��������H�ɶ��W���ɭP�p���ܺC�����D�C
-    *   �N���J�ɶ������b 3 �����C
-*   **2. �ϥΪ̬y�{ (User Flow)**
-    *   (�I������) �C�� 1 ���۰�Ĳ�o Trigger ����ַӡC
-    *   �ϥΪ̵L�P�A���}�ҳt���ܧ֡C
-*   **3. �����]�p (UI/UX)**
-    *   �L�e�ݤ����A�Ȼݦb��x Log ��ܰ��浲�G�C
-*   **4. ��ƻP�޿� (Data & Logic)**
-    *   **�x�s**�G�إ����� Sheet `_Snapshot`�A���G`Date, Ticker, Qty, Cost`�C
-    *   **�޿�**�G`Current Inventory = Snapshot + Transactions(after snapshot date)`�C
-*   **5. �޳N���� (Constraints)**
-    *   GAS Trigger ����ɶ����� (6 min)�C
-*   **6. �禬�з� (Acceptance Criteria)**
-    *   �ַӫ�p�⵲�G�ݻP���q�p�⧹���@�P�C
-*   **7. �į�P���c (Performance & Refactoring)**
-    *   �j�T��� `getInventoryMap` �ݹM�����C�ơC
+## ? 核心功能擴充 (Core Features)
 
-### 2. ���v�ײv��T��
-*   **1. �֤ߥؼ� (Objective)**
-    *   ���ѧ��T���x������l�q�p��C
-*   **2. �ϥΪ̬y�{ (User Flow)**
-    *   ��J����ɡA�۰ʱa�J����ײv�]�Y�� API�^�A�Τ��\��ʭץ��C
-*   **3. �����]�p (UI/UX)**
-    *   �������W�[�u�ײv�v��� (�w�]���áA�i���i�})�C
-*   **4. ��ƻP�޿� (Data & Logic)**
-    *   **�ӷ�**�G�O���C��������U�� `USD/TWD`�C
-    *   **�޿�**�G`Realized PnL (TWD) = (Sell Price * Sell FX) - (Buy Price * Buy FX)`�C
-*   **5. �޳N���� (Constraints)**
-    *   ���v�ײv API ���o�����λݥI�O�C
-*   **6. �禬�з� (Acceptance Criteria)**
-    *   �w��{�l�q���A�����e�ײv�i�ʼv�T�C
-*   **7. �į�P���c (Performance & Refactoring)**
-    *   �ݹ��¸�ƶi��@���ʲM�~�μаO�w�]�ײv�C
+### 1. 智慧再平衡計算機 (Smart Rebalancing Calculator) ? **(Priority: High)**
+*   **1. 核心目標 (Objective)**
+    *   協助用戶將投資組合比例自動校正回預設目標比例。
+    *   降低使用者手動計算配置的複雜度，直觀顯示操作建議。
+*   **2. 使用者流程 (User Flow)**
+    *   進入「資產」頁面 -> 點擊「再平衡計算」 -> 設定目標權重 (Target %) -> 系統計算差額 -> 顯示買賣建議。
+*   **3. 介面設計 (UI/UX)**
+    *   **權重設定**: 每個資產一張卡片，包含滑桿 (Slider) 與輸入框。
+    *   **直覺回饋**: 當權重總和不等於 100% 時，顯示紅字警告。
+    *   **買賣清單**: 清單顯示「建議買入/賣出」的股數與金額。
+*   **4. 資料與邏輯 (Data & Logic)**
+    *   **來源**: `getInventoryMap` 取得現有庫存。
+    *   **邏輯**: `目標金額 = 總資產 * 目標%`，`建議金額 = 目標金額 - 現有金額`。
+    *   **儲存**: 使用 `localStorage` 儲存使用者的目標配置設定 (`rebalance_cfg`)。
+*   **5. 技術限制 (Constraints)**
+    *   資金不足時，暫不考慮借貸買入。
+    *   需處理零股/整股交易限制。
+*   **6. 驗收標準 (Acceptance Criteria)**
+    *   權重總和非 100% 時禁止計算。
+    *   買賣建議金額加總正確 (淨資金投入/產出)。
+*   **7. 效能與重構 (Performance & Refactoring)**
+    *   前端即時計算 (Client-side calculation)，無須回傳後端，確保流暢度。
 
-### 3. ���~�B�z��� (Fallback Mechanism)
-*   **1. �֤ߥؼ� (Objective)**
-    *   ���ɨt��í�w�ʡA�קK��@��Ʒ����I�ɭP�������ȡC
-*   **2. �ϥΪ̬y�{ (User Flow)**
-    *   ���D�ӷ����ѮɡA�t�Φ۰ʤ����ƴ��A�ϥΪ̶Ȭݨ�u��ƨӷ��G�ƴ��v�����ܡC
-*   **3. �����]�p (UI/UX)**
-    *   ��������ܤp�ϥܼХܨӷ����A (��O/���O)�C
-*   **4. ��ƻP�޿� (Data & Logic)**
-    *   **�޿�**�G`Try Source A -> Catch Error -> Try Source B -> Catch Error -> Return Last Known Price`�C
-*   **5. �޳N���� (Constraints)**
-    *   �|�W�[ API �ШD������ɶ��C
-*   **6. �禬�з� (Acceptance Criteria)**
-    *   �����_���� API ���~�ɡA�t�Τ�����ܳ����C
-*   **7. �į�P���c (Performance & Refactoring)**
-    *   �ʸ˲Τ@�� `PriceService` ���O�ӳB�z�Ҧ������ШD�C
+### 2. 股息與現金流儀表板 (Dividend Dashboard)
+*   **1. 核心目標 (Objective)**
+    *   具體呈現被動收入狀況，提升存股動力。
+    *   計算投入資產的「殖利率 (Yield on Cost)」。
+*   **2. 使用者流程 (User Flow)**
+    *   看版首頁 -> 切換「現金流分析」 -> 檢視月/年平均股息分配。
+*   **3. 介面設計 (UI/UX)**
+    *   **長條圖**: 顯示每月/每季股息收入。
+    *   **KPI 卡片**: 顯示「預估年殖利率」、「已領取總股息」。
+*   **4. 資料與邏輯 (Data & Logic)**
+    *   **來源**: 篩選交易紀錄中 `Type = 'Dividend'` 的資料。
+    *   **邏輯**: `Yield on Cost = 總配息金額 / 總投入成本`。
+*   **5. 技術限制 (Constraints)**
+    *   需確認 Chart.js 是否支援所需的圖表類型。
+*   **6. 驗收標準 (Acceptance Criteria)**
+    *   配息統計與 Log 紀錄完全一致。
+    *   不同幣別 (USD/TWD) 需正確換算總計。
+*   **7. 效能與重構 (Performance & Refactoring)**
+    *   若資料量過大，需在後端預先聚合運算 (Aggregation) 再回傳前端。
+
+### 3. 自選觀察清單 (Watchlist)
+*   **1. 核心目標 (Objective)**
+    *   隨時關注有興趣的標的。
+    *   快速查看標的與現有部位的比較。
+*   **2. 使用者流程 (User Flow)**
+    *   點選「新增觀察」 -> 輸入代號 -> 列表顯示即時價格與漲跌幅。
+*   **3. 介面設計 (UI/UX)**
+    *   簡潔列表，包含：名稱、現價、漲跌幅、到價提醒。
+    *   支援拖拉排序。
+*   **4. 資料與邏輯 (Data & Logic)**
+    *   **來源**: 與現有市價來源共用 (Binance/Yahoo/Cnyes)。
+    *   **儲存**: `UserProperties` 或 `localStorage` 儲存觀察清單代號。
+*   **5. 技術限制 (Constraints)**
+    *   外部 API 呼叫速率限制 (Rate Limiting)。
+*   **6. 驗收標準 (Acceptance Criteria)**
+    *   新增無效代碼時需有錯誤提示。
+    *   清單更新延遲需在可接受範圍 (<10s)。
+*   **7. 效能與重構 (Performance & Refactoring)**
+    *   需做批次查詢優化 (Batch Fetching) 以節省 API 呼叫次數。
+
+### 4. 批次匯入功能 (CSV Import)
+*   **1. 核心目標 (Objective)**
+    *   大幅減少初次建檔或定期整理的時間成本。
+    *   降低手動輸入錯誤。
+*   **2. 使用者流程 (User Flow)**
+    *   設定頁面 -> 點選「匯入」 -> 貼上 CSV 文字 -> 預覽解析結果 -> 確認匯入。
+*   **3. 介面設計 (UI/UX)**
+    *   大區塊文字輸入框 (Textarea)。
+    *   解析結果預覽表 (包含狀態：成功/失敗/警告)。
+*   **4. 資料與邏輯 (Data & Logic)**
+    *   **解析器**: 針對常見券商 (e.g., Firstrade, 永豐) 撰寫 Regex 解析規則。
+    *   **驗證**: 欄位 (日期+代號+金額) 判斷是否為有效數據。
+*   **5. 技術限制 (Constraints)**
+    *   各券商格式不一，需保留擴充彈性。
+*   **6. 驗收標準 (Acceptance Criteria)**
+    *   能正確解析標準 CSV 格式。
+    *   匯入格式錯誤時不會崩潰，並標示錯誤行數。
+*   **7. 效能與重構 (Performance & Refactoring)**
+    *   寫入 Spreadsheet 時應使用 `setValues` 進行批次寫入，取代迴圈 `appendRow`。
+
+### 5. 簡易收支/現金流管理 (Simple Expense Tracking)
+*   **1. 核心目標 (Objective)**
+    *   區分「本業收入」與「資本利得」。
+    *   計算真實的投資報酬率 (MWRR/TWRR)。
+*   **2. 使用者流程 (User Flow)**
+    *   新增交易 -> 類別選「入金(Deposit)」或「出金(Withdraw)」。
+*   **3. 介面設計 (UI/UX)**
+    *   在交易紀錄的「動作」下拉選單增加選項。
+    *   看版增加「淨入金」顯示。
+*   **4. 資料與邏輯 (Data & Logic)**
+    *   **邏輯**: `淨資產 = 成本 + 損益` -> `損益 = 淨資產 - 成本`。
+*   **5. 技術限制 (Constraints)**
+    *   需處理多幣別問題 (入金 USD vs TWD)。
+*   **6. 驗收標準 (Acceptance Criteria)**
+    *   入金後，總資產增加但損益顯示不變。
+*   **7. 效能與重構 (Performance & Refactoring)**
+    *   調整 `getInventoryMap` 邏輯以包含現金流計算。
+
+---
+
+## ?? 技術優化與重構 (Technical Improvements)
+
+### 1. 資產歷史快照 (Snapshotting)
+*   **1. 核心目標 (Objective)**
+    *   解決交易紀錄隨時間增加導致計算變慢的問題。
+    *   將歷史計算結果鎖定。
+*   **2. 使用者流程 (User Flow)**
+    *   (背景執行) 每月 1 號自動觸發 Trigger 建立快照。
+    *   使用者無感，僅感受到速度變快。
+*   **3. 介面設計 (UI/UX)**
+    *   無前端介面，視需在後台 Log 顯示執行結果。
+*   **4. 資料與邏輯 (Data & Logic)**
+    *   **儲存**: 建立專屬 Sheet `_Snapshot`，格式：`Date, Ticker, Qty, Cost`。
+    *   **邏輯**: `Current Inventory = Snapshot + Transactions(after snapshot date)`。
+*   **5. 技術限制 (Constraints)**
+    *   GAS Trigger 執行時間限制 (6 min)。
+*   **6. 驗收標準 (Acceptance Criteria)**
+    *   快照後計算結果需與全量計算完全一致。
+*   **7. 效能與重構 (Performance & Refactoring)**
+    *   大幅簡化 `getInventoryMap` 需遍歷的資料量。
+
+### 2. 已實現損益精確化
+*   **1. 核心目標 (Objective)**
+    *   精確計算賣出當下的已實現損益。
+*   **2. 使用者流程 (User Flow)**
+    *   賣出股票時，自動帶入庫存「平均成本」做為參考，或允許手動修正。
+*   **3. 介面設計 (UI/UX)**
+    *   賣出視窗增加「成本」欄位 (預設隱藏，可展開)。
+*   **4. 資料與邏輯 (Data & Logic)**
+    *   **匯率**: 需紀錄買入與賣出當下的 `USD/TWD`。
+    *   **邏輯**: `Realized PnL (TWD) = (Sell Price * Sell FX) - (Buy Price * Buy FX)`。
+*   **5. 技術限制 (Constraints)**
+    *   歷史匯率 API 取得可能需付費。
+*   **6. 驗收標準 (Acceptance Criteria)**
+    *   賣出後剩餘庫存成本不變，已實現損益可被追溯。
+*   **7. 效能與重構 (Performance & Refactoring)**
+    *   需對資料進行先進先出 (FIFO) 或平均成本法 (Avg Cost) 運算。
+
+### 3. 容錯與備援機制 (Fallback Mechanism)
+*   **1. 核心目標 (Objective)**
+    *   當某個報價來源失效時，避免整個儀表板崩潰或顯示零值。
+*   **2. 使用者流程 (User Flow)**
+    *   主來源無回應時，系統自動切換備援，使用者僅看到「資料來源：備援」提示。
+*   **3. 介面設計 (UI/UX)**
+    *   價格欄位顯示小黃點或提示來源 (一般/舊資料)。
+*   **4. 資料與邏輯 (Data & Logic)**
+    *   **邏輯**: `Try Source A -> Catch Error -> Try Source B -> Catch Error -> Return Last Known Price`。
+*   **5. 技術限制 (Constraints)**
+    *   會增加 API 請求等待時間。
+*   **6. 驗收標準 (Acceptance Criteria)**
+    *   斷開主要 API 連線時，系統仍能顯示數據。
+*   **7. 效能與重構 (Performance & Refactoring)**
+    *   封裝統一的 `PriceService` 來集中處理所有報價請求。
+
+### 4. 寫入後快取機制 (Write-Behind Caching)
+*   **1. 核心目標 (Objective)**
+    *   解決 GAS Serverless 環境下資料持久化造成的 1.5s 延遲體感。
+    *   實現「秒級回應、非同步存檔」。
+*   **2. 使用者流程 (User Flow)**
+    *   使用者按下儲存 -> 介面立即顯示成功 (0.1s) -> 背景 Trigger 默默將資料寫入 Sheet。
+*   **3. 技術實作 (Tech Spec)**
+    *   **L2 Cache**: 先寫入 `CacheService` (TTL 10 mins)。
+    *   **Worker**: 設置每分鐘 Trigger 檢查 Cache 是否有 Dirty Data，若有則批次寫入 Sheet。
+*   **4. 風險評估 (Risk)**
+    *   若 CacheService 在 Trigger 啟動前失效，資料將遺失。需評估此風險與 UX 的權衡。
