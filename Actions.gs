@@ -1,17 +1,17 @@
 /**
  * Actions.gs
- * ³B²z¨Ó¦Û«eºÝªº½Ð¨D¡A¨Ã¼g¤J GasStore
+ * ï¿½Bï¿½zï¿½Ó¦Û«eï¿½Ýªï¿½ï¿½Ð¨Dï¿½Aï¿½Ã¼gï¿½J GasStore
  */
 
 /**
- * ³B²z·s¼W¥æ©ö (Logs)
- * @param {Object} d - «eºÝ¶Ç¨Óªºªí³æ¸ê®Æ {date, type, ticker, ...}
+ * ï¿½Bï¿½zï¿½sï¿½Wï¿½ï¿½ï¿½ (Logs)
+ * @param {Object} d - ï¿½eï¿½Ý¶Ç¨Óªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ {date, type, ticker, ...}
  */
 function addTransaction(d) {
     return withLock(() => {
         let logs = GasStore.get('DB:LOG', []);
 
-        // ÅçÃÒ
+        // ï¿½ï¿½ï¿½ï¿½
         if (!d.ticker || !d.qty || !d.price) return "Error: Missing Fields";
 
         logs.push({
@@ -31,14 +31,14 @@ function addTransaction(d) {
 }
 
 /**
- * ³B²z­É¶U¬ÛÃö¾Þ§@
+ * ï¿½Bï¿½zï¿½É¶Uï¿½ï¿½ï¿½ï¿½ï¿½Þ§@
  * @param {Object} d - {action, source, ...}
  */
 function processLoanAction(d) {
     return withLock(() => {
         let loans = GasStore.get('DB:LOAN', []);
 
-        // --- ·s¼W¦X¬ù (New Loan) ---
+        // --- ï¿½sï¿½Wï¿½Xï¿½ï¿½ (New Loan) ---
         if (d.action === 'new') {
             loans.push({
                 source: d.source,
@@ -65,34 +65,34 @@ function processLoanAction(d) {
 }
 
 /**
- * ³B²zÁÙ´Ú/½Õ¾ã (Repay/Adjust)
- * ³o¬O³Ì½ÆÂøªº³¡¤À¡A»Ý­n­×§ï²{¦³ Loan¡A¨Ã²£¥Í Log
+ * ï¿½Bï¿½zï¿½Ù´ï¿½/ï¿½Õ¾ï¿½ (Repay/Adjust)
+ * ï¿½oï¿½Oï¿½Ì½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½Ý­nï¿½×§ï¿½{ï¿½ï¿½ Loanï¿½Aï¿½Ã²ï¿½ï¿½ï¿½ Log
  */
 function processRepayment(d) {
     return withLock(() => {
         let loans = GasStore.get('DB:LOAN', []);
         let logs = GasStore.get('DB:LOG', []);
 
-        // ´M§ä¥Ø¼Ð¦X¬ù (Source + Collateral + Note Match)
-        // Â²³æ°_¨£¡A³o¸Ì¥ÎÂ²©ö¤Ç°t¡A¹ê»ÚÀ³¦³ ID
+        // ï¿½Mï¿½ï¿½Ø¼Ð¦Xï¿½ï¿½ (Source + Collateral + Note Match)
+        // Â²ï¿½ï¿½_ï¿½ï¿½ï¿½Aï¿½oï¿½Ì¥ï¿½Â²ï¿½ï¿½ï¿½Ç°tï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ID
         let targetSource = d.source;
         let targetCol = normalizeTicker(d.collateral);
 
         let matches = loans
             .map((l, i) => ({ l, i }))
-            .filter(x => x.l.source === targetSource && (x.l.col === targetCol || !targetCol) && !String(x.l.note).includes('¤wµ²²M'));
+            .filter(x => x.l.source === targetSource && (x.l.col === targetCol || !targetCol) && !String(x.l.note).includes('ï¿½wï¿½ï¿½ï¿½M'));
 
         if (matches.length === 0) return "Error: No Active Contract Found";
 
-        // Logic: Àu¥ýÁÙ´Ú§Q²v°ªªº? ³o¸Ì°²³]¥u¹ï²Ä¤@­Ó¤Ç°tªº¦X¬ù¾Þ§@
+        // Logic: ï¿½uï¿½ï¿½ï¿½Ù´Ú§Qï¿½vï¿½ï¿½ï¿½ï¿½? ï¿½oï¿½Ì°ï¿½ï¿½]ï¿½uï¿½ï¿½Ä¤@ï¿½Ó¤Ç°tï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½Þ§@
         let m = matches[0];
-        // d.amount ¬O¥»¦¸ÁÙ´ÚÁ`ÃB
+        // d.amount ï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½Ù´ï¿½ï¿½`ï¿½B
         let repayAmt = Number(d.amount);
         let logMsg = [];
 
-        // 1. ­pºâÀ³¥I§Q®§ (Accrued Interest)
-        // »Ý­«·s­pºâ§Q®§... ³o¸ÌÂ²¤Æ¡A°²³]«eºÝ©Î Logic ºâ¦n¶Ç¨Ó? 
-        // ³o¸Ì­«ºâ¥H¨D¦w¥þ
+        // 1. ï¿½pï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½Qï¿½ï¿½ (Accrued Interest)
+        // ï¿½Ý­ï¿½ï¿½sï¿½pï¿½ï¿½Qï¿½ï¿½... ï¿½oï¿½ï¿½Â²ï¿½Æ¡Aï¿½ï¿½ï¿½]ï¿½eï¿½Ý©ï¿½ Logic ï¿½ï¿½nï¿½Ç¨ï¿½? 
+        // ï¿½oï¿½Ì­ï¿½ï¿½ï¿½Hï¿½Dï¿½wï¿½ï¿½
         let now = new Date();
         let startDate = new Date(m.l.date);
         let days = Math.floor((now - startDate) / (1000 * 3600 * 24));
@@ -102,25 +102,25 @@ function processRepayment(d) {
 
         let remainingRepay = repayAmt;
 
-        // ¥ý¥I§Q®§
+        // ï¿½ï¿½ï¿½Iï¿½Qï¿½ï¿½
         if (remainingRepay > 0) {
             if (remainingRepay >= m.l.amount + interest) {
-                // ¥þÃBµ²²M
+                // ï¿½ï¿½ï¿½Bï¿½ï¿½ï¿½M
                 remainingRepay -= (m.l.amount + interest);
 
                 loans[m.i].amount = 0;
-                loans[m.i].note = (loans[m.i].note || '') + ' [¤wµ²²M]';
+                loans[m.i].note = (loans[m.i].note || '') + ' [ï¿½wï¿½ï¿½ï¿½M]';
 
                 logMsg.push(`Paid Off w/ Int ${interest}`);
 
                 if (interest > 0) {
                     logs.push({
-                        date: new Date(), type: '¤ä¥X', ticker: '§Q®§', cat: '¶O¥Î', qty: 1, price: interest,
+                        date: new Date(), type: 'ï¿½ï¿½X', ticker: 'ï¿½Qï¿½ï¿½', cat: 'ï¿½Oï¿½ï¿½', qty: 1, price: interest,
                         currency: m.l.currency, note: `Repay Int - ${m.l.source}`
                     });
                 }
             } else {
-                // ³¡¤ÀÁÙ´Ú
+                // ï¿½ï¿½ï¿½ï¿½ï¿½Ù´ï¿½
                 if (remainingRepay < interest) return "Error: Repayment < Accrued Interest";
 
                 let principal = remainingRepay - interest;
@@ -131,7 +131,7 @@ function processRepayment(d) {
 
                 if (interest > 0) {
                     logs.push({
-                        date: new Date(), type: '¤ä¥X', ticker: '§Q®§', cat: '¶O¥Î', qty: 1, price: interest,
+                        date: new Date(), type: 'ï¿½ï¿½X', ticker: 'ï¿½Qï¿½ï¿½', cat: 'ï¿½Oï¿½ï¿½', qty: 1, price: interest,
                         currency: m.l.currency, note: `Repay Int - ${m.l.source}`
                     });
                 }
@@ -149,10 +149,10 @@ function processContractAction(d) {
         let loans = GasStore.get('DB:LOAN', []);
         let logs = GasStore.get('DB:LOG', []);
 
-        // ¦A¦¸´M§ä
+        // ï¿½Aï¿½ï¿½ï¿½Mï¿½ï¿½
         let matches = loans
             .map((l, i) => ({ l, i }))
-            .filter(x => x.l.source === d.source && !String(x.l.note).includes('¤wµ²²M'));
+            .filter(x => x.l.source === d.source && !String(x.l.note).includes('ï¿½wï¿½ï¿½ï¿½M'));
 
         // --- Action: Add Collateral ---
         if (d.type === 'addCol') {
@@ -172,7 +172,7 @@ function processContractAction(d) {
                 rate: Number(d.price || base.rate),
                 col: normalizeTicker(d.col || base.col),
                 colQty: 0,
-                type: base.type || 'ªÑ²¼',
+                type: base.type || 'ï¿½Ñ²ï¿½',
                 warn: base.warn || 160, liq: base.liq || 130,
                 note: 'Increase',
                 totalTerm: 0, paidTerm: 0, monthlyPay: 0, currency: base.currency || 'TWD'
@@ -189,7 +189,7 @@ function processContractAction(d) {
             if (loans[matches[0].i].colQty < 0) loans[matches[0].i].colQty = 0;
 
             logs.push({
-                date: new Date(), type: '½æ¥X', ticker: d.col, cat: 'ÁÙ´Ú',
+                date: new Date(), type: 'ï¿½ï¿½X', ticker: d.col, cat: 'ï¿½Ù´ï¿½',
                 qty: sellQty, price: Number(d.price), currency: matches[0].l.currency, note: 'Sell to Repay'
             });
 
@@ -217,12 +217,12 @@ function processContractAction(d) {
             loans[idx].paidTerm += 1;
 
             if (loans[idx].amount <= 0 || loans[idx].paidTerm >= total) {
-                loans[idx].note = (loans[idx].note || '') + " [¤wµ²²M]";
+                loans[idx].note = (loans[idx].note || '') + " [ï¿½wï¿½ï¿½ï¿½M]";
                 loans[idx].amount = 0;
             }
 
             logs.push({
-                date: new Date(), type: '¤ä¥X', ticker: '«H¶U', cat: 'ÁÙ´Ú',
+                date: new Date(), type: 'ï¿½ï¿½X', ticker: 'ï¿½Hï¿½U', cat: 'ï¿½Ù´ï¿½',
                 qty: 1, price: mPay, currency: loan.currency, note: `Period ${paid + 1}/${total}`
             });
 
@@ -277,7 +277,7 @@ function processWizard(d) {
                 rate: isCredit ? 2.88 : 2.5,
                 col: isCredit ? '' : normalizeTicker(d.col),
                 colQty: isCredit ? 0 : Number(d.qty || 0),
-                type: isCredit ? '«H¶U' : 'ªÑ²¼',
+                type: isCredit ? 'ï¿½Hï¿½U' : 'ï¿½Ñ²ï¿½',
                 warn: isCredit ? 0 : 160,
                 liq: isCredit ? 0 : 130,
                 note: 'Wizard',
@@ -297,7 +297,7 @@ function processWizard(d) {
                     rate: 5.0,
                     col: normalizeTicker(a.ticker),
                     colQty: Number(a.qty),
-                    type: '¥[±K³f¹ô', warn: 80, liq: 90, note: 'Wizard(DeFi)',
+                    type: 'ï¿½[ï¿½Kï¿½fï¿½ï¿½', warn: 80, liq: 90, note: 'Wizard(DeFi)',
                     totalTerm: 0, paidTerm: 0, monthlyPay: 0, currency: 'USD'
                 });
             });
@@ -327,3 +327,6 @@ function withLock(func) {
         throw new Error('Lock timeout');
     }
 }
+
+
+

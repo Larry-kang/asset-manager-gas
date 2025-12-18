@@ -1,10 +1,10 @@
 /**
  * Logic.gs
- * Æ÷§ﬂ∑~∞»≈ﬁøË (Business Logic Layer)
+ * ÔøΩ÷§ﬂ∑~ÔøΩÔøΩÔøΩﬁøÔøΩ (Business Logic Layer)
  */
 
 /**
- * º–∑«§∆ Ticker
+ * ÔøΩ–∑«§ÔøΩ Ticker
  */
 function normalizeTicker(ticker) {
     if (!ticker) return '';
@@ -12,7 +12,7 @@ function normalizeTicker(ticker) {
 }
 
 /**
- * ≠p∫‚Æw¶sªP¶®•ª (Inventory Map)
+ * ÔøΩpÔøΩÔøΩwÔøΩsÔøΩPÔøΩÔøΩÔøΩÔøΩ (Inventory Map)
  */
 function getInventoryMap(logRows, loanRows) {
     let inventory = {};
@@ -21,7 +21,7 @@ function getInventoryMap(logRows, loanRows) {
     if (loanRows && loanRows.length > 1) {
         loanRows.slice(1).forEach(r => {
             // Check for cleared note
-            if (!r[0] || String(r[9]).includes('§wµ≤≤M')) {
+            if (!r[0] || String(r[9]).includes('ÔøΩwÔøΩÔøΩÔøΩM')) {
                 // Future Logic
             }
         });
@@ -43,10 +43,10 @@ function getInventoryMap(logRows, loanRows) {
         // Use Global Constants or fallback to strings if running standalone test without context?
         // In strict setup, ACT_BUY is defined.
         // Fallback for safety if constants missing:
-        const _BUY = (typeof ACT_BUY !== 'undefined') ? ACT_BUY : '∂R§J';
-        const _SELL = (typeof ACT_SELL !== 'undefined') ? ACT_SELL : 'ΩÊ•X';
+        const _BUY = (typeof ACT_BUY !== 'undefined') ? ACT_BUY : 'ÔøΩRÔøΩJ';
+        const _SELL = (typeof ACT_SELL !== 'undefined') ? ACT_SELL : 'ÔøΩÔøΩX';
 
-        if (type === _BUY || type === '∞t™—') {
+        if (type === _BUY || type === 'ÔøΩtÔøΩÔøΩ') {
             let totalCost = inventory[ticker].cost * inventory[ticker].qty + price * qty;
             inventory[ticker].qty += qty;
             inventory[ticker].cost = (inventory[ticker].qty > 0) ? totalCost / inventory[ticker].qty : 0;
@@ -60,7 +60,7 @@ function getInventoryMap(logRows, loanRows) {
 }
 
 /**
- * ≥B≤z•´≥ı¶Ê±°∏ÍÆ∆
+ * ÔøΩBÔøΩzÔøΩÔøΩÔøΩÔøΩÔøΩÊ±°ÔøΩÔøΩÔøΩ
  * Supports 2-column [Ticker, Price] or 3-column [Ticker, Rate, Price]
  */
 function processMarketData(marketRows) {
@@ -82,7 +82,7 @@ function processMarketData(marketRows) {
 }
 
 /**
- * ≠p∫‚¡`ßÎ∏Í≤’¶Xª˘≠»
+ * ÔøΩpÔøΩÔøΩÔøΩ`ÔøΩÔøΩÔøΩ’¶XÔøΩÔøΩÔøΩÔøΩ
  */
 function calculatePortfolio(logRows, marketData, pledgedData) {
     let invMap = getInventoryMap(logRows, null);
@@ -131,7 +131,7 @@ function calculatePortfolio(logRows, marketData, pledgedData) {
 }
 
 /**
- * ≠p∫‚≠…∂U≠∑¿I
+ * ÔøΩpÔøΩÔøΩ…∂UÔøΩÔøΩÔøΩI
  */
 function calculateLoans(loanRows, marketData) {
     let totalDebtTWD = 0;
@@ -148,7 +148,7 @@ function calculateLoans(loanRows, marketData) {
             let note = String(r[9] || '');
             let loanCurr = r[13] || 'TWD';
 
-            if (!src || note.includes('§wµ≤≤M')) return;
+            if (!src || note.includes('ÔøΩwÔøΩÔøΩÔøΩM')) return;
 
             let amt = Number(r[2]);
             let rate = Number(r[3]);
@@ -195,7 +195,7 @@ function calculateLoans(loanRows, marketData) {
         loanRows.slice(1).forEach(r => {
             let src = r[0];
             let note = String(r[9] || '');
-            if (!src || note.includes('§wµ≤≤M')) return;
+            if (!src || note.indexOf('ÁµêÊ∏Ö') !== -1) return; // Filter out cleared (contains ÁµêÊ∏Ö)
 
             let amt = Number(r[2]);
             let col = normalizeTicker(r[4]);
@@ -270,3 +270,6 @@ function calculateSingleRisk(amt, col, colQty, prices, fx, currency) {
     if (amt <= 0) return 'N/A';
     return ((colVal / amt) * 100).toFixed(2) + '%';
 }
+
+
+

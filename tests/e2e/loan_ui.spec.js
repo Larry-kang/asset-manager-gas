@@ -1,22 +1,6 @@
 const { test, expect } = require('@playwright/test');
-const { spawn } = require('child_process');
-const path = require('path');
 
-let serverProcess;
-
-test.beforeAll(async () => {
-    const serverPath = path.join(__dirname, '../server.js');
-    serverProcess = spawn('node', [serverPath], { stdio: 'inherit' });
-    console.log(`Starting Mock Server from ${serverPath}...`);
-    // Give server time to start
-    await new Promise(resolve => setTimeout(resolve, 2000));
-});
-
-test.afterAll(() => {
-    if (serverProcess) {
-        serverProcess.kill();
-    }
-});
+// Server managed by playwright.config.js
 
 test('Dashboard Loads and Shows Risks', async ({ page }) => {
     // 1. Go to Localhost
@@ -26,8 +10,7 @@ test('Dashboard Loads and Shows Risks', async ({ page }) => {
     await expect(page).toHaveTitle(/Asset Manager/);
 
     // 3. Verify Risk Card ("Sinopac") on Dashboard
-    // Wait for Login to clear (Mock Auth)
-    await expect(page.locator('#loginModal')).toBeHidden({ timeout: 10000 });
+    // Login check removed
 
     // 4. Navigate to Loan Vault
     await page.click('div[onclick="go(\'loan\', this)"]');

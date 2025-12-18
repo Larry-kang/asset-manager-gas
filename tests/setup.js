@@ -14,11 +14,12 @@ if (typeof jest === 'undefined') {
 }
 
 // 1. Read GAS Files
-const codeContent = fs.readFileSync(path.join(__dirname, '../Code.gs'), 'utf8');
-const logicContent = fs.readFileSync(path.join(__dirname, '../Logic.gs'), 'utf8');
-const repoContent = fs.readFileSync(path.join(__dirname, '../Repository.gs'), 'utf8');
-const actionsContent = fs.readFileSync(path.join(__dirname, '../Actions.gs'), 'utf8'); // Actions depends on Logic/Repo
-const constantsContent = fs.readFileSync(path.join(__dirname, '../Constants.gs'), 'utf8'); // Load Constants
+const codeContent = fs.readFileSync(path.join(__dirname, '../Code.gs'), 'utf8').replace(/^\uFEFF/, '');
+const logicContent = fs.readFileSync(path.join(__dirname, '../Logic.gs'), 'utf8').replace(/^\uFEFF/, '');
+const repoContent = fs.readFileSync(path.join(__dirname, '../Repository.gs'), 'utf8').replace(/^\uFEFF/, '');
+const actionsContent = fs.readFileSync(path.join(__dirname, '../Actions.gs'), 'utf8').replace(/^\uFEFF/, ''); // Actions depends on Logic/Repo
+const constantsContent = fs.readFileSync(path.join(__dirname, '../Constants.gs'), 'utf8').replace(/^\uFEFF/, ''); // Load Constants
+const gasStoreContent = fs.readFileSync(path.join(__dirname, '../GasStore.gs'), 'utf8').replace(/^\uFEFF/, ''); // Load GasStore
 
 // 2. Mock GAS Environment
 const MockSheet = class {
@@ -131,6 +132,13 @@ const context = {
     UrlFetchApp: {
         fetch: jest.fn()
     },
+    CacheService: {
+        getScriptCache: jest.fn(() => ({
+            get: jest.fn(() => null),
+            put: jest.fn(),
+            remove: jest.fn()
+        }))
+    },
     mockSheets: {},
     console: console,
     exports: {},
@@ -145,6 +153,8 @@ vm.createContext(context);
 const constantsWithVar = constantsContent.replace(/const /g, 'var ');
 vm.runInContext(constantsWithVar, context);
 
+vm.runInContext(gasStoreContent, context); // GasStore first
+
 // Explicitly export Classes from Logic.gs to Context
 // Class declarations in VM might not automatically hoist to 'this'
 // Explicitly export Classes from Logic.gs to Context
@@ -152,6 +162,10 @@ vm.runInContext(constantsWithVar, context);
 const logicWithExports = logicContent;
 
 vm.runInContext(logicWithExports, context);
+
+// Run Code.gs in context
+const codeWithExports = codeContent;
+vm.runInContext(codeWithExports, context);
 
 // Explicitly export Classes from Repository.gs to Context
 const repoWithExports = repoContent +
@@ -166,23 +180,26 @@ const {
     // Logic
     getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
     // Actions
-    getDashboardData, addTransaction, processLoanAction,
+    getDashboardData, addTransaction, processLoanAction, processContractAction,
     // Repository
     SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
     // Constants
-    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET
+    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET, ACT_BUY, TYPE_STOCK
 } = context;
 
 module.exports = {
     context,
-    // Mock classes for manual instantiation if needed
+    // Mock classes
     MockSheet, MockSS,
     // Logic
     getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
     // Actions
-    getDashboardData, addTransaction, processLoanAction,
+    getDashboardData,
+    addTx: addTransaction, // Alias
+    addTransaction,
+    processLoanAction, processContractAction,
     // Repository
     SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
     // Constants
-    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET
+    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET, ACT_BUY, TYPE_STOCK
 };

@@ -79,3 +79,6 @@ function trigger_RecordDailyHistory() {
   sheet.appendRow([today, netWorth, totalAssets, totalDebt]);
   console.log("排程執行: 新增今日資產紀錄");
 }
+
+
+

@@ -23,3 +23,6 @@ const ACT_SELL = '賣出';
 const ACT_DIVIDEND = '配息';
 
 // utf-8 fixed
+
+
+

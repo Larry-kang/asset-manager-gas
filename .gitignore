@@ -20,3 +20,9 @@ yarn-debug.log*
 yarn-error.log*
 .clasp.json
 
+
+# Test Artifacts
+test_report*.txt
+test_output*.log
+playwright-report/
+test-results/

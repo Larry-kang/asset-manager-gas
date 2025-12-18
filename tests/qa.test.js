@@ -14,10 +14,12 @@ describe('QA Integration Scenarios', () => {
     beforeEach(() => {
         mockSS = context.MockSS;
         // Reset Sheets
+        if (!mockSS.getSheetByName(TAB_LOG)) mockSS.insertSheet(TAB_LOG);
         const sLog = mockSS.getSheetByName(TAB_LOG);
         sLog.data = [];
         sLog.appendRow(['Date', 'Type', 'Ticker', 'Cat', 'Qty', 'Price', 'Currency', 'Note']); // Header
 
+        if (!mockSS.getSheetByName(TAB_LOAN)) mockSS.insertSheet(TAB_LOAN);
         const sLoan = mockSS.getSheetByName(TAB_LOAN);
         sLoan.data = [];
         sLoan.appendRow(['Source', 'Date', 'Amt', 'Rate', 'Col', 'Qty', 'Type', 'Warn', 'Liq', 'Note', 'Term', 'Paid', 'Monthly', 'Curr']); // Header

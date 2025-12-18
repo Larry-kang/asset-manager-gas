@@ -164,8 +164,9 @@
 
 ## 變更歷程 (Changelog)
 
-### v3.2.0 (Self-Hosted Release)
-- [Sec] **密碼鎖 (Security Gate)**: 新增 `doSetup()` 與前端 Login Modal，防止未授權存取。
+### Security (Optional)
+Previously password-protected, now open by default for simplified access.
+To re-enable locking, see `archive/` documentation (legacy).
 - [Feat] **借貸精靈 (Smart Wizard)**: 實作 `Sinopac` (股票質押) 與 `AAVE` (加密貨幣) 的自動開倉邏輯。
 - [Fix] **利息記帳**: 修正還款時利息未被記錄為支出的會計錯誤。
 - [Arch] **自部署準備**: 移除對特定試算表 ID 的硬編碼依賴。

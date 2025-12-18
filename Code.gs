@@ -1,6 +1,6 @@
 /**
  * Code.gs
- * ¤J¤fÂI»P¥þ°ì¨ç¦¡ (Main Entry Point)
+ * ï¿½Jï¿½fï¿½Iï¿½Pï¿½ï¿½ï¿½ï¿½ç¦¡ (Main Entry Point)
  */
 
 function doGet(e) {
@@ -16,17 +16,12 @@ function include(filename) {
 }
 
 /**
- * ¨ú±o³Ì·s¸ê®Æ («eºÝ Polling)
+ * ï¿½ï¿½ï¿½oï¿½Ì·sï¿½ï¿½ï¿½ (ï¿½eï¿½ï¿½ Polling)
  */
 function getData(password) {
     try {
-        // ÅçÃÒ±K½X
-        const props = PropertiesService.getScriptProperties();
-        const stored = props.getProperty('APP_PASSWORD');
-        if (stored && stored.trim() !== '' && String(password).trim() !== String(stored).trim()) {
-            return JSON.stringify({ status: "403", message: "Unauthorized" });
-        }
-
+        // ï¿½ï¿½ï¿½Ò±Kï¿½X
+        // Auth Check Removed per user request
         GasStore.init({ sheet_name: '_DB_STORE', encryption_key: 'AssetManager_V4', use_lock: false });
 
         // Sync Market Data if needed
@@ -108,6 +103,9 @@ function getData(password) {
     }
 }
 
+// Alias for Frontend/Test Compatibility
+var getDashboardData = getData;
+
 function getLogData(password) {
     try {
         // Auth check... simplified
@@ -148,3 +146,6 @@ function syncMarketData(ss, forceRefresh) {
         data: { fx: fx, prices: prices }
     };
 }
+
+
+

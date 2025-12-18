@@ -12,7 +12,7 @@ if (!fs.existsSync(reportDir)) {
 
 
 function renderTemplate(filename) {
-    let content = fs.readFileSync(path.join(__dirname, `../${filename}.html`), 'utf8');
+    let content = fs.readFileSync(path.join(__dirname, `../${filename}.html`), 'utf8').replace(/^\uFEFF/, '');
 
     // Improved Regex to capturing "js" or 'js' inside include with flexible spacing/semicolon
     // <?!= include('js'); ?> or <?!= include( "js" ) ?>
@@ -20,7 +20,7 @@ function renderTemplate(filename) {
         const includePath = path.join(__dirname, `../${p1}.html`);
         if (fs.existsSync(includePath)) {
             console.log(`[Server] Included: ${p1}`);
-            return fs.readFileSync(includePath, 'utf8');
+            return fs.readFileSync(includePath, 'utf8').replace(/^\uFEFF/, '');
         }
         console.warn(`[Server] Include NOT FOUND: ${includePath}`);
         return '';

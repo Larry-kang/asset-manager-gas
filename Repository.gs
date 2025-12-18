@@ -1,19 +1,19 @@
 /**
  * Repository.gs
- * ¸ê®Æ¦s¨ú¼h (Data Access Layer)
+ * ï¿½ï¿½Æ¦sï¿½ï¿½ï¿½h (Data Access Layer)
  *
- * Â¾³d:
- * 1. «Ê¸Ë SpreadsheetApp ªº©I¥s
- * 2. ºÞ²z Sheet ªº Schema »P¯Á¤Þ
- * 3. ´£¨Ñª«¥ó¾É¦V (DTO) ªº¸ê®Æ¦s¨ú
+ * Â¾ï¿½d:
+ * 1. ï¿½Ê¸ï¿½ SpreadsheetApp ï¿½ï¿½ï¿½Iï¿½s
+ * 2. ï¿½Þ²z Sheet ï¿½ï¿½ Schema ï¿½Pï¿½ï¿½ï¿½ï¿½
+ * 3. ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½É¦V (DTO) ï¿½ï¿½ï¿½ï¿½Æ¦sï¿½ï¿½
  */
 
 // --- Base Repository ---
 
 class SheetRepository {
     /**
-     * @param {string} tabName - Sheet ¦WºÙ
-     * @param {Object} schema - ©w¸q { KEY: Index } (0-based for array mapping, 1-based for Sheet)
+     * @param {string} tabName - Sheet ï¿½Wï¿½ï¿½
+     * @param {Object} schema - ï¿½wï¿½q { KEY: Index } (0-based for array mapping, 1-based for Sheet)
      */
     constructor(tabName, schema) {
         this.tabName = tabName;
@@ -31,22 +31,22 @@ class SheetRepository {
     }
 
     /**
-     * Åª¨ú©Ò¦³¸ê®Æ (±Æ°£ Header)
-     * @returns {Array<Object>} Âà´««áªºª«¥ó°}¦C
+     * Åªï¿½ï¿½ï¿½Ò¦ï¿½ï¿½ï¿½ï¿½ (ï¿½Æ°ï¿½ Header)
+     * @returns {Array<Object>} ï¿½à´«ï¿½áªºï¿½ï¿½ï¿½ï¿½}ï¿½C
      */
     findAll() {
         const lastRow = this.sheet.getLastRow();
         if (lastRow <= 1) return [];
 
         const numCols = this.sheet.getLastColumn();
-        // ±Æ°£ Header ±q²Ä 2 ¦æ¶}©l
+        // ï¿½Æ°ï¿½ Header ï¿½qï¿½ï¿½ 2 ï¿½ï¿½}ï¿½l
         const data = this.sheet.getRange(2, 1, lastRow - 1, numCols).getValues();
 
         return data.map((row, index) => this._mapRowToEntity(row, index + 2));
     }
 
     /**
-     * ±N Row Array Âà´«¬° Entity Object
+     * ï¿½N Row Array ï¿½à´«ï¿½ï¿½ Entity Object
      */
     _mapRowToEntity(row, rowNum) {
         const entity = { _row: rowNum };
@@ -113,14 +113,14 @@ const RepositoryFactory = {
 };
 
 /*
- * ­É¶U¬y¤ô±b Repository (Event Sourcing)
+ * ï¿½É¶Uï¿½yï¿½ï¿½ï¿½b Repository (Event Sourcing)
  */
 class LoanActionRepository extends SheetRepository {
     constructor() {
         super(TAB_LOAN_ACTIONS);
     }
 
-    // ½T«O Header ¦s¦b
+    // ï¿½Tï¿½O Header ï¿½sï¿½b
     _ensureHeader(sheet) {
         if (sheet.getLastRow() === 0) {
             sheet.appendRow(['Time', 'LoanID', 'Type', 'Protocol', 'Action', 'Asset', 'Amount', 'Note']);
@@ -157,3 +157,6 @@ function testRepository() {
         Logger.log("First Record: " + JSON.stringify(data[0]));
     }
 }
+
+
+

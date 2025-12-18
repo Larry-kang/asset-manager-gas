@@ -4,7 +4,7 @@
  * Goal: Maximize free quota usage and minimize I/O time.
  */
 
-const GasStore = (function () {
+var GasStore = (function () {
 
     // --- Default Configuration ---
     let CONFIG = {
@@ -402,3 +402,6 @@ const GasStore = (function () {
 
 // Assign to global so other scripts can see it?
 // In GAS, top-level const in a file is global to the project.
+
+
+
