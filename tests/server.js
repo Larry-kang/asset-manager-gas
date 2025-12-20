@@ -84,10 +84,10 @@ window.google = {
             processWizard: function(d) {
                 console.log('[Client] processWizard called', d);
                 // Mock Wizard Response
-                var msg = '[Mock] Created ' + d.proto + ' Loan. ' + (d.amount ? 'Amt:' + d.amount : '');
+                var msg = 'Wizard: Created ' + d.proto + ' Loan';
                 if (this._successHandler) setTimeout(() => this._successHandler(msg), 800);
             },
-            addTx: function(tx) { 
+            addTransaction: function(tx) { 
                 if (this._successHandler) setTimeout(() => this._successHandler({ success: true }), 500); 
             },
             runSystemCheck: function() { }

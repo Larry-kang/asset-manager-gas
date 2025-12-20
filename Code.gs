@@ -21,8 +21,7 @@ function include(filename) {
 function getData(password) {
     try {
         // ���ұK�X
-        // Auth Check Removed per user request
-        GasStore.init({ sheet_name: '_DB_STORE', encryption_key: 'AssetManager_V4', use_lock: false });
+        GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: false });
 
         // Sync Market Data if needed
         let marketRes = syncMarketData(SpreadsheetApp.getActiveSpreadsheet(), false);
@@ -109,7 +108,7 @@ var getDashboardData = getData;
 function getLogData(password) {
     try {
         // Auth check... simplified
-        GasStore.init({ sheet_name: '_DB_STORE', encryption_key: 'AssetManager_V4', use_lock: false });
+        GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: false });
         let logs = GasStore.get('DB:LOG', []);
         return JSON.stringify({ status: "success", logs: logs.reverse() });
     } catch (e) {
@@ -137,14 +136,62 @@ function syncMarketData(ss, forceRefresh) {
     let prices = {};
     let fx = 32.5;
 
-    // Hardcoded logic for now or fetch from Cache
-    // Real implementation would fetch URLs
-    // Returning dummy for tests/stub
+    const props = PropertiesService.getScriptProperties();
+    const CACHE_KEY = 'MARKET_DATA_JSON';
+    const CACHE_TIME = 15 * 60; // 15 mins
 
-    return {
-        logs: logs,
-        data: { fx: fx, prices: prices }
-    };
+    if (!forceRefresh) {
+        let cached = CacheService.getScriptCache().get(CACHE_KEY);
+        if (cached) {
+            return { logs: ['Loaded from cache'], data: JSON.parse(cached) };
+        }
+    }
+
+    try {
+        // 1. Fetch FX (USD/TWD)
+        let fxRes = UrlFetchApp.fetch("https://api.exchangerate-api.com/v4/latest/USD");
+        let fxData = JSON.parse(fxRes.getContentText());
+        fx = fxData.rates.TWD || 32.5;
+        logs.push(`FX Sync: ${fx}`);
+
+        // 2. Fetch Crypto (Binance)
+        let coins = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'];
+        let cryptoRes = UrlFetchApp.fetch(`https://api.binance.com/api/v3/ticker/price?symbols=["${coins.join('","')}"]`);
+        let cryptoData = JSON.parse(cryptoRes.getContentText());
+        cryptoData.forEach(item => {
+            let symbol = item.symbol.replace('USDT', '');
+            prices[symbol] = parseFloat(item.price);
+        });
+        logs.push(`Crypto Sync: ${cryptoData.length} items`);
+
+        // 3. Fetch TW Stocks (Yahoo Finance / TwStock Scraper)
+        // Simplified: Fetch from a mock or known good endpoint if available, 
+        // otherwise scrap Yahoo.
+        let twTickers = ['2330', '2454', '2317', '0050', '0056'];
+        twTickers.forEach(t => {
+            try {
+                let url = `https://query1.finance.yahoo.com/v8/finance/chart/${t}.TW`;
+                let res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+                let data = JSON.parse(res.getContentText());
+                if (data.chart && data.chart.result) {
+                    let price = data.chart.result[0].meta.regularMarketPrice;
+                    prices[t] = price;
+                }
+            } catch (e) {
+                logs.push(`TW Stock Error (${t}): ${e.toString()}`);
+            }
+        });
+        logs.push(`TW Stock Sync: ${twTickers.length} attempted`);
+
+        const resultData = { fx: fx, prices: prices };
+        CacheService.getScriptCache().put(CACHE_KEY, JSON.stringify(resultData), CACHE_TIME);
+
+        return { logs: logs, data: resultData };
+
+    } catch (e) {
+        logs.push(`Sync Error: ${e.toString()}`);
+        return { logs: logs, data: { fx: 32.5, prices: {} } };
+    }
 }
 
 

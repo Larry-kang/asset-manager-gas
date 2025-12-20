@@ -167,9 +167,10 @@
 ### Security (Optional)
 Previously password-protected, now open by default for simplified access.
 To re-enable locking, see `archive/` documentation (legacy).
-- [Feat] **借貸精靈 (Smart Wizard)**: 實作 `Sinopac` (股票質押) 與 `AAVE` (加密貨幣) 的自動開倉邏輯。
-- [Fix] **利息記帳**: 修正還款時利息未被記錄為支出的會計錯誤。
-- [Arch] **自部署準備**: 移除對特定試算表 ID 的硬編碼依賴。
+- [Feat] **即時市場數據**: 整合 Exchangerate-api (匯率), Binance (加密貨幣), Yahoo Finance (台股) 並實作快取機制。
+- [Feat] **還款邏輯優化**: 實作精確的利息計算與本息分離記帳，還款時自動計算應計利息。
+- [Feat] **完整測試套件**: 重建單元測試與導航測試，並新增「系統整合測試 (Integration Tests)」覆蓋完整資產生命週期。
+- [Arch] **配置中心化**: 將資料庫與加密金鑰移至 `Constants.gs` 統一管理。
 
 ### v3.1.1 (UX Enhanced + Mobile Fix)
 - [Fix] **手機版優化**：將抵押品輸入框改為原生 `<select>`，解決手機版無法選取的問題。

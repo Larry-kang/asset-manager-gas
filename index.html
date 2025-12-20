@@ -16,161 +16,176 @@
   <div class="app-root">
 
     <!-- SIDEBAR -->
-    <div class="sidebar">
-      <div class="sidebar-logo">
-        <i class="fa-solid fa-gem" style="color:var(--text-gold)"></i>
-        <div class="logo-text">ASSET MANAGER</div>
+    <div class="sidebar-logo">
+      <div class="logo-icon-box">
+        <i class="fa-solid fa-gem gradient-icon"></i>
       </div>
+      <div class="logo-text">ASSET V4</div>
+    </div>
 
-      <div class="nav-menu">
-        <div class="nav-item active" onclick="go('dash', this)">
-          <i class="fa-solid fa-chart-pie"></i>
-          <span data-i18n="Dash">Dashboard</span>
-        </div>
-        <div class="nav-item" onclick="go('holdings', this)">
-          <i class="fa-solid fa-layer-group"></i>
-          <span data-i18n="Port">Portfolio</span>
-        </div>
-        <div class="nav-item" onclick="go('loan', this)">
-          <i class="fa-solid fa-landmark"></i>
-          <span data-i18n="Vault">Vault</span>
-        </div>
-        <div class="nav-item" onclick="go('viewTx', this)">
-          <i class="fa-solid fa-list"></i>
-          <span data-i18n="Tx">Transactions</span>
-        </div>
+    <div class="nav-menu">
+      <div class="nav-item active" onclick="go('dash', this)">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span data-i18n="Dash">Dashboard</span>
       </div>
-
-      <div class="user-profile">
-        <div
-          style="width:32px; height:32px; border-radius:50%; background:#333; display:flex; align-items:center; justify-content:center; font-size:12px">
-          MK</div>
-        <div style="font-size:13px; color:var(--text-secondary)">Ming-Hao</div>
-        <div style="margin-left:auto; cursor:pointer; color:var(--text-secondary)" onclick="toggleLang()"
-          title="Switch Language">
-          <i class="fa-solid fa-earth-americas"></i>
-        </div>
+      <div class="nav-item" onclick="go('holdings', this)">
+        <i class="fa-solid fa-layer-group"></i>
+        <span data-i18n="Port">Portfolio</span>
+      </div>
+      <div class="nav-item" onclick="go('loan', this)">
+        <i class="fa-solid fa-landmark"></i>
+        <span data-i18n="Vault">Vault</span>
+      </div>
+      <div class="nav-item" onclick="go('viewTx', this)">
+        <i class="fa-solid fa-list"></i>
+        <span data-i18n="Tx">Transactions</span>
       </div>
     </div>
 
-    <!-- MAIN -->
-    <div class="main-content">
-
-      <!-- DASHBOARD -->
-      <div id="dash" class="view active">
-        <!-- Centered Balance Header -->
-        <div class="dash-header">
-          <div class="dash-label" data-i18n="NetWarning">Total Vault Balance</div>
-          <div class="dash-balance" id="netWorth">...</div>
-          <div id="dailyChange"
-            style="margin-top:-16px; margin-bottom:24px; font-family:var(--font-sans); font-weight:500"></div>
-
-          <div class="dash-actions" style="align-items:center">
-            <!-- Currency Toggle -->
-            <div class="segmented-control"
-              style="margin-right:12px; height:48px; display:flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid var(--border-color)">
-              <div class="seg-btn active" id="btnTWD" onclick="setCurrency('TWD')">TWD</div>
-              <div class="seg-btn" id="btnUSD" onclick="setCurrency('USD')">USD</div>
-            </div>
-
-            <button class="btn-gold-pill" onclick="openTxModal()"><i class="fa-solid fa-plus"
-                style="margin-right:8px"></i> <span data-i18n="AddF">Add Funds</span></button>
-            <button class="btn-outline" onclick="openTxModal()"><i class="fa-solid fa-arrow-up"></i></button>
-            <button class="btn-outline" onclick="load(true)" title="Reload"><i class="fa-solid fa-rotate"></i></button>
-          </div>
+    <div class="user-profile">
+      <div class="settings-group">
+        <div class="setting-row" onclick="toggleLang()">
+          <i class="fa-solid fa-earth-americas"></i>
+          <span data-i18n="Lang">Language</span>
         </div>
+        <div id="themeToggle" class="setting-row" onclick="load(true)">
+          <i class="fa-solid fa-moon"></i>
+          <span>Appearance</span>
+        </div>
+      </div>
 
-        <div class="grid-stack">
+      <div class="segmented-control" id="setCurrencyCtrl">
+        <div class="seg-btn active" id="btnTWD" onclick="setCurrency('TWD')">TWD</div>
+        <div class="seg-btn" id="btnUSD" onclick="setCurrency('USD')">USD</div>
+      </div>
 
-          <!-- Assets Section -->
-          <div>
-            <div class="section-title" data-i18n="Assets">Assets</div>
-            <div class="card">
-              <!-- Chart + List Layout -->
-              <div style="display:flex; gap:32px; align-items:center; flex-wrap:wrap">
-                <div style="width:140px; height:140px; position:relative; flex-shrink:0">
-                  <canvas id="assetChart"></canvas>
-                </div>
+      <button class="btn-diag" onclick="load(true)">
+        <i class="fa-solid fa-microchip"></i>
+        <span data-i18n="RunDig">Diagnostics</span>
+      </button>
+      <button class="btn-diag" id="btnEvolve" onclick="triggerEvolution()" style="margin-top:8px">
+        <i class="fa-solid fa-dna"></i>
+        <span data-i18n="Evolve">Evolve System</span>
+      </button>
+    </div>
+  </div>
 
-                <div style="flex:1; min-width:280px">
-                  <!-- Skeleton State -->
-                  <div id="assetSkeleton">
-                    <div class="skeleton-card" style="margin-bottom:8px">
-                      <div style="display:flex; justify-content:space-between">
-                        <div class="skeleton skeleton-text" style="width:40%"></div>
-                        <div class="skeleton skeleton-text" style="width:20%"></div>
-                      </div>
-                      <div class="skeleton skeleton-text" style="width:30%"></div>
+  <!-- MAIN -->
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div id="dash" class="view active">
+      <!-- Centered Balance Header -->
+      <div class="dash-header">
+        <div class="dash-label" data-i18n="NetWarning">Total Vault Balance</div>
+        <div class="dash-balance-wrapper">
+          <span class="dash-currency-symbol">$</span>
+          <div class="dash-balance" id="netWorth">...</div>
+        </div>
+        <div id="dailyChange" class="daily-change-pill"></div>
+
+        <div class="dash-actions">
+          <button class="btn-primary-glow" onclick="openTxModal()">
+            <i class="fa-solid fa-plus"></i>
+            <span data-i18n="AddF">Add Funds</span>
+          </button>
+          <button class="btn-icon-blur" onclick="load(true)" title="Reload">
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid-stack">
+
+        <!-- Assets Section -->
+        <div>
+          <div class="section-title" data-i18n="Assets">Assets</div>
+          <div class="card">
+            <!-- Chart + List Layout -->
+            <div style="display:flex; gap:32px; align-items:center; flex-wrap:wrap">
+              <div style="width:140px; height:140px; position:relative; flex-shrink:0">
+                <canvas id="assetChart"></canvas>
+              </div>
+
+              <div style="flex:1; min-width:280px">
+                <!-- Skeleton State -->
+                <div id="assetSkeleton">
+                  <div class="skeleton-card" style="margin-bottom:8px">
+                    <div style="display:flex; justify-content:space-between">
+                      <div class="skeleton skeleton-text" style="width:40%"></div>
+                      <div class="skeleton skeleton-text" style="width:20%"></div>
                     </div>
-                    <div class="skeleton-card">
-                      <div style="display:flex; justify-content:space-between">
-                        <div class="skeleton skeleton-text" style="width:40%"></div>
-                        <div class="skeleton skeleton-text" style="width:20%"></div>
-                      </div>
-                      <div class="skeleton skeleton-text" style="width:30%"></div>
-                    </div>
+                    <div class="skeleton skeleton-text" style="width:30%"></div>
                   </div>
-                  <div id="assetList"></div>
+                  <div class="skeleton-card">
+                    <div style="display:flex; justify-content:space-between">
+                      <div class="skeleton skeleton-text" style="width:40%"></div>
+                      <div class="skeleton skeleton-text" style="width:20%"></div>
+                    </div>
+                    <div class="skeleton skeleton-text" style="width:30%"></div>
+                  </div>
                 </div>
+                <div id="assetList"></div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Transactions Section -->
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
-              <div class="section-title" style="margin:0" data-i18n="Tx">Transactions</div>
-              <div style="font-size:12px; color:var(--text-gold); cursor:pointer"
-                onclick="go('viewTx', document.querySelectorAll('.nav-item')[3])">View All</div>
-            </div>
-            <div class="card" id="recentTxList">
-              <!-- Injected by JS -->
-            </div>
+        <!-- Transactions Section -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+            <div class="section-title" style="margin:0" data-i18n="Tx">Transactions</div>
+            <div style="font-size:12px; color:var(--text-gold); cursor:pointer"
+              onclick="go('viewTx', document.querySelectorAll('.nav-item')[3])">View All</div>
           </div>
-
-        </div>
-      </div>
-
-      <!-- PORTFOLIO / HOLDINGS -->
-      <div id="holdings" class="view hidden">
-        <div class="top-header">
-          <div class="section-title" data-i18n="Port">Portfolio Holdings</div>
-          <button class="btn-gold-pill" onclick="openTxModal()">+ Trade</button>
-        </div>
-        <div id="holdingsList"></div>
-      </div>
-
-      <!-- VAULT / LOANS -->
-      <div id="loan" class="view hidden">
-        <div class="section-title" data-i18n="Vault">Vault (Loans)</div>
-        <div id="riskList" class="grid-stack" style="margin-bottom:24px"></div>
-        <div id="loanList"></div>
-        <button class="btn-gold-pill floating-btn" onclick="openWizard()">+ New Loan</button>
-      </div>
-
-      <!-- TRANSACTIONS VIEW (NEW) -->
-      <div id="viewTx" class="view hidden">
-        <div class="top-header">
-          <div class="section-title" data-i18n="Tx">Transactions</div>
-          <button class="btn-gold-pill" onclick="openTxModal()">+ New</button>
-        </div>
-        <div class="card">
-          <div
-            style="display:grid; grid-template-columns: 100px 80px 100px 1fr 100px 80px; gap:16px; padding-bottom:12px; border-bottom:1px solid var(--border-color); color:var(--text-secondary); font-size:12px; font-weight:600">
-            <div>Date</div>
-            <div>Type</div>
-            <div>Ticker</div>
-            <div>Note</div>
-            <div style="text-align:right">Amount</div>
-            <div style="text-align:center">Action</div>
-          </div>
-          <div id="fullTxList" style="max-height: calc(100vh - 200px); overflow-y:auto">
-            <div style="padding:24px; text-align:center; color:#666">Loading...</div>
+          <div class="card" id="recentTxList">
+            <!-- Injected by JS -->
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
+
+    <!-- PORTFOLIO / HOLDINGS -->
+    <div id="holdings" class="view hidden">
+      <div class="top-header">
+        <div class="section-title" data-i18n="Port">Portfolio Holdings</div>
+        <button class="btn-gold-pill" onclick="openTxModal()">+ Trade</button>
+      </div>
+      <div id="holdingsList"></div>
+    </div>
+
+    <!-- VAULT / LOANS -->
+    <div id="loan" class="view hidden">
+      <div class="section-title" data-i18n="Vault">Vault (Loans)</div>
+      <div id="riskList" class="grid-stack" style="margin-bottom:24px"></div>
+      <div id="loanList"></div>
+      <button class="btn-gold-pill floating-btn" onclick="openWizard()">+ New Loan</button>
+    </div>
+
+    <!-- TRANSACTIONS VIEW (NEW) -->
+    <div id="viewTx" class="view hidden">
+      <div class="top-header">
+        <div class="section-title" data-i18n="Tx">Transactions</div>
+        <button class="btn-gold-pill" onclick="openTxModal()">+ New</button>
+      </div>
+      <div class="card">
+        <div
+          style="display:grid; grid-template-columns: 100px 80px 100px 1fr 100px 80px; gap:16px; padding-bottom:12px; border-bottom:1px solid var(--border-color); color:var(--text-secondary); font-size:12px; font-weight:600">
+          <div>Date</div>
+          <div>Type</div>
+          <div>Ticker</div>
+          <div>Note</div>
+          <div style="text-align:right">Amount</div>
+          <div style="text-align:center">Action</div>
+        </div>
+        <div id="fullTxList" style="max-height: calc(100vh - 200px); overflow-y:auto">
+          <div style="padding:24px; text-align:center; color:#666">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
   </div>
 
   </div>
@@ -395,4 +410,3 @@
 </body>
 
 </html>
-

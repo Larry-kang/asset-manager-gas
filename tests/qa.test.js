@@ -1,5 +1,6 @@
 const {
     context,
+    GasStore,
     TAB_LOG,
     TAB_LOAN,
     getDashboardData,
@@ -52,12 +53,10 @@ describe('QA Integration Scenarios', () => {
         expect(result.success).toBe(true);
         expect(result.message).toBe('\u4EA4\u6613\u7D00\u9304\u65B0\u589E\u6210\u529F'); // 交易紀錄新增成功
 
-        // Verify Data Persistence
-        const repo = new LogRepository();
-        const logs = repo.findAll();
+        // Verify Data Persistence via GasStore (Current Architecture)
+        const logs = GasStore.get('DB:LOG', []);
         expect(logs.length).toBe(1);
-        // Actions.gs adds a leading quote for formatting
-        expect(logs[0].ticker.replace("'", "")).toBe('2330');
+        expect(logs[0].ticker).toBe('2330');
         expect(logs[0].qty).toBe(1000);
     });
 
@@ -93,8 +92,7 @@ describe('QA Integration Scenarios', () => {
 
         const json = getDashboardData();
         const data = JSON.parse(json);
-
-        expect(data.inventory['AAPL']).toBe(10);
+        expect(data.inventory['AAPL'].qty).toBe(10);
         // Expect holding valTWD > 0 (assuming mock FX is set or defaults)
         // marketData uses hardcoded 32.5 if not found, or mocks.
         // We just verify it exists.

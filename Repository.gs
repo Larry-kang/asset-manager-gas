@@ -1,19 +1,19 @@
 /**
  * Repository.gs
- * ��Ʀs���h (Data Access Layer)
+ * 資料持久化層 (Data Access Layer)
  *
- * ¾�d:
- * 1. �ʸ� SpreadsheetApp ���I�s
- * 2. �޲z Sheet �� Schema �P����
- * 3. ���Ѫ���ɦV (DTO) ����Ʀs��
+ * 職責:
+ * 1. 封裝 SpreadsheetApp 的底層呼叫
+ * 2. 管理 Sheet 的 Schema 與對應
+ * 3. 提供物件導向 (DTO) 的資料存取介面
  */
 
 // --- Base Repository ---
 
 class SheetRepository {
     /**
-     * @param {string} tabName - Sheet �W��
-     * @param {Object} schema - �w�q { KEY: Index } (0-based for array mapping, 1-based for Sheet)
+     * @param {string} tabName - Sheet 名稱
+     * @param {Object} schema - 定義 { KEY: Index } (0-based 陣列映射)
      */
     constructor(tabName, schema) {
         this.tabName = tabName;
@@ -31,22 +31,22 @@ class SheetRepository {
     }
 
     /**
-     * Ū���Ҧ���� (�ư� Header)
-     * @returns {Array<Object>} �ഫ�᪺����}�C
+     * 讀取所有資料 (跳過 Header)
+     * @returns {Array<Object>} 轉換後的物件陣列
      */
     findAll() {
         const lastRow = this.sheet.getLastRow();
         if (lastRow <= 1) return [];
 
         const numCols = this.sheet.getLastColumn();
-        // �ư� Header �q�� 2 ��}�l
+        // 跳過 Header 從第 2 行開始
         const data = this.sheet.getRange(2, 1, lastRow - 1, numCols).getValues();
 
         return data.map((row, index) => this._mapRowToEntity(row, index + 2));
     }
 
     /**
-     * �N Row Array �ഫ�� Entity Object
+     * 將 Row Array 轉換為 Entity Object
      */
     _mapRowToEntity(row, rowNum) {
         const entity = { _row: rowNum };
@@ -113,14 +113,14 @@ const RepositoryFactory = {
 };
 
 /*
- * �ɶU�y���b Repository (Event Sourcing)
+ * 貸款流水紀錄 Repository (Event Sourcing)
  */
 class LoanActionRepository extends SheetRepository {
     constructor() {
         super(TAB_LOAN_ACTIONS);
     }
 
-    // �T�O Header �s�b
+    // 確保 Header 存在
     _ensureHeader(sheet) {
         if (sheet.getLastRow() === 0) {
             sheet.appendRow(['Time', 'LoanID', 'Type', 'Protocol', 'Action', 'Asset', 'Amount', 'Note']);
@@ -157,6 +157,3 @@ function testRepository() {
         Logger.log("First Record: " + JSON.stringify(data[0]));
     }
 }
-
-
-

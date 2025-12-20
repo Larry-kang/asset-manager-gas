@@ -3,8 +3,8 @@ function migrateToGasStore() {
 
     // 1. Initialize GasStore
     GasStore.init({
-        sheet_name: '_DB_STORE',
-        encryption_key: 'AssetManager_V4', // Simple key for migration
+        sheet_name: DB_STORE_NAME,
+        encryption_key: DB_ENCRYPTION_KEY,
         use_lock: true
     });
 

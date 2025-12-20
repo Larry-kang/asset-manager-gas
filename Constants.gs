@@ -22,6 +22,10 @@ const ACT_BUY = '買入';
 const ACT_SELL = '賣出';
 const ACT_DIVIDEND = '配息';
 
+// --- Database Configuration ---
+const DB_STORE_NAME = '_DB_STORE';
+const DB_ENCRYPTION_KEY = 'AssetManager_V4';
+
 // utf-8 fixed
 
 

@@ -43,6 +43,27 @@ const MockSheet = class {
         return new MockRange(this, 1, 1, this.data.length || 1, (this.data[0] || []).length || 1);
     }
     clear() { this.data = []; this.lastRow = 0; }
+    hideSheet() { return this; }
+    createTextFinder(key) {
+        const sheet = this;
+        return {
+            matchEntireCell: function () { return this; },
+            findNext: function () {
+                for (let i = 0; i < sheet.data.length; i++) {
+                    const row = sheet.data[i];
+                    for (let j = 0; j < row.length; j++) {
+                        if (String(row[j]) === String(key)) {
+                            return {
+                                getRow: () => i + 1,
+                                getColumn: () => j + 1
+                            };
+                        }
+                    }
+                }
+                return null;
+            }
+        };
+    }
 };
 
 const MockRange = class {
@@ -109,9 +130,26 @@ const context = {
         openById: jest.fn(() => MockSS)
     },
     Logger: { log: jest.fn(msg => console.log('[GAS Log]', msg)) },
+    Session: {
+        getActiveUser: jest.fn(() => ({ getEmail: jest.fn(() => 'test@example.com') })),
+        getEffectiveUser: jest.fn(() => ({ getEmail: jest.fn(() => 'test@example.com') })),
+        getScriptTimeZone: jest.fn(() => 'Asia/Taipei')
+    },
     Utilities: {
         formatDate: jest.fn((d) => new Date(d).toISOString().split('T')[0]),
-        newBlob: jest.fn()
+        newBlob: jest.fn((content) => ({
+            getBytes: () => {
+                if (typeof content === 'string') return Array.from(Buffer.from(content, 'utf8'));
+                return content; // Assume it's already bytes
+            },
+            getDataAsString: () => {
+                if (Array.isArray(content)) return Buffer.from(content).toString('utf8');
+                return String(content);
+            }
+        })),
+        computeHmacSha256Signature: jest.fn((data, key) => [1, 2, 3]), // Mock bytes
+        base64Encode: jest.fn((bytes) => Buffer.from(bytes).toString('base64')),
+        base64Decode: jest.fn((str) => Array.from(Buffer.from(str, 'base64')))
     },
     LockService: {
         getScriptLock: jest.fn(() => ({
@@ -120,27 +158,53 @@ const context = {
         }))
     },
     PropertiesService: {
-        getScriptProperties: jest.fn(() => ({
-            getProperty: jest.fn(() => null),
-            setProperty: jest.fn(),
-            setProperties: jest.fn()
-        }))
+        _props: {},
+        getScriptProperties: jest.fn(function () {
+            const self = context.PropertiesService;
+            return {
+                getProperty: jest.fn((key) => self._props[key] || null),
+                setProperty: jest.fn((key, val) => self._props[key] = val),
+                setProperties: jest.fn((obj) => Object.assign(self._props, obj)),
+                deleteAllProperties: jest.fn(() => self._props = {})
+            };
+        })
     },
     HtmlService: {
         createHtmlOutputFromFile: jest.fn(() => ({ setTitle: jest.fn() }))
     },
     UrlFetchApp: {
-        fetch: jest.fn()
+        fetch: jest.fn((url) => {
+            if (url.includes('exchangerate-api')) {
+                return { getContentText: () => JSON.stringify({ rates: { TWD: 32.5 } }) };
+            }
+            if (url.includes('binance')) {
+                return { getContentText: () => JSON.stringify([{ symbol: 'BTCUSDT', price: '90000' }]) };
+            }
+            if (url.includes('yahoo')) {
+                return { getContentText: () => JSON.stringify({ chart: { result: [{ meta: { regularMarketPrice: 1000 } }] } }) };
+            }
+            return { getContentText: () => '{}' };
+        })
     },
     CacheService: {
-        getScriptCache: jest.fn(() => ({
-            get: jest.fn(() => null),
-            put: jest.fn(),
-            remove: jest.fn()
-        }))
+        _cache: {},
+        getScriptCache: jest.fn(function () {
+            const self = context.CacheService;
+            return {
+                get: jest.fn((key) => self._cache[key] || null),
+                put: jest.fn((key, val) => self._cache[key] = val),
+                remove: jest.fn((key) => delete self._cache[key])
+            };
+        })
     },
     mockSheets: {},
-    console: console,
+    console: {
+        log: console.log,
+        error: console.error,
+        warn: console.warn,
+        time: () => { },
+        timeEnd: () => { }
+    },
     exports: {},
     module: { exports: {} },
     MockSS: MockSS // Inject MockSS explicitely
@@ -177,18 +241,21 @@ vm.runInContext(actionsContent, context); // Actions depend on logic/repo
 const {
     MockSheet: MockSheetRef,
     MockSS: MockSSRef,
+    GasStore,
     // Logic
     getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
     // Actions
-    getDashboardData, addTransaction, processLoanAction, processContractAction,
+    getDashboardData, addTransaction, syncMarketData, processLoanAction, processContractAction,
     // Repository
     SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
     // Constants
-    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET, ACT_BUY, TYPE_STOCK
+    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET, ACT_BUY, TYPE_STOCK,
+    DB_STORE_NAME, DB_ENCRYPTION_KEY
 } = context;
 
 module.exports = {
     context,
+    GasStore,
     // Mock classes
     MockSheet, MockSS,
     // Logic
@@ -197,9 +264,11 @@ module.exports = {
     getDashboardData,
     addTx: addTransaction, // Alias
     addTransaction,
+    syncMarketData,
     processLoanAction, processContractAction,
     // Repository
     SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
     // Constants
-    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET, ACT_BUY, TYPE_STOCK
+    TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET, ACT_BUY, TYPE_STOCK,
+    DB_STORE_NAME, DB_ENCRYPTION_KEY
 };

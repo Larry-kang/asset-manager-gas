@@ -1,10 +1,10 @@
 /**
  * Logic.gs
- * �֤߷~���޿� (Business Logic Layer)
+ * 核心業務邏輯層 (Business Logic Layer)
  */
 
 /**
- * �зǤ� Ticker
+ * 正規化 Ticker
  */
 function normalizeTicker(ticker) {
     if (!ticker) return '';
@@ -12,20 +12,10 @@ function normalizeTicker(ticker) {
 }
 
 /**
- * �p��w�s�P���� (Inventory Map)
+ * 計算庫存地圖 (Inventory Map)
  */
 function getInventoryMap(logRows, loanRows) {
     let inventory = {};
-
-    let clearedLoans = new Set();
-    if (loanRows && loanRows.length > 1) {
-        loanRows.slice(1).forEach(r => {
-            // Check for cleared note
-            if (!r[0] || String(r[9]).includes('�w���M')) {
-                // Future Logic
-            }
-        });
-    }
 
     if (!logRows || logRows.length <= 1) return inventory;
 
@@ -43,10 +33,10 @@ function getInventoryMap(logRows, loanRows) {
         // Use Global Constants or fallback to strings if running standalone test without context?
         // In strict setup, ACT_BUY is defined.
         // Fallback for safety if constants missing:
-        const _BUY = (typeof ACT_BUY !== 'undefined') ? ACT_BUY : '�R�J';
-        const _SELL = (typeof ACT_SELL !== 'undefined') ? ACT_SELL : '��X';
+        const _BUY = (typeof ACT_BUY !== 'undefined') ? ACT_BUY : '買入';
+        const _SELL = (typeof ACT_SELL !== 'undefined') ? ACT_SELL : '賣出';
 
-        if (type === _BUY || type === '�t��') {
+        if (type === _BUY || type === '配股') {
             let totalCost = inventory[ticker].cost * inventory[ticker].qty + price * qty;
             inventory[ticker].qty += qty;
             inventory[ticker].cost = (inventory[ticker].qty > 0) ? totalCost / inventory[ticker].qty : 0;
@@ -60,8 +50,8 @@ function getInventoryMap(logRows, loanRows) {
 }
 
 /**
- * �B�z�����污���
- * Supports 2-column [Ticker, Price] or 3-column [Ticker, Rate, Price]
+ * 處理市場行情數據
+ * 支持 2 欄位 [Ticker, Price] 或 3 欄位 [Ticker, Rate, Price]
  */
 function processMarketData(marketRows) {
     let prices = {};
@@ -82,7 +72,7 @@ function processMarketData(marketRows) {
 }
 
 /**
- * �p���`���զX����
+ * 計算投資組合總額
  */
 function calculatePortfolio(logRows, marketData, pledgedData) {
     let invMap = getInventoryMap(logRows, null);
@@ -131,7 +121,7 @@ function calculatePortfolio(logRows, marketData, pledgedData) {
 }
 
 /**
- * �p��ɶU���I
+ * 計算負債與槓桿
  */
 function calculateLoans(loanRows, marketData) {
     let totalDebtTWD = 0;
@@ -148,7 +138,8 @@ function calculateLoans(loanRows, marketData) {
             let note = String(r[9] || '');
             let loanCurr = r[13] || 'TWD';
 
-            if (!src || note.includes('�w���M')) return;
+            // 統一過濾「結清」標籤
+            if (!src || note.includes('結清') || note.includes('已結清')) return;
 
             let amt = Number(r[2]);
             let rate = Number(r[3]);
@@ -195,7 +186,7 @@ function calculateLoans(loanRows, marketData) {
         loanRows.slice(1).forEach(r => {
             let src = r[0];
             let note = String(r[9] || '');
-            if (!src || note.indexOf('結清') !== -1) return; // Filter out cleared (contains 結清)
+            if (!src || note.includes('結清') || note.includes('已結清')) return;
 
             let amt = Number(r[2]);
             let col = normalizeTicker(r[4]);
@@ -270,6 +261,3 @@ function calculateSingleRisk(amt, col, colQty, prices, fx, currency) {
     if (amt <= 0) return 'N/A';
     return ((colVal / amt) * 100).toFixed(2) + '%';
 }
-
-
-

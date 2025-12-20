@@ -1,91 +1,99 @@
-let CACHED_PASS = ''; // Deprecated but kept for signature compatibility if needed
+<script>
+    let CACHED_PASS = ''; // Deprecated but kept for signature compatibility if needed
 
-// function doLogin moved to archive
+    // function doLogin moved to archive
 
-function load(refresh = false) {
-if (refresh) setVal('netWorth', 'Loading...');
+    function load(refresh = false) {
+        if (refresh) setVal('netWorth', 'Loading...');
 
-google.script.run
-.withSuccessHandler(res => {
-let d;
-try { d = (typeof res === 'string') ? JSON.parse(res) : res; }
-catch (e) { showMsg('Parse Error', 'Failed to parse server response'); return; }
+        google.script.run
+            .withSuccessHandler(res => {
+                let d;
+                try { d = (typeof res === 'string') ? JSON.parse(res) : res; }
+                catch (e) { showMsg('Parse Error', 'Failed to parse server response'); return; }
 
-if (d.status === 'success' || d.success === true) {
-DATA = d;
-setVal('netWorth', fmt(d.netWorthTWD));
-renderDashboard(d);
-} else {
-showMsg('Error', d.message || 'Unknown error');
-}
-})
-.withFailureHandler(err => {
-showMsg('Server Error', err.message);
-})
-.getDashboardData();
-}
+                if (d.status === 'success' || d.success === true) {
+                    DATA = d;
+                    setVal('netWorth', fmt(d.netWorthTWD));
+                    renderDashboard(d);
+                } else {
+                    showMsg('Error', d.message || 'Unknown error');
+                }
+            })
+            .withFailureHandler(err => {
+                showMsg('Server Error', err.message);
+            })
+            .getDashboardData();
+    }
 
-function renderDashboard(d) {
-const dc = document.getElementById('dailyChange');
-if (dc) {
-const color = d.dailyChange >= 0 ? '#4ADE80' : '#F87171';
-dc.innerHTML = `<span style="color:${color}">${d.dailyChange >= 0 ? '+' : ''}${fmt(d.dailyChange)}</span> Today`;
-}
+    function renderDashboard(d) {
+        const dc = document.getElementById('dailyChange');
+        if (dc) {
+            const color = d.dailyChange >= 0 ? '#4ADE80' : '#F87171';
+            dc.innerHTML = `<span style="color:${color}">${d.dailyChange >= 0 ? '+' : ''}${fmt(d.dailyChange)}</span> Today`;
+        }
 
-renderAssets(d);
-renderTx(d);
-renderHoldings(d);
-renderLoan(d);
+        renderAssets(d);
+        renderTx(d);
+        renderHoldings(d);
+        renderLoan(d);
 
-const tList = document.getElementById('tickerList');
-if (tList && d.knownTickers) {
-tList.innerHTML = '';
-d.knownTickers.forEach(t => {
-const opt = document.createElement('option');
-opt.value = t;
-tList.appendChild(opt);
-});
-}
-}
+        const tList = document.getElementById('tickerList');
+        if (tList && d.knownTickers) {
+            tList.innerHTML = '';
+            d.knownTickers.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                tList.appendChild(opt);
+            });
+        }
+    }
 
-window.onload = function () {
-const dateInput = document.getElementById('tDate');
-if (dateInput) dateInput.valueAsDate = new Date();
+    window.onload = function () {
+        const dateInput = document.getElementById('tDate');
+        if (dateInput) dateInput.valueAsDate = new Date();
 
-loadSettings();
-load();
-};
+        loadSettings();
+        load();
+    };
 
-function setVal(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
-function fmt(n) {
-if (n === undefined || n === null) return '-';
-return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TWD', minimumFractionDigits: 0 }).format(n);
-}
-function showMsg(title, body) {
-document.getElementById('msgTitle').innerText = title;
-document.getElementById('msgBody').innerText = body;
-document.getElementById('msgModal').style.display = 'flex';
-}
+    function setVal(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
+    function fmt(n) {
+        if (n === undefined || n === null) return '-';
+        const config = {
+            style: 'currency',
+            currency: CURRENCY,
+            minimumFractionDigits: (CURRENCY === 'USD') ? 2 : 0,
+            maximumFractionDigits: (CURRENCY === 'USD') ? 2 : 0
+        };
+        // Normalize for USD display symbols if necessary, but Intl usually handles it
+        return new Intl.NumberFormat(curLang === 'zh' ? 'zh-TW' : 'en-US', config).format(n);
+    }
+    function showMsg(title, body) {
+        document.getElementById('msgTitle').innerText = title;
+        document.getElementById('msgBody').innerText = body;
+        document.getElementById('msgModal').style.display = 'flex';
+    }
 
-function renderAssets(d) {
-const skel = document.getElementById('assetSkeleton');
-if (skel) skel.style.display = 'none';
+    function renderAssets(d) {
+        const skel = document.getElementById('assetSkeleton');
+        if (skel) skel.style.display = 'none';
 
-if (!d.holdings) return;
-const ctx = document.getElementById('assetChart');
-if (!ctx) return;
+        if (!d.holdings) return;
+        const ctx = document.getElementById('assetChart');
+        if (!ctx) return;
 
-let stock = 0, crypto = 0, cash = 0;
-d.holdings.forEach(h => {
-if (h.cat === '股票') stock += h.valTWD;
-else if (h.cat === '加密貨幣') crypto += h.valTWD;
-else cash += h.valTWD;
-});
-CASH = cash;
+        let stock = 0, crypto = 0, cash = 0;
+        d.holdings.forEach(h => {
+            if (h.cat === '股票') stock += h.valTWD;
+            else if (h.cat === '加密貨幣') crypto += h.valTWD;
+            else cash += h.valTWD;
+        });
+        CASH = cash;
 
-const list = document.getElementById('assetList');
-if (list) {
-list.innerHTML = `
+        const list = document.getElementById('assetList');
+        if (list) {
+            list.innerHTML = `
 <div class="asset-row">
     <div>Stocks</div>
     <div>${fmt(getVal(stock))}</div>
@@ -99,36 +107,36 @@ list.innerHTML = `
     <div>${fmt(getVal(cash))}</div>
 </div>
 `;
-}
+        }
 
-if (window.myChart) window.myChart.destroy();
-window.myChart = new Chart(ctx, {
-type: 'doughnut',
-data: {
-labels: ['Stocks', 'Crypto', 'Cash'],
-datasets: [{
-data: [stock, crypto, cash],
-backgroundColor: ['#F59E0B', '#3B82F6', '#10B981'],
-borderWidth: 0
-}]
-},
-options: { cutout: '70%', plugins: { legend: { display: false } } }
-});
-}
+        if (window.myChart) window.myChart.destroy();
+        window.myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Stocks', 'Crypto', 'Cash'],
+                datasets: [{
+                    data: [stock, crypto, cash],
+                    backgroundColor: ['#F59E0B', '#3B82F6', '#10B981'],
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: '70%', plugins: { legend: { display: false } } }
+        });
+    }
 
-function renderTx(d) {
-const list = document.getElementById('recentTxList');
-if (!list) return;
-list.innerHTML = '';
-if (!d.recentTx || d.recentTx.length === 0) {
-list.innerHTML = '<div style="text-align:center;color:#666;padding:20px">No recent transactions</div>';
-return;
-}
-d.recentTx.slice(0, 5).forEach(t => {
-const isIn = t.type === '買入' || t.type === '配息';
-const row = document.createElement('div');
-row.className = 'asset-row';
-row.innerHTML = `
+    function renderTx(d) {
+        const list = document.getElementById('recentTxList');
+        if (!list) return;
+        list.innerHTML = '';
+        if (!d.recentTx || d.recentTx.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:#666;padding:20px">No recent transactions</div>';
+            return;
+        }
+        d.recentTx.slice(0, 5).forEach(t => {
+            const isIn = t.type === '買入' || t.type === '配息';
+            const row = document.createElement('div');
+            row.className = 'asset-row';
+            row.innerHTML = `
 <div style="display:flex; align-items:center; gap:12px">
     <div
         style="width:40px; height:40px; border-radius:50%; background:#1A1A1A; display:flex; align-items:center; justify-content:center; color:${isIn ? 'var(--color-green)' : 'var(--text-primary)'}">
@@ -144,77 +152,77 @@ row.innerHTML = `
     <div style="font-size:12px; color:var(--text-secondary)">${t.type}</div>
 </div>
 `;
-list.appendChild(row);
-});
-}
+            list.appendChild(row);
+        });
+    }
 
-function renderHoldings(d) {
-const list = document.getElementById('holdingsList');
-if (!list) return;
-list.innerHTML = '';
+    function renderHoldings(d) {
+        const list = document.getElementById('holdingsList');
+        if (!list) return;
+        list.innerHTML = '';
 
-const cats = { '現金': [], '股票': [], '加密貨幣': [] };
-if (d.holdings) {
-d.holdings.forEach(h => {
-if (cats[h.cat]) cats[h.cat].push(h);
-else { if (!cats['股票']) cats['股票'] = []; cats['股票'].push(h); }
-});
-}
+        const cats = { '現金': [], '股票': [], '加密貨幣': [] };
+        if (d.holdings) {
+            d.holdings.forEach(h => {
+                if (cats[h.cat]) cats[h.cat].push(h);
+                else { if (!cats['股票']) cats['股票'] = []; cats['股票'].push(h); }
+            });
+        }
 
-for (let c in cats) {
-if (cats[c].length === 0) continue;
-const hdr = document.createElement('div');
-hdr.className = 'section-title';
-hdr.style.fontSize = '16px';
-hdr.style.marginTop = '24px';
-hdr.style.color = 'var(--text-gold)';
-hdr.innerText = c;
-list.appendChild(hdr);
+        for (let c in cats) {
+            if (cats[c].length === 0) continue;
+            const hdr = document.createElement('div');
+            hdr.className = 'section-title';
+            hdr.style.fontSize = '16px';
+            hdr.style.marginTop = '24px';
+            hdr.style.color = 'var(--text-gold)';
+            hdr.innerText = c;
+            list.appendChild(hdr);
 
-const card = document.createElement('div');
-card.className = 'card';
-card.style.padding = "0 16px";
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.padding = "0 16px";
 
-cats[c].forEach(h => {
-if (h.qty <= 0.0001 && h.cat !=='現金' ) return; const isCash=h.cat==='現金' ; const pnlColor=h.pnl>= 0 ?
-    'var(--color-green)' : 'var(--color-red)';
+            cats[c].forEach(h => {
+                if (h.qty <= 0.0001 && h.cat !== '現金') return; const isCash = h.cat === '現金'; const pnlColor = h.pnl >= 0 ?
+                    'var(--color-green)' : 'var(--color-red)';
 
-    const row = document.createElement('div');
-    row.className = 'asset-row';
-    row.onclick = () => quickTrade(h.ticker, h.cat);
+                const row = document.createElement('div');
+                row.className = 'asset-row';
+                row.onclick = () => quickTrade(h.ticker, h.cat);
 
-    row.innerHTML = `
+                const roi = parseFloat(h.roi) || 0;
+                const roiText = h.qty > 0 ? (roi >= 0 ? `+${roi}%` : `${roi}%`) : '';
+
+                row.innerHTML = `
     <div style="display:flex; align-items:center">
         <div>
             <div style="font-weight:600; font-size:15px; display:flex; align-items:center; gap:8px">
                 ${h.ticker}
-                ${h.currency === 'USD' ? `<span
-                    style="font-size:10px; background:#333; padding:2px 4px; border-radius:4px">USD</span>` : ''}
+                ${h.currency === 'USD' ? `<span class="badge-usd">USD</span>` : ''}
             </div>
-            <div style="font-size:12px; color:var(--text-secondary)">${h.qty} @ ${fmt(h.qty > 0 ? (h.marketPrice || 0) :
-                0)}</div>
+            <div style="font-size:12px; color:var(--text-secondary)">${h.qty} @ ${fmt(getVal(h.marketPrice || 0))}</div>
         </div>
     </div>
     <div style="text-align:right">
         <div style="font-weight:600; font-size:15px">${fmt(getVal(h.marketValTWD || h.valTWD))}</div>
-        <div style="font-size:12px; color:${pnlColor}">${isCash ? '' : `${h.profitTWD >= 0 ? '+' :
-            ''}${fmt(getVal(h.profitTWD || h.pnl))} (${h.roi})`}</div>
+        <div style="font-size:12px; color:${pnlColor}">${isCash ? '' : `${h.profitTWD >= 0 ? '+' : ''}${fmt(getVal(h.profitTWD || h.pnl))} (${roiText})`}</div>
     </div>
     `;
-    card.appendChild(row);
-    });
-    list.appendChild(card);
-    }
+                card.appendChild(row);
+            });
+            list.appendChild(card);
+        }
     }
 
     function renderLoan(d) {
-    const lList = document.getElementById('loanList');
-    const rList = document.getElementById('riskList');
-    if (!lList) return;
-    lList.innerHTML = ''; rList.innerHTML = '';
+        const lList = document.getElementById('loanList');
+        const rList = document.getElementById('riskList');
+        if (!lList) return;
+        lList.innerHTML = ''; rList.innerHTML = '';
 
-    if (!d.risks || d.risks.length === 0) {
-    rList.innerHTML = `
+        if (!d.risks || d.risks.length === 0) {
+            rList.innerHTML = `
     <div
         style="grid-column: 1 / -1; text-align:center; padding:48px 24px; color:var(--text-secondary); background:var(--bg-card); border-radius:16px; border:1px dashed var(--border-color)">
         <i class="fa-solid fa-vault"
@@ -223,25 +231,25 @@ if (h.qty <= 0.0001 && h.cat !=='現金' ) return; const isCash=h.cat==='現金'
         <div style="font-size:13px">Your vault is empty. Create a new loan to get started.</div>
     </div>
     `;
-    return;
-    }
+            return;
+        }
 
-    if (d.risks) {
-    d.risks.forEach(r => {
-    const riskColor = r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? '#FBBF24' :
-    'var(--color-red)');
-    let ratio = parseFloat(r.rate); // Logic returns '50.2%' or 'N/A'
-    if (isNaN(ratio)) ratio = 0;
+        if (d.risks) {
+            d.risks.forEach(r => {
+                const riskColor = r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? '#FBBF24' :
+                    'var(--color-red)');
+                let ratio = parseFloat(r.rate); // Logic returns '50.2%' or 'N/A'
+                if (isNaN(ratio)) ratio = 0;
 
-    let barPct = Math.min(Math.max(ratio, 0), 100);
+                let barPct = Math.min(Math.max(ratio, 0), 100);
 
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.position = 'relative';
-    card.onclick = () => openLoanAction(r.source, 'repay');
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.position = 'relative';
+                card.onclick = () => openLoanAction(r.source, 'repay');
 
-    // Construct HTML carefully
-    card.innerHTML = `
+                // Construct HTML carefully
+                card.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
         <div class="card-label" style="font-size:16px; font-weight:600; color:white">
             <i class="fa-solid fa-shield-halved" style="margin-right:8px; color:var(--text-gold)"></i>${r.source}
@@ -284,63 +292,95 @@ if (h.qty <= 0.0001 && h.cat !=='現金' ) return; const isCash=h.cat==='現金'
             Repay
         </button>
     </div>`;
-    rList.appendChild(card);
-    });
-    }
+                rList.appendChild(card);
+            });
+        }
     }
 
     function quickTrade(ticker, cat) {
-    openTxModal();
-    document.getElementById('tTicker').value = ticker;
-    document.getElementById('tCat').value = cat;
+        openTxModal();
+        document.getElementById('tTicker').value = ticker;
+        document.getElementById('tCat').value = cat;
     }
 
     function openLoanAction(source, type) {
-    document.getElementById('modalLoan').style.display = 'flex';
-    document.getElementById('lSource').value = source;
-    const sel = document.getElementById('lType');
-    if (type) { sel.value = type; updateLoanUI(type); }
-    document.getElementById('lTitle').innerText = `${source} Action`;
+        document.getElementById('modalLoan').style.display = 'flex';
+        document.getElementById('lSource').value = source;
+        const sel = document.getElementById('lType');
+        if (type) { sel.value = type; updateLoanUI(type); }
+        document.getElementById('lTitle').innerText = `${source} Action`;
     }
 
     function subLoan() {
-    const type = document.getElementById('lType').value;
-    const val = parseFloat(document.getElementById('lVal').value);
-    if (isNaN(val) && type !== 'payPeriod') { showMsg('Error', 'Invalid Value'); return; }
+        const type = document.getElementById('lType').value;
+        const val = parseFloat(document.getElementById('lVal').value);
+        if (isNaN(val) && type !== 'payPeriod') { showMsg('Error', 'Invalid Value'); return; }
 
-    const payload = {
-    source: document.getElementById('lSource').value,
-    type: type,
-    val: val,
-    price: parseFloat(document.getElementById('lPrice').value) || 0
-    };
+        const payload = {
+            source: document.getElementById('lSource').value,
+            type: type,
+            val: val,
+            price: parseFloat(document.getElementById('lPrice').value) || 0
+        };
 
-    setVal('btnLoan', 'Processing...');
-    google.script.run.withSuccessHandler(res => {
-    setVal('btnLoan', 'Submit Action');
-    document.getElementById('modalLoan').style.display = 'none';
-    if (res.success || res === 'Success') { showMsg('Success', 'Action Recorded'); load(true); }
-    else showMsg('Error', res.message || res);
-    }).processContractAction(payload);
+        setVal('btnLoan', 'Processing...');
+        google.script.run.withSuccessHandler(res => {
+            setVal('btnLoan', 'Submit Action');
+            document.getElementById('modalLoan').style.display = 'none';
+            if (res.success || res === 'Success') { showMsg('Success', 'Action Recorded'); load(true); }
+            else showMsg('Error', res.message || res);
+        }).processContractAction(payload);
     }
 
     function subTx() {
-    const payload = {
-    date: document.getElementById('tDate').value,
-    type: document.getElementById('tType').value,
-    cat: document.getElementById('tCat').value,
-    ticker: document.getElementById('tTicker').value,
-    qty: parseFloat(document.getElementById('tQty').value),
-    price: parseFloat(document.getElementById('tPrice').value),
-    currency: document.getElementById('tCurrency').value
-    };
-    google.script.run.withSuccessHandler(res => {
-    if (res.success || res === 'Transaction Added') {
-    closeTxModal();
-    showMsg('Success', 'Transaction Added');
-    load(true);
-    } else showMsg('Error', res.message || res);
-    }).addTransaction(payload); // Updated to match Actions.gs
+        const payload = {
+            date: document.getElementById('tDate').value,
+            type: document.getElementById('tType').value,
+            cat: document.getElementById('tCat').value,
+            ticker: document.getElementById('tTicker').value,
+            qty: parseFloat(document.getElementById('tQty').value),
+            price: parseFloat(document.getElementById('tPrice').value),
+            currency: document.getElementById('tCurrency').value
+        };
+        const btn = document.getElementById('btnTx');
+        btn.disabled = true;
+        btn.innerText = 'Syncing...';
+
+        google.script.run.withSuccessHandler(res => {
+            btn.disabled = false;
+            btn.innerText = 'Confirm Transaction';
+            if (res.success || res === 'Transaction Added') {
+                closeTxModal();
+                showMsg(curLang === 'zh' ? '成功' : 'Success', curLang === 'zh' ? '交易已記錄' : 'Transaction Added');
+                // Optimistic UI could go here, but reload is safer for now
+                load(true);
+            } else showMsg('Error', res.message || res);
+        }).addTransaction(payload);
+    }
+
+    function triggerEvolution() {
+        const btn = document.getElementById('btnEvolve');
+        const span = btn.querySelector('span');
+        const originalText = span ? span.innerText : 'Evolve';
+
+        if (span) span.innerText = curLang === 'zh' ? '進化中...' : 'Evolving...';
+        btn.disabled = true;
+
+        google.script.run
+            .withSuccessHandler(insights => {
+                btn.disabled = false;
+                if (span) span.innerText = originalText;
+                const count = insights.length;
+                showMsg(curLang === 'zh' ? '進化完成' : 'Evolution Complete',
+                    curLang === 'zh' ? `發現 ${count} 項洞察。` : `Found ${count} insights.`);
+                load(true);
+            })
+            .withFailureHandler(err => {
+                btn.disabled = false;
+                if (span) span.innerText = originalText;
+                showMsg('Evolution Failed', err.message);
+            })
+            .runEvolution();
     }
 
     /* --- WIZARD LOGIC --- */
@@ -348,104 +388,104 @@ if (h.qty <= 0.0001 && h.cat !=='現金' ) return; const isCash=h.cat==='現金'
     let wizType = 'Stock';
 
     function openWizard() {
-    document.getElementById('modalWizard').style.display = 'flex';
-    wizBack();
+        document.getElementById('modalWizard').style.display = 'flex';
+        wizBack();
     }
     function closeWizard() { document.getElementById('modalWizard').style.display = 'none'; }
 
     function setWizProto(proto, type) {
-    wizProto = proto; wizType = type;
-    document.getElementById('wizStep1').classList.add('hidden');
-    document.getElementById('wizStep2').classList.remove('hidden');
-    document.getElementById('wizDot2').classList.add('active');
-    document.getElementById('wizProtoLabel').innerText = `${proto} (${type})`;
-    document.getElementById('wizInputStock').classList.add('hidden');
-    document.getElementById('wizInputCrypto').classList.add('hidden');
-    document.getElementById('wizInputCredit').classList.add('hidden');
+        wizProto = proto; wizType = type;
+        document.getElementById('wizStep1').classList.add('hidden');
+        document.getElementById('wizStep2').classList.remove('hidden');
+        document.getElementById('wizDot2').classList.add('active');
+        document.getElementById('wizProtoLabel').innerText = `${proto} (${type})`;
+        document.getElementById('wizInputStock').classList.add('hidden');
+        document.getElementById('wizInputCrypto').classList.add('hidden');
+        document.getElementById('wizInputCredit').classList.add('hidden');
 
-    if (type === 'Stock') initWizStock();
-    else if (type === 'Crypto') initWizCrypto();
-    else if (type === 'Credit') document.getElementById('wizInputCredit').classList.remove('hidden');
+        if (type === 'Stock') initWizStock();
+        else if (type === 'Crypto') initWizCrypto();
+        else if (type === 'Credit') document.getElementById('wizInputCredit').classList.remove('hidden');
     }
 
     function wizBack() {
-    document.getElementById('wizStep1').classList.remove('hidden');
-    document.getElementById('wizStep2').classList.add('hidden');
-    document.getElementById('wizDot1').classList.add('active');
-    document.getElementById('wizDot2').classList.remove('active');
+        document.getElementById('wizStep1').classList.remove('hidden');
+        document.getElementById('wizStep2').classList.add('hidden');
+        document.getElementById('wizDot1').classList.add('active');
+        document.getElementById('wizDot2').classList.remove('active');
     }
 
     function initWizStock() {
-    document.getElementById('wizInputStock').classList.remove('hidden');
-    const sel = document.getElementById('wizStockTicker');
-    sel.innerHTML = '<option disabled selected>Select Stock</option>';
-    if (DATA.holdings) {
-    DATA.holdings.forEach(h => {
-    const opt = document.createElement('option');
-    opt.value = h.ticker;
-    opt.innerText = `${h.ticker} (Qty: ${h.qty})`;
-    sel.appendChild(opt);
-    });
-    }
-    sel.onchange = () => {
-    const t = DATA.holdings.find(h => h.ticker === sel.value);
-    document.getElementById('wizStockQty').innerText = t ? `Avail: ${t.qty}` : '0';
-    };
+        document.getElementById('wizInputStock').classList.remove('hidden');
+        const sel = document.getElementById('wizStockTicker');
+        sel.innerHTML = '<option disabled selected>Select Stock</option>';
+        if (DATA.holdings) {
+            DATA.holdings.forEach(h => {
+                const opt = document.createElement('option');
+                opt.value = h.ticker;
+                opt.innerText = `${h.ticker} (Qty: ${h.qty})`;
+                sel.appendChild(opt);
+            });
+        }
+        sel.onchange = () => {
+            const t = DATA.holdings.find(h => h.ticker === sel.value);
+            document.getElementById('wizStockQty').innerText = t ? `Avail: ${t.qty}` : '0';
+        };
     }
 
     function initWizCrypto() {
-    document.getElementById('wizInputCrypto').classList.remove('hidden');
-    document.getElementById('wizCryptoRows').innerHTML = '';
-    addCryptoRow();
+        document.getElementById('wizInputCrypto').classList.remove('hidden');
+        document.getElementById('wizCryptoRows').innerHTML = '';
+        addCryptoRow();
     }
 
     function addCryptoRow() {
-    const div = document.createElement('div');
-    div.style.marginBottom = '8px';
-    div.style.display = 'grid';
-    div.style.gridTemplateColumns = '1fr 1fr 32px';
-    div.style.gap = '8px';
-    div.innerHTML = `
+        const div = document.createElement('div');
+        div.style.marginBottom = '8px';
+        div.style.display = 'grid';
+        div.style.gridTemplateColumns = '1fr 1fr 32px';
+        div.style.gap = '8px';
+        div.innerHTML = `
     <input type="text" placeholder="Asset (BTC)" class="wiz-c-asset">
     <input type="number" placeholder="Amt" class="wiz-c-amt">
     <div style="display:flex;align-items:center;justify-content:center;color:red" onclick="this.parentElement.remove()">
         <i class="fa-solid fa-trash"></i></div>
     `;
-    document.getElementById('wizCryptoRows').appendChild(div);
+        document.getElementById('wizCryptoRows').appendChild(div);
     }
 
     function subWizard() {
-    setVal('wizBtn', 'Processing...');
-    let payload = {};
+        setVal('wizBtn', 'Processing...');
+        let payload = {};
 
-    if (wizProto === 'Sinopac') {
-    const tTicker = document.getElementById('wizStockTicker').value;
-    const tAmt = document.getElementById('wizStockLoan').value;
-    if (!tTicker || !tAmt) { showMsg('Error', 'Missing fields'); return; }
-    const realTicker = tTicker.split(' ')[0];
-    payload = { proto: 'Sinopac', col: realTicker, qty: 1000, amount: tAmt };
-    }
-    else if (wizProto === 'LineBank') {
-    const tAmt = document.getElementById('wizCreditLoan').value;
-    payload = { proto: 'LineBank', amount: tAmt };
-    }
-    else if (wizProto === 'AAVE') {
-    const rows = document.querySelectorAll('#wizCryptoRows > div');
-    let assets = [];
-    rows.forEach(r => {
-    const t = r.querySelector('.wiz-c-asset').value;
-    const q = r.querySelector('.wiz-c-amt').value;
-    if (t && q) assets.push({ ticker: t, qty: q });
-    });
-    let debt = document.getElementById('wizCryptoBorrow').value;
-    payload = { proto: 'AAVE', assets: assets, amount: debt };
-    }
+        if (wizProto === 'Sinopac') {
+            const tTicker = document.getElementById('wizStockTicker').value;
+            const tAmt = document.getElementById('wizStockLoan').value;
+            if (!tTicker || !tAmt) { showMsg('Error', 'Missing fields'); return; }
+            const realTicker = tTicker.split(' ')[0];
+            payload = { proto: 'Sinopac', col: realTicker, qty: 1000, amount: tAmt };
+        }
+        else if (wizProto === 'LineBank') {
+            const tAmt = document.getElementById('wizCreditLoan').value;
+            payload = { proto: 'LineBank', amount: tAmt };
+        }
+        else if (wizProto === 'AAVE') {
+            const rows = document.querySelectorAll('#wizCryptoRows > div');
+            let assets = [];
+            rows.forEach(r => {
+                const t = r.querySelector('.wiz-c-asset').value;
+                const q = r.querySelector('.wiz-c-amt').value;
+                if (t && q) assets.push({ ticker: t, qty: q });
+            });
+            let debt = document.getElementById('wizCryptoBorrow').value;
+            payload = { proto: 'AAVE', assets: assets, amount: debt };
+        }
 
-    google.script.run.withSuccessHandler(res => {
-    closeWizard();
-    showMsg('Success', res);
-    load(true);
-    }).processWizard(payload);
+        google.script.run.withSuccessHandler(res => {
+            closeWizard();
+            showMsg('Success', res);
+            load(true);
+        }).processWizard(payload);
     }
 
     /* --- SETTINGS --- */
@@ -453,50 +493,50 @@ if (h.qty <= 0.0001 && h.cat !=='現金' ) return; const isCash=h.cat==='現金'
     let curLang = 'zh';
 
     function setCurrency(val) {
-    CURRENCY = val;
-    document.getElementById('btnTWD').classList.toggle('active', val === 'TWD');
-    document.getElementById('btnUSD').classList.toggle('active', val === 'USD');
-    autoSaveSettings();
-    if (DATA && DATA.status) renderDashboard(DATA);
+        CURRENCY = val;
+        document.getElementById('btnTWD').classList.toggle('active', val === 'TWD');
+        document.getElementById('btnUSD').classList.toggle('active', val === 'USD');
+        autoSaveSettings();
+        if (DATA && DATA.status) renderDashboard(DATA);
     }
 
     function toggleLang() { setLang(curLang === 'zh' ? 'en' : 'zh'); }
 
     function getVal(valTWD) {
-    if (CURRENCY === 'USD' && DATA.fx) return valTWD / DATA.fx;
-    return valTWD;
+        if (CURRENCY === 'USD' && DATA.fx) return valTWD / DATA.fx;
+        return valTWD;
     }
 
     function autoSaveSettings() {
-    localStorage.setItem('am_prefs', JSON.stringify({ currency: CURRENCY, lang: curLang }));
+        localStorage.setItem('am_prefs', JSON.stringify({ currency: CURRENCY, lang: curLang }));
     }
 
     function loadSettings() {
-    try {
-    const p = JSON.parse(localStorage.getItem('am_prefs'));
-    if (p) {
-    if (p.currency) setCurrency(p.currency);
-    if (p.lang) setLang(p.lang);
-    }
-    } catch (e) { }
+        try {
+            const p = JSON.parse(localStorage.getItem('am_prefs'));
+            if (p) {
+                if (p.currency) setCurrency(p.currency);
+                if (p.lang) setLang(p.lang);
+            }
+        } catch (e) { }
     }
 
     const i18nData = {
-    'SysStat': { zh: '系統狀態', en: 'System Status' },
-    'RunDig': { zh: '執行診斷', en: 'Run Diagnostics' },
-    'Lang': { zh: '語言', en: 'Language' },
-    'Vault': { zh: '金庫', en: 'Vault' },
-    'Dash': { zh: '儀表板', en: 'Dashboard' },
-    'Tx': { zh: '交易', en: 'Transactions' },
-    'Set': { zh: '設定', en: 'Settings' }
+        'SysStat': { zh: '系統狀態', en: 'System Status' },
+        'RunDig': { zh: '執行診斷', en: 'Run Diagnostics' },
+        'Lang': { zh: '語言', en: 'Language' },
+        'Vault': { zh: '金庫', en: 'Vault' },
+        'Dash': { zh: '儀表板', en: 'Dashboard' },
+        'Tx': { zh: '交易', en: 'Transactions' },
+        'Set': { zh: '設定', en: 'Settings' },
+        'Evolve': { zh: '系統進化', en: 'Evolve System' }
     };
 
     function setLang(lang) {
-    curLang = lang;
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (i18nData[key] && i18nData[key][lang]) el.innerText = i18nData[key][lang];
-    });
+        curLang = lang;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (i18nData[key] && i18nData[key][lang]) el.innerText = i18nData[key][lang];
+        });
     }
-    </script>
-
+</script>

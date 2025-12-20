@@ -1,0 +1,45 @@
+name: Periodic Evolution Audit
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # 每週日凌晨執行
+  workflow_dispatch: # 支援手動觸發
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Unit & Integration Tests
+        run: npm test
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E Tests
+        run: npm run test:e2e
+        env:
+          CI: true
+
+      - name: Generate Audit Report
+        run: |
+          echo "# System Evolution Audit Report" > evolution_report.md
+          echo "Date: $(date)" >> evolution_report.md
+          echo "Status: SUCCESS" >> evolution_report.md
+          echo "All tests passed. System is stable for next evolution cycle." >> evolution_report.md
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: evolution-report
+          path: evolution_report.md
