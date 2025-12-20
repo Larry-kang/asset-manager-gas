@@ -371,8 +371,8 @@
                 btn.disabled = false;
                 if (span) span.innerText = originalText;
                 const count = insights.length;
-                showMsg(curLang === 'zh' ? '進化完成' : 'Evolution Complete',
-                    curLang === 'zh' ? `發現 ${count} 項洞察。` : `Found ${count} insights.`);
+                showMsg(curLang === 'zh' ? '分析完成' : 'Audit Complete',
+                    curLang === 'zh' ? `偵測到 ${count} 項建議。請告知代理進行代碼演進。` : `Detected ${count} points. Please ask your Agent to evolve code.`);
                 load(true);
             })
             .withFailureHandler(err => {
@@ -529,7 +529,7 @@
         'Dash': { zh: '儀表板', en: 'Dashboard' },
         'Tx': { zh: '交易', en: 'Transactions' },
         'Set': { zh: '設定', en: 'Settings' },
-        'Evolve': { zh: '系統進化', en: 'Evolve System' }
+        'Evolve': { zh: '進化分析', en: 'Evolve Audit' }
     };
 
     function setLang(lang) {
