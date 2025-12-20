@@ -1,12 +1,12 @@
 /**
  * Evolution Audit Module
- * ­t³d¨t²Îªº¥N½X¯Å¶i¤Æ¼f­p¡C
+ * ï¿½tï¿½dï¿½tï¿½Îªï¿½ï¿½Nï¿½Xï¿½Å¶iï¿½Æ¼fï¿½pï¿½C
  */
 
 const EVOLUTION_INSIGHTS_KEY = 'DB:EVOLUTION_INSIGHTS';
 
 /**
- * °õ¦æ¶i¤Æ¼f­p (¶È²£¥Í«ØÄ³³ø§i¡A¤£­×§ï¸ê®Æ)
+ * ï¿½ï¿½ï¿½ï¿½iï¿½Æ¼fï¿½p (ï¿½È²ï¿½ï¿½Í«ï¿½Ä³ï¿½ï¿½ï¿½iï¿½Aï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½)
  */
 function runEvolution() {
     GasStore.init({
@@ -15,64 +15,63 @@ function runEvolution() {
         use_lock: true
     });
 
-    const insights = [];
+    var insights = [];
     Logger.log('--- [System: Evolution Audit] Starting ---');
 
-    // 1. ¨t²Î¶EÂ_ (Ã­©w©ÊÀË¬d)
+    // 1. ï¿½tï¿½Î¶Eï¿½_ (Ã­ï¿½wï¿½ï¿½ï¿½Ë¬d)
     try {
-        const checkRes = runSystemCheck();
-        if (typeof checkRes === 'string' && checkRes.includes('¥¢±Ñ')) {
+        var checkRes = runSystemCheck();
+        if (typeof checkRes === 'string' && checkRes.indexOf('ï¿½ï¿½ï¿½ï¿½') !== -1) {
             insights.push({
                 type: 'STABILITY',
-                msg: '¨t²ÎÃ­©w©ÊÀË´ú¥¼³q¹L¡A«ØÄ³¤H¤u¤¶¤J¡C',
+                msg: 'ï¿½tï¿½ï¿½Ã­ï¿½wï¿½ï¿½ï¿½Ë´ï¿½ï¿½ï¿½ï¿½qï¿½Lï¿½Aï¿½ï¿½Ä³ï¿½Hï¿½uï¿½ï¿½ï¿½Jï¿½C',
                 details: checkRes
             });
         }
     } catch (e) {
-        insights.push({ type: 'CRITICAL', msg: '¼f­p¤ÞÀº±Y¼ì: ' + e.message });
+        insights.push({ type: 'CRITICAL', msg: 'ï¿½fï¿½pï¿½ï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½: ' + e.message });
     }
 
-    // 2. ®Ö¤ß¥N½XÅÞ¿è¼f­p (±Æ°£¸ê®Æ­×´_)
-    const logs = GasStore.get('DB:LOG') || [];
-    const market = GasStore.get('DB:MARKET_DATA') || {};
-    const loans = GasStore.get('DB:LOAN') || [];
-    const now = new Date().getTime();
+    // 2. ï¿½Ö¤ß¥Nï¿½Xï¿½Þ¿ï¿½fï¿½p (ï¿½Æ°ï¿½ï¿½ï¿½Æ­×´_)
+    var logs = GasStore.get('DB:LOG') || [];
+    var market = GasStore.get('DB:MARKET_DATA') || {};
+    var now = new Date().getTime();
 
-    // °»´ú²§±`¸ê®Æ¤À§G (·t¥Ü¥N½XÅÞ¿è¥i¯à¦³°ÝÃD)
-    const anomalies = logs.filter(l => !l.ticker || l.price <= 0 || l.qty <= 0);
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½`ï¿½ï¿½Æ¤ï¿½ï¿½G (ï¿½tï¿½Ü¥Nï¿½Xï¿½Þ¿ï¿½iï¿½à¦³ï¿½ï¿½ï¿½D)
+    var anomalies = logs.filter(function (l) { return !l.ticker || l.price <= 0 || l.qty <= 0; });
     if (anomalies.length > 0) {
         insights.push({
             type: 'CODE_LOGIC',
-            msg: `°»´ú¨ì ${anomalies.length} µ§²§±`¬ö¿ý¡C«ØÄ³Àu¤Æ Actions.gs ¤¤ªº¥æ©ö®ÕÅçÅÞ¿è¡C`,
-            details: anomalies.map(a => a.ticker)
+            msg: 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ' + anomalies.length + ' ï¿½ï¿½ï¿½ï¿½ï¿½`ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½Ä³ï¿½uï¿½ï¿½ Actions.gs ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ¿ï¿½C',
+            details: anomalies.map(function (a) { return a.ticker; })
         });
     }
 
-    // 3. ¦h¹ô§O»P¶×²vÅÞ¿è¼f­p
+    // 3. ï¿½hï¿½ï¿½ï¿½Oï¿½Pï¿½×²vï¿½Þ¿ï¿½fï¿½p
     if (!market.USD || !market.TWD) {
-        insights.push({ type: 'LOGIC', msg: '¯Ê¥¢®Ö¤ß¶×²v¡C«ØÄ³ÀË¬d syncMarketData ªº API ¦ê±µÅÞ¿è¡C' });
+        insights.push({ type: 'LOGIC', msg: 'ï¿½Ê¥ï¿½ï¿½Ö¤ß¶×²vï¿½Cï¿½ï¿½Ä³ï¿½Ë¬d syncMarketData ï¿½ï¿½ API ï¿½ê±µï¿½Þ¿ï¿½C' });
     }
 
-    // 4. Àx¦s¼f­p³ø§i
-    const history = GasStore.get(EVOLUTION_INSIGHTS_KEY) || [];
+    // 4. ï¿½xï¿½sï¿½fï¿½pï¿½ï¿½ï¿½i
+    var history = GasStore.get(EVOLUTION_INSIGHTS_KEY) || [];
     history.push({
         ts: now,
         insights: insights,
-        summary: insights.length > 0 ? `µo²{ ${insights.length} ¶µ¼ç¦b¶i¤ÆÂI¡C` : '¨t²Î®Ö¤ß¹B§@Ã­©w¡C'
+        summary: insights.length > 0 ? 'ï¿½oï¿½{ ' + insights.length + ' ï¿½ï¿½ï¿½ï¿½bï¿½iï¿½ï¿½ï¿½Iï¿½C' : 'ï¿½tï¿½Î®Ö¤ß¹Bï¿½@Ã­ï¿½wï¿½C'
     });
 
-    // «O¯d³Ìªñ 10 ¦¸¬ö¿ý
+    // ï¿½Oï¿½dï¿½Ìªï¿½ 10 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (history.length > 10) history.shift();
 
     GasStore.set(EVOLUTION_INSIGHTS_KEY, history);
     GasStore.commit();
 
-    Logger.log(`Audit Complete: ${insights.length} insights generated.`);
+    Logger.log('Audit Complete: ' + insights.length + ' insights generated.');
     return insights;
 }
 
 /**
- * Àò¨ú¶i¤Æ¬}¹î (¨Ñ Agent ­×´_¥N½X°Ñ¦Ò)
+ * ï¿½ï¿½ï¿½ï¿½iï¿½Æ¬}ï¿½ï¿½ (ï¿½ï¿½ Agent ï¿½×´_ï¿½Nï¿½Xï¿½Ñ¦ï¿½)
  */
 function getEvolutionInsights() {
     GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY });
