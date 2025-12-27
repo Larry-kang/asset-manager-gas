@@ -218,3 +218,11 @@ To re-enable locking, see `archive/` documentation (legacy).
 - [Core] 建立 FIFO 還款核心。
 - [Core] 實作增貸與補抵押邏輯。
 - [Core] 實作平均成本法損益計算。
+
+## 👤 Author
+
+**Larry Kang**
+
+* **Role:** Senior Backend Engineer | FinTech Specialist
+* **Focus:** Distributed Systems, Payment Architecture, .NET Performance Tuning.
+* **Contact:** [LinkedIn Profile](www.linkedin.com/in/larry-kang)
