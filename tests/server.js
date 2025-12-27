@@ -71,7 +71,9 @@ window.google = {
                      ],
                      contracts: [],
                      fx: 32.5,
-                     knownTickers: ['TSLA', 'BTC']
+                     knownTickers: ['TSLA', 'BTC'],
+                     targets: { 'Stock': 50, 'Crypto': 50 },
+                     rebalancing: []
                 };
                 if (this._successHandler) { 
                     setTimeout(() => this._successHandler(mockData), 500);
@@ -90,6 +92,10 @@ window.google = {
             addTransaction: function(tx) { 
                 if (this._successHandler) setTimeout(() => this._successHandler({ success: true }), 500); 
             },
+            saveTargets: function(targets) {
+                console.log('[Client] saveTargets called', targets);
+                if (this._successHandler) setTimeout(() => this._successHandler(JSON.stringify({ status: 'success' })), 500);
+            },
             runSystemCheck: function() { }
         }
     }
@@ -98,6 +104,7 @@ window.google = {
 `;
 
 app.get('/', (req, res) => {
+    console.log('[Server] GET / request received');
     let html = renderTemplate('index');
     html = html.replace('</body>', `${mockClientScript}</body>`);
     res.send(html);

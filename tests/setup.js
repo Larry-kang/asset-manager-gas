@@ -137,6 +137,7 @@ const context = {
     },
     Utilities: {
         formatDate: jest.fn((d) => new Date(d).toISOString().split('T')[0]),
+        sleep: jest.fn(), // Mock sleep
         newBlob: jest.fn((content) => ({
             getBytes: () => {
                 if (typeof content === 'string') return Array.from(Buffer.from(content, 'utf8'));
@@ -174,16 +175,21 @@ const context = {
     },
     UrlFetchApp: {
         fetch: jest.fn((url) => {
+            const mockRes = (content) => ({
+                getContentText: () => content,
+                getResponseCode: () => 200
+            });
+
             if (url.includes('exchangerate-api')) {
-                return { getContentText: () => JSON.stringify({ rates: { TWD: 32.5 } }) };
+                return mockRes(JSON.stringify({ rates: { TWD: 32.5 } }));
             }
             if (url.includes('binance')) {
-                return { getContentText: () => JSON.stringify([{ symbol: 'BTCUSDT', price: '90000' }]) };
+                return mockRes(JSON.stringify([{ symbol: 'BTCUSDT', price: '90000' }]));
             }
             if (url.includes('yahoo')) {
-                return { getContentText: () => JSON.stringify({ chart: { result: [{ meta: { regularMarketPrice: 1000 } }] } }) };
+                return mockRes(JSON.stringify({ chart: { result: [{ meta: { regularMarketPrice: 1000 } }] } }));
             }
-            return { getContentText: () => '{}' };
+            return mockRes('{}');
         })
     },
     CacheService: {
@@ -243,7 +249,7 @@ const {
     MockSS: MockSSRef,
     GasStore,
     // Logic
-    getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
+    getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker, calculateRebalancing,
     // Actions
     getDashboardData, addTransaction, syncMarketData, processLoanAction, processContractAction,
     // Repository
@@ -259,7 +265,7 @@ module.exports = {
     // Mock classes
     MockSheet, MockSS,
     // Logic
-    getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker,
+    getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker, calculateRebalancing,
     // Actions
     getDashboardData,
     addTx: addTransaction, // Alias

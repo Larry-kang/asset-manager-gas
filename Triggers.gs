@@ -40,17 +40,46 @@ function trigger_UpdateMarketData() {
 function trigger_RecordDailyHistory() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  // 先更新一次市價確保數據最新
+  // 1. Init GasStore
+  GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: false });
+
+  // 2. Sync Market Data
   let result = syncMarketData(ss, true);
   let marketData = result.data;
 
-  let loanData = calculateLoans(ss, marketData);
-  let portfolio = calculatePortfolio(ss, marketData, loanData.pledged);
+  // 3. Prepare Data for Logic.gs (Replicating Code.gs logic)
+  // Fetch Logs
+  let logs = GasStore.get('DB:LOG', []);
+  let logRows = [['Date', 'Type', 'Ticker', 'Cat', 'Qty', 'Price', 'Currency', 'Note']];
+  logs.forEach(l => {
+    logRows.push([l.date, l.type, l.ticker, l.cat, l.qty, l.price, l.currency, l.note]);
+  });
 
-  let netWorth = portfolio.totalAssetsTWD - loanData.totalDebtTWD;
+  // Fetch Loans
+  let loans = GasStore.get('DB:LOAN', []);
+  let loanRows = [['Source', 'Date', 'Amt', 'Rate', 'Col', 'Qty', 'Type', 'Warn', 'Liq', 'Note']];
+  loans.forEach(l => {
+    loanRows.push([
+      l.source, l.date, l.amount, l.rate, l.col, l.colQty, l.type, l.warn, l.liq, l.note,
+      l.totalTerm, l.paidTerm, l.monthlyPay, l.currency
+    ]);
+  });
+
+  // Pledged Data
+  let pledged = {};
+  loans.forEach(l => {
+    if (l.col) pledged[l.col] = (pledged[l.col] || 0) + Number(l.colQty);
+  });
+
+  // 4. Calculate
+  let portfolio = calculatePortfolio(logRows, marketData, pledged);
+  let loanCalc = calculateLoans(loanRows, marketData);
+
+  let netWorth = portfolio.totalAssetsTWD - loanCalc.totalDebtTWD;
   let totalAssets = portfolio.totalAssetsTWD;
-  let totalDebt = loanData.totalDebtTWD;
+  let totalDebt = loanCalc.totalDebtTWD;
 
+  // 5. Write to History
   let sheet = ss.getSheetByName(TAB_HISTORY);
   if (!sheet) {
     sheet = ss.insertSheet(TAB_HISTORY);

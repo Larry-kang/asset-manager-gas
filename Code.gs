@@ -80,6 +80,9 @@ function getData(password) {
         // Historical Logs (Optional - simplified)
         let historyData = []; // GasStore.get('DB:HISTORY', []);
 
+        // Fetch Targets
+        let targets = GasStore.get('DB:SETTINGS:TARGETS', {});
+
         return JSON.stringify({
             status: "success",
             fx: marketRes.data.fx,
@@ -91,6 +94,8 @@ function getData(password) {
             contracts: loanCalc.contracts,
             risks: loanCalc.risks,
             inventory: portfolio.inventory,
+            targets: targets,
+            rebalancing: calculateRebalancing(portfolio, targets, netWorth), // Logic.gs
             recentTx: logs.slice(-10).reverse(), // Last 10
             logs: marketRes.logs, // Debug logs
             debug: []
@@ -108,9 +113,20 @@ var getDashboardData = getData;
 function getLogData(password) {
     try {
         // Auth check... simplified
-        GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: false });
-        let logs = GasStore.get('DB:LOG', []);
-        return JSON.stringify({ status: "success", logs: logs.reverse() });
+        GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY }); // Use Lock for writes
+        let result = Actions.runSystemCheck(SpreadsheetApp.getActiveSpreadsheet());
+        return JSON.stringify(result);
+    } catch (e) {
+        return JSON.stringify({ status: "error", message: e.toString() });
+    }
+}
+
+function saveTargets(targets) {
+    try {
+        GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: true });
+        GasStore.put('DB:SETTINGS:TARGETS', targets);
+        GasStore.commit();
+        return JSON.stringify({ status: "success" });
     } catch (e) {
         return JSON.stringify({ status: "error", message: e.toString() });
     }
@@ -147,6 +163,8 @@ function syncMarketData(ss, forceRefresh) {
         }
     }
 
+
+
     try {
         // 1. Fetch FX (USD/TWD)
         let fxRes = UrlFetchApp.fetch("https://api.exchangerate-api.com/v4/latest/USD");
@@ -165,17 +183,36 @@ function syncMarketData(ss, forceRefresh) {
         logs.push(`Crypto Sync: ${cryptoData.length} items`);
 
         // 3. Fetch TW Stocks (Yahoo Finance / TwStock Scraper)
-        // Simplified: Fetch from a mock or known good endpoint if available, 
-        // otherwise scrap Yahoo.
         let twTickers = ['2330', '2454', '2317', '0050', '0056'];
+
+        // Helper: Fetch with Headers & Retry
+        const fetchUrl = (url) => {
+            const params = {
+                muteHttpExceptions: true,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+            };
+            for (let i = 0; i < 3; i++) {
+                try {
+                    let res = UrlFetchApp.fetch(url, params);
+                    if (res.getResponseCode() === 200) return res.getContentText();
+                } catch (e) { Utilities.sleep(500 * (i + 1)); }
+            }
+            return null;
+        };
+
         twTickers.forEach(t => {
             try {
                 let url = `https://query1.finance.yahoo.com/v8/finance/chart/${t}.TW`;
-                let res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-                let data = JSON.parse(res.getContentText());
-                if (data.chart && data.chart.result) {
-                    let price = data.chart.result[0].meta.regularMarketPrice;
-                    prices[t] = price;
+                let content = fetchUrl(url);
+                if (content) {
+                    let data = JSON.parse(content);
+                    if (data.chart && data.chart.result) {
+                        let meta = data.chart.result[0].meta;
+                        let price = meta.regularMarketPrice || meta.previousClose;
+                        if (price) prices[t] = price;
+                    }
                 }
             } catch (e) {
                 logs.push(`TW Stock Error (${t}): ${e.toString()}`);

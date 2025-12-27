@@ -1,34 +1,34 @@
+ï»¿---
+description: [ï¿½ï¿½ï¿½~ï¿½ï¿½ï¿½Nï¿½uï¿½Æ¤uï¿½@ï¿½y]: ï¿½ï¿½ï¿½ï¿½ ï¿½]ï¿½ï¿½ -> ï¿½pï¿½e -> ï¿½ï¿½@ -> ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Û°Ê´`ï¿½ï¿½ï¿½C
 ---
-description: [²£«~­¡¥NÀu¤Æ¤u§@¬y]: °õ¦æ ½]®Ö -> ­pµe -> ¹ê§@ -> ÅçÃÒ ªº¦Û°Ê´`Àô¡C
----
 
-³o­Ó¤u§@¬yµ{¥Î©ó¹ï±M®×¶i¦æ«ùÄòªº UI/UX Àu¤Æ»P Bug ­×´_¡C
+ï¿½oï¿½Ó¤uï¿½@ï¿½yï¿½{ï¿½Î©ï¿½ï¿½Mï¿½×¶iï¿½ï¿½ï¿½ï¿½ï¿½ UI/UX ï¿½uï¿½Æ»P Bug ï¿½×´_ï¿½C
 
-1. **Phase 0: ±´¯Á»P½]®Ö [Agent: Auditor]**
-   - ±½´y¥D­nÅã¥Ü¤å¥ó (`index.html`, `css.html`, `js.html`)¡C
-   - ¤ÀªR·í«e UI/UX Ãa¨ý¹D»PÅÞ¿è Bug¡C
-   - ²£¥X¡u²{ªp¤ÀªR³ø§i¡v©ó«äºûÃì¤¤¡C
+1. **Phase 0: ï¿½ï¿½ï¿½ï¿½ï¿½Pï¿½]ï¿½ï¿½ [Agent: Auditor]**
+   - ï¿½ï¿½ï¿½yï¿½Dï¿½nï¿½ï¿½Ü¤ï¿½ï¿½ (`index.html`, `css.html`, `js.html`)ï¿½C
+   - ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½e UI/UX ï¿½aï¿½ï¿½ï¿½Dï¿½Pï¿½Þ¿ï¿½ Bugï¿½C
+   - ï¿½ï¿½ï¿½Xï¿½uï¿½{ï¿½pï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½iï¿½vï¿½ï¿½ï¿½ï¿½ï¿½ì¤¤ï¿½C
 
-2. **Phase 1: ¹ïµJ»P¾Ô²¤ [Agent: Architect]**
-   - ®Ú¾Ú½]®Öµ²ªG§ó·s©Î«Ø¥ß `implementation_plan.md`¡C
-   - ©w¸qÅç¦¬¼Ð·Ç»P E2E ´ú¸Õ³õ´º¡C
+2. **Phase 1: ï¿½ï¿½Jï¿½Pï¿½Ô²ï¿½ [Agent: Architect]**
+   - ï¿½Ú¾Ú½]ï¿½Öµï¿½ï¿½Gï¿½ï¿½sï¿½Î«Ø¥ï¿½ `implementation_plan.md`ï¿½C
+   - ï¿½wï¿½qï¿½ç¦¬ï¿½Ð·Ç»P E2E ï¿½ï¿½ï¿½Õ³ï¿½ï¿½ï¿½ï¿½C
    - // turbo
-   - ¨Ï¥Î `notify_user` ½Ð¨D CEO ®Ö­ã¡C
+   - ï¿½Ï¥ï¿½ `notify_user` ï¿½Ð¨D CEO ï¿½Ö­ï¿½C
 
-3. **Phase 2: ¶Â½c°õ¦æ»P¼ÒÀÀ [Agent: Dev Swarm]**
-   - **Backend/Frontend Dev**: ¹ê§@Àu¤Æ¥N½X¡C
-   - **Fixer**: ºÊ±±½sÄ¶»Pªì¨B°õ¦æª¬ºA¡C
+3. **Phase 2: ï¿½Â½cï¿½ï¿½ï¿½ï¿½Pï¿½ï¿½ï¿½ï¿½ [Agent: Dev Swarm]**
+   - **Backend/Frontend Dev**: ï¿½ï¿½@ï¿½uï¿½Æ¥Nï¿½Xï¿½C
+   - **Fixer**: ï¿½Ê±ï¿½ï¿½sÄ¶ï¿½Pï¿½ï¿½Bï¿½ï¿½ï¿½æª¬ï¿½Aï¿½C
    - // turbo
-   - °õ¦æ `npm test` ½T«O®Ö¤ßÅÞ¿èÃ­©w¡C
+   - ï¿½ï¿½ï¿½ï¿½ `npm test` ï¿½Tï¿½Oï¿½Ö¤ï¿½ï¿½Þ¿ï¿½Ã­ï¿½wï¿½C
 
-4. **Phase 3: ¦Û°Ê¤ÆÅçÃÒ [Agent: Browser Bot]**
+4. **Phase 3: ï¿½Û°Ê¤ï¿½ï¿½ï¿½ï¿½ï¿½ [Agent: Browser Bot]**
    - // turbo
-   - °õ¦æ `npm run test:e2e` ¶i¦æµøÄ±»P¥\¯à¦^Âk´ú¸Õ¡C
-   - ­Y¥¢±Ñ¡A¥Ñ **Fixer** ¦Û°Ê­×´_ª½¨ì³q¹L¡C
+   - ï¿½ï¿½ï¿½ï¿½ `npm run test:e2e` ï¿½iï¿½ï¿½ï¿½Ä±ï¿½Pï¿½\ï¿½ï¿½^ï¿½kï¿½ï¿½ï¿½Õ¡C
+   - ï¿½Yï¿½ï¿½ï¿½Ñ¡Aï¿½ï¿½ **Fixer** ï¿½Û°Ê­×´_ï¿½ï¿½ï¿½ï¿½qï¿½Lï¿½C
 
-5. **Phase 4: §¹¬ü¥æ¥I [Agent: Doc]**
-   - §ó·s `README.md` »P `walkthrough.md`¡C
-   - ¨Ï¥Î `notify_user` ¥æ¥I¦¨ªG¡C
+5. **Phase 4: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½I [Agent: Doc]**
+   - ï¿½ï¿½s `README.md` ï¿½P `walkthrough.md`ï¿½C
+   - ï¿½Ï¥ï¿½ `notify_user` ï¿½ï¿½Iï¿½ï¿½ï¿½Gï¿½C
 
 // turbo-all
-6. ¤ÏÂÐ°õ¦æ¦¹¬yµ{ª½¨ì¹F¨ì¨ô¶V«~½è¡C
+6. ï¿½ï¿½ï¿½Ð°ï¿½ï¿½æ¦¹ï¿½yï¿½{ï¿½ï¿½ï¿½ï¿½Fï¿½ï¿½ï¿½ï¿½Vï¿½~ï¿½ï¿½C

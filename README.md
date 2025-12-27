@@ -164,6 +164,11 @@
 
 ## 變更歷程 (Changelog)
 
+### v4.0 (Current)
+- [Doc] **Documentation Refresh**: Updated `FEATURES.md` and `task.md` to reflect current system state.
+- [UI] **Frontend Version**: Sidebar updated to "ASSET V4".
+- [Core] **Optimization**: Verified `GasStore` integrity and logic flow.
+
 ### Security (Optional)
 Previously password-protected, now open by default for simplified access.
 To re-enable locking, see `archive/` documentation (legacy).

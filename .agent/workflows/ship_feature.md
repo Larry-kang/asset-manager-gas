@@ -1,4 +1,4 @@
----
+﻿---
 description: Automate the delivery (Test -> Commit -> Merge -> Deploy)
 ---
 

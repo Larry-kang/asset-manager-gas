@@ -254,6 +254,68 @@ function calculateLoans(loanRows, marketData) {
     };
 }
 
+/**
+ * 計算再平衡建議
+ * @param {Object} portfolio - calculatePortfolio 的結果
+ * @param {Object} targets - 目標配置 { "Stock": 60, "Crypto": 40 }
+ * @param {Number} netWorth - 當前淨值
+ */
+function calculateRebalancing(portfolio, targets, netWorth) {
+    let suggestions = [];
+    let currentAlloc = {};
+
+    // 1. Calculate Current Allocation
+    // Group holdings by category (assuming 'cat' field exists in portfolio list or we derive it)
+    // Note: portfolio.list contains items with 'ticker'. We need to map ticker back to category via inventory if possible,
+    // or rely on what's available. The 'list' items from calculatePortfolio don't explicitly have 'cat' but the input logRows did.
+    // However, calculatePortfolio returns 'list' items. Let's look at calculatePortfolio again. 
+    // It returns ticker, qty, marketValTWD. It doesn't strictly preserve 'cat'.
+    // We might need to assume categories based on Ticker or pass that info through.
+    // Ideally, Logic.gs should know the category. 
+    // Let's check getInventoryMap. It uses logRows.
+    // For now, let's assume we can get category from the inventory map in portfolio.inventory
+
+    // Group Current Value by Category
+    for (let ticker in portfolio.inventory) {
+        let item = portfolio.inventory[ticker];
+        let val = 0;
+        // Find market value in portfolio list
+        let pItem = portfolio.list.find(x => x.ticker === ticker);
+        if (pItem) val = pItem.marketValTWD;
+
+        let cat = item.cat || 'Other';
+        currentAlloc[cat] = (currentAlloc[cat] || 0) + val;
+    }
+
+    // Add Cash (NetWorth - Invested) ?? 
+    // Or just treat Cash as an explicit asset if we tracked it.
+    // For this simple version, let's assume "Cash" is the remainder of NetWorth if positive?
+    // Or users track Cash as a transaction 'TYPE_CASH'.
+    // If TYPE_CASH is used, it's in inventory.
+
+    // Calculate Suggestions
+    for (let cat in targets) {
+        let targetPct = Number(targets[cat]);
+        if (targetPct <= 0) continue;
+
+        let targetVal = netWorth * (targetPct / 100);
+        let currentVal = currentAlloc[cat] || 0;
+        let diff = targetVal - currentVal;
+        let action = diff > 0 ? 'Buy' : 'Sell';
+
+        suggestions.push({
+            category: cat,
+            currentVal: Math.round(currentVal),
+            targetVal: Math.round(targetVal),
+            diff: Math.round(diff),
+            action: action,
+            pct: ((currentVal / netWorth) * 100).toFixed(1) + '%'
+        });
+    }
+
+    return suggestions;
+}
+
 function calculateSingleRisk(amt, col, colQty, prices, fx, currency) {
     if (!col || colQty <= 0) return 'Credit';
     let price = prices[col] || 0;

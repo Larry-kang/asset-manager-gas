@@ -41,6 +41,10 @@
           <i class="fa-solid fa-list"></i>
           <span data-i18n="Tx">Transactions</span>
         </div>
+        <div class="nav-item mobile-only" onclick="openSettings()">
+          <i class="fa-solid fa-gear"></i>
+          <span>Settings</span>
+        </div>
       </div>
 
       <div class="user-profile">
@@ -91,10 +95,14 @@
               <span data-i18n="AddF">Add Funds</span>
             </button>
             <button class="btn-icon-blur" onclick="load(true)" title="Reload">
-              <i class="fa-solid fa-rotate"></i>
+              <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="action-btn" onclick="openRebalance()">
+              <i class="fas fa-balance-scale"></i> Rebalance
             </button>
           </div>
         </div>
+        <div id="pfList" class="card-grid"></div>
 
         <div class="grid-stack">
 
@@ -374,6 +382,70 @@
     </div>
   </div>
 
+  <!-- Rebalance Modal -->
+  <div id="modalRebalance" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-balance-scale"></i> Smart Rebalancing</h3>
+        <span class="close-btn" onclick="closeModal('modalRebalance')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Target Allocation (%)</label>
+          <div id="rebInputs"></div>
+        </div>
+        <hr>
+        <h4>Suggestions</h4>
+        <div id="rebSuggestions" class="tx-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalRebalance')">Close</button>
+        <button class="btn btn-primary" onclick="saveRebalance()">Save Targets</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal for Mobile -->
+  <div id="modalSettings" class="modal-overlay" style="z-index: 200;">
+    <div class="modal-content" style="width: 350px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h3 style="margin:0; font-family: var(--font-heading);">Settings</h3>
+        <i class="fa-solid fa-xmark" style="cursor:pointer; font-size:20px;" onclick="closeSettings()"></i>
+      </div>
+
+      <div class="settings-group">
+        <div class="setting-row" onclick="toggleLang(); closeSettings();">
+          <i class="fa-solid fa-earth-americas"></i>
+          <span data-i18n="Lang">Language</span>
+        </div>
+        <div class="setting-row" onclick="load(true); closeSettings();">
+          <i class="fa-solid fa-moon"></i>
+          <span>Appearance</span>
+        </div>
+
+        <div style="margin: 16px 0; border-top: 1px solid var(--border-color); padding-top: 16px;">
+          <div style="display:flex; gap:8px;">
+            <div class="seg-btn" id="mBtnTWD" onclick="setCurrency('TWD'); closeSettings();"
+              style="flex:1; text-align:center; padding:8px; border-radius:8px; border:1px solid var(--border-color); cursor:pointer;">
+              TWD</div>
+            <div class="seg-btn" id="mBtnUSD" onclick="setCurrency('USD'); closeSettings();"
+              style="flex:1; text-align:center; padding:8px; border-radius:8px; border:1px solid var(--border-color); cursor:pointer;">
+              USD</div>
+          </div>
+        </div>
+
+        <button class="btn-diag" onclick="load(true); closeSettings();">
+          <i class="fa-solid fa-microchip"></i>
+          <span data-i18n="RunDig">Diagnostics</span>
+        </button>
+        <button class="btn-diag" onclick="triggerEvolution(); closeSettings();" style="margin-top:8px">
+          <i class="fa-solid fa-dna"></i>
+          <span data-i18n="Evolve">Evolve System</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Login Modal Removed -->
 
   <!-- SCRIPTS -->
@@ -393,6 +465,16 @@
 
     function openTxModal() { document.getElementById('modalOverlay').style.display = 'flex'; document.getElementById('tDate').valueAsDate = new Date(); }
     function closeTxModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+
+    function openSettings() {
+      document.getElementById('modalSettings').style.display = 'flex';
+      // Sync Mobile Currency Buttons
+      document.getElementById('mBtnTWD').classList.toggle('active', CURRENCY === 'TWD');
+      document.getElementById('mBtnTWD').style.background = CURRENCY === 'TWD' ? 'rgba(255,255,255,0.1)' : 'transparent';
+      document.getElementById('mBtnUSD').classList.toggle('active', CURRENCY === 'USD');
+      document.getElementById('mBtnUSD').style.background = CURRENCY === 'USD' ? 'rgba(255,255,255,0.1)' : 'transparent';
+    }
+    function closeSettings() { document.getElementById('modalSettings').style.display = 'none'; }
 
     function updateLoanUI(type) {
       const lbl = document.querySelector('#lInputs label');
