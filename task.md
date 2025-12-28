@@ -1,16 +1,16 @@
 # Project Cleanup & Restoration Plan
 
-- [ ] **1. Security Cleanup (ï¿½Mï¿½ï¿½ï¿½ï¿½w)**
+- [ ] **1. Security Cleanup (²M°£¸ê¦w)**
     - [ ] Audit `Code.gs` for any remaining auth stubs.
     - [ ] Scan `js.html` for dead auth variables/functions.
     - [ ] Ensure `Actions.gs` has no auth blockers.
 
-- [ ] **2. Fix Anomalies (ï¿½×´_ï¿½ï¿½ï¿½`)**
+- [ ] **2. Fix Anomalies (­×´_²§±`)**
     - [ ] **Fix Unit Tests**: Resolve `LoanPosition is not a constructor` in `aggregation.test.js` & `loan_lifecycle.test.js`.
     - [ ] **Fix Setup**: Ensure `tests/setup.js` correctly maps `Logic.gs` functional exports.
     - [ ] **Verify**: Run `npm test` until green.
 
-- [ ] **3. Documentation Restructure (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)**
+- [ ] **3. Documentation Restructure (­«¾ã¤å¥ó)**
     - [ ] Update `README.md` (Remove Login instructions, update Arch).
     - [ ] Refine `docs/FEATURES.md` (Reflect current functional logic).
     - [ ] Mark deprecated docs in `docs/archive/`.

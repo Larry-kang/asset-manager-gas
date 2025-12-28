@@ -26,7 +26,7 @@ function Convert-ToUtf8NoBom {
 
 # Recursively find source files (gs, html, js, json, md)
 # Exclude .git, node_modules, .vscode
-Get-ChildItem -Path . -Recurse -Include "*.gs", "*.html", "*.js", "*.json", "*.md" | 
+Get-ChildItem -Path . -Recurse -Include "*.gs", "*.html", "*.js", "*.json" | 
 Where-Object { $_.FullName -notmatch "\\.git\\" -and $_.FullName -notmatch "\\node_modules\\" -and $_.FullName -notmatch "\\.vscode\\" } |
 ForEach-Object {
     Convert-ToUtf8NoBom -Path $_.FullName

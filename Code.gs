@@ -1,4 +1,4 @@
-```javascript
+
 /**
  * Code.gs
  * 應用程式入口點 (Main Entry Point)
@@ -211,52 +211,52 @@ function syncMarketData(ss, forceRefresh) {
         });
         logs.push('Crypto Sync: ' + cryptoData.length + ' items');
 
-// 3. Fetch TW Stocks (Yahoo Finance / TwStock Scraper)
-let twTickers = ['2330', '2454', '2317', '0050', '0056'];
+        // 3. Fetch TW Stocks (Yahoo Finance / TwStock Scraper)
+        let twTickers = ['2330', '2454', '2317', '0050', '0056'];
 
-// Helper: Fetch with Headers & Retry
-const fetchUrl = (url) => {
-    const params = {
-        muteHttpExceptions: true,
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-    };
-    for (let i = 0; i < 3; i++) {
-        try {
-            let res = UrlFetchApp.fetch(url, params);
-            if (res.getResponseCode() === 200) return res.getContentText();
-        } catch (e) { Utilities.sleep(500 * (i + 1)); }
-    }
-    return null;
-};
-
-twTickers.forEach(t => {
-    try {
-        let url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + t + '.TW';
-        let content = fetchUrl(url);
-        if (content) {
-            let data = JSON.parse(content);
-            if (data.chart && data.chart.result) {
-                let meta = data.chart.result[0].meta;
-                let price = meta.regularMarketPrice || meta.previousClose;
-                if (price) prices[t] = price;
+        // Helper: Fetch with Headers & Retry
+        const fetchUrl = (url) => {
+            const params = {
+                muteHttpExceptions: true,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+            };
+            for (let i = 0; i < 3; i++) {
+                try {
+                    let res = UrlFetchApp.fetch(url, params);
+                    if (res.getResponseCode() === 200) return res.getContentText();
+                } catch (e) { Utilities.sleep(500 * (i + 1)); }
             }
-        }
-    } catch (e) {
-        logs.push('TW Stock Error (' + t + '): ' + e.toString());
-    }
-});
-logs.push('TW Stock Sync: ' + twTickers.length + ' attempted');
+            return null;
+        };
 
-const resultData = { fx: fx, prices: prices };
-CacheService.getScriptCache().put(CACHE_KEY, JSON.stringify(resultData), CACHE_TIME);
+        twTickers.forEach(t => {
+            try {
+                let url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + t + '.TW';
+                let content = fetchUrl(url);
+                if (content) {
+                    let data = JSON.parse(content);
+                    if (data.chart && data.chart.result) {
+                        let meta = data.chart.result[0].meta;
+                        let price = meta.regularMarketPrice || meta.previousClose;
+                        if (price) prices[t] = price;
+                    }
+                }
+            } catch (e) {
+                logs.push('TW Stock Error (' + t + '): ' + e.toString());
+            }
+        });
+        logs.push('TW Stock Sync: ' + twTickers.length + ' attempted');
 
-return { logs: logs, data: resultData };
+        const resultData = { fx: fx, prices: prices };
+        CacheService.getScriptCache().put(CACHE_KEY, JSON.stringify(resultData), CACHE_TIME);
+
+        return { logs: logs, data: resultData };
 
     } catch (e) {
         logs.push('Sync Error: ' + e.toString());
-    return { logs: logs, data: { fx: 32.5, prices: {} } };
+        return { logs: logs, data: { fx: 32.5, prices: {} } };
+    }
 }
-}
-```
+
