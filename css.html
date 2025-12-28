@@ -281,39 +281,7 @@
     border-color: rgba(255, 45, 85, 0.2);
   }
 
-  /* SCANNER ANIMATION */
-  .scanner-line {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--obsidian-blue), transparent);
-    opacity: 0.5;
-    animation: scan 4s linear infinite;
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  @keyframes scan {
-    0% {
-      transform: translateY(0);
-      opacity: 0;
-    }
-
-    10% {
-      opacity: 1;
-    }
-
-    90% {
-      opacity: 1;
-    }
-
-    100% {
-      transform: translateY(100vh);
-      opacity: 0;
-    }
-  }
+  /* SCANNER ANIMATION REMOVED */
 
   /* TABLES */
   .data-table {

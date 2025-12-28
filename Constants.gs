@@ -17,6 +17,14 @@ const TYPE_CASH = '現金';
 const TYPE_CREDIT = '信用貸款';
 const TYPE_CARD = '卡費';
 
+// --- Database Configuration ---
+const DB_SCHEMA = {
+    'Config': ['Key', 'Value', 'Updated'],
+    'Transactions': ['Date', 'Type', 'Category', 'Ticker', 'Qty', 'Price', 'Currency', 'Note', 'Status', 'Hash'],
+    'Holdings': ['Ticker', 'Qty', 'AvgPrice', 'CurrentPrice', 'Value', 'Alloc', 'Sector', 'Updated'],
+    'Vault': ['Source', 'Protocol', 'CollateralAsset', 'CollateralQty', 'LoanAmount', 'InterestRate', 'LiquidationPrice', 'Status', 'Updated']
+};
+
 // --- Action Types ---
 const ACT_BUY = '買入';
 const ACT_SELL = '賣出';

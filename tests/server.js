@@ -96,7 +96,15 @@ window.google = {
                 console.log('[Client] saveTargets called', targets);
                 if (this._successHandler) setTimeout(() => this._successHandler(JSON.stringify({ status: 'success' })), 500);
             },
-            runSystemCheck: function() { }
+            runSystemCheck: function() { },
+            checkDbStructure: function() { 
+                console.log('[Client] checkDbStructure called');
+                if (this._successHandler) setTimeout(() => this._successHandler('Mock: Database Structure Valid ?\n- Config: OK\n- Transactions: OK'), 500);
+            },
+            resetDatabase: function() {
+                console.log('[Client] resetDatabase called');
+                if (this._successHandler) setTimeout(() => this._successHandler('Mock: Database Reset Successfully. Old sheets archived.'), 1000);
+            }
         }
     }
 };

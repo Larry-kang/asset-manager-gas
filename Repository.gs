@@ -60,48 +60,28 @@ class SheetRepository {
 
 // --- Specific Repositories ---
 
-const SCHEMA_LOG = {
-    date: 1,      // A
-    type: 2,      // B
-    ticker: 3,    // C
-    cat: 4,       // D
-    qty: 5,       // E
-    price: 6,     // F
-    currency: 7,  // G
-    note: 8       // H
-};
+// --- Specific Repositories ---
 
 class LogRepository extends SheetRepository {
     constructor() {
-        super(TAB_LOG, SCHEMA_LOG);
+        // Map DB_SCHEMA.Transactions array to object { Key: Index (1-based) }
+        const schema = {};
+        DB_SCHEMA.Transactions.forEach((col, i) => schema[col] = i + 1);
+        super(TAB_LOG, schema);
     }
 
     findByTicker(ticker) {
         const all = this.findAll();
-        return all.filter(item => item.ticker === ticker);
+        // Adjust property case if needed, or keep upper as per DB_SCHEMA
+        return all.filter(item => item.Ticker === ticker);
     }
 }
 
-const SCHEMA_LOAN = {
-    source: 1,
-    date: 2,
-    amount: 3,
-    rate: 4,
-    collateral: 5,
-    colQty: 6,
-    type: 7,
-    warn: 8,
-    liq: 9,
-    note: 10,
-    totalTerm: 11,
-    paidTerm: 12,
-    monthlyPay: 13,
-    currency: 14
-};
-
 class LoanRepository extends SheetRepository {
     constructor() {
-        super(TAB_LOAN, SCHEMA_LOAN);
+        const schema = {};
+        DB_SCHEMA.Vault.forEach((col, i) => schema[col] = i + 1);
+        super(TAB_LOAN, schema);
     }
 }
 

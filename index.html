@@ -47,36 +47,13 @@
         </div>
       </div>
 
-      <div class="user-profile">
-        <div class="settings-group">
-          <div class="setting-row" onclick="toggleLang()">
-            <i class="fa-solid fa-earth-americas"></i>
-            <span data-i18n="Lang">Language</span>
-          </div>
-          <div id="themeToggle" class="setting-row" onclick="load(true)">
-            <i class="fa-solid fa-moon"></i>
-            <span>Appearance</span>
-          </div>
-        </div>
-
-        <div class="segmented-control" id="setCurrencyCtrl">
-          <div class="seg-btn active" id="btnTWD" onclick="setCurrency('TWD')">TWD</div>
-          <div class="seg-btn" id="btnUSD" onclick="setCurrency('USD')">USD</div>
-        </div>
-
-        <button class="btn-diag" onclick="load(true)">
-          <i class="fa-solid fa-microchip"></i>
-          <span data-i18n="RunDig">Diagnostics</span>
-        </button>
-        <button class="btn-diag" id="btnEvolve" onclick="triggerEvolution()" style="margin-top:8px">
-          <i class="fa-solid fa-dna"></i>
-          <span data-i18n="Evolve">Evolve System</span>
-        </button>
+      <div class="user-profile hidden"> <!-- HIDDEN: Moved to Settings -->
+        <div class="settings-group"></div>
       </div>
     </div>
 
     <div class="main-content">
-      <div class="scanner-line"></div>
+      <!-- Removed Scanner Line -->
 
       <!-- DASHBOARD -->
       <div id="dash" class="view active">
@@ -441,6 +418,21 @@
           <i class="fa-solid fa-dna"></i>
           <span data-i18n="Evolve">Evolve System</span>
         </button>
+
+        <!-- Maintenance Section -->
+        <div style="margin-top:24px; border-top:1px solid var(--border-color); padding-top:16px">
+          <h4 class="h-label" style="margin-bottom:12px; color:var(--text-secondary)">System Maintenance</h4>
+          <button class="btn-outline"
+            style="width:100%; border-color:var(--text-muted); color:var(--text-muted); font-size:12px"
+            onclick="checkDbStructure()">
+            <i class="fas fa-list-check"></i> Check DB Structure
+          </button>
+          <button class="btn-outline"
+            style="width:100%; border-color:var(--obsidian-danger); color:var(--obsidian-danger); font-size:12px; margin-top:8px"
+            onclick="resetDatabase()">
+            <i class="fas fa-exclamation-triangle"></i> Reset Database
+          </button>
+        </div>
       </div>
     </div>
   </div>

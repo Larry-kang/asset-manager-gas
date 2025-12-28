@@ -587,6 +587,16 @@
         return i18nData[key][curLang] || i18nData[key]['en'];
     }
 
+    function checkDbStructure() {
+        google.script.run.withSuccessHandler(alert).checkDbStructure();
+    }
+
+    function resetDatabase() {
+        if (confirm('Are you sure you want to RESET the database? This will archive current sheets and create fresh ones.')) {
+            google.script.run.withSuccessHandler(alert).resetDatabase();
+        }
+    }
+
     function setLang(lang) {
         curLang = lang;
         document.querySelectorAll('[data-i18n]').forEach(el => {
