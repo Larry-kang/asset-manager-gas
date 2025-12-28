@@ -233,21 +233,21 @@ const fetchUrl = (url) => {
 
 twTickers.forEach(t => {
     try {
-        let url = `https://query1.finance.yahoo.com/v8/finance/chart/${t}.TW`;
-let content = fetchUrl(url);
-if (content) {
-    let data = JSON.parse(content);
-    if (data.chart && data.chart.result) {
-        let meta = data.chart.result[0].meta;
-        let price = meta.regularMarketPrice || meta.previousClose;
-        if (price) prices[t] = price;
-    }
-}
+        let url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + t + '.TW';
+        let content = fetchUrl(url);
+        if (content) {
+            let data = JSON.parse(content);
+            if (data.chart && data.chart.result) {
+                let meta = data.chart.result[0].meta;
+                let price = meta.regularMarketPrice || meta.previousClose;
+                if (price) prices[t] = price;
+            }
+        }
     } catch (e) {
-    logs.push(`TW Stock Error (${t}): ${e.toString()}`);
-}
+        logs.push('TW Stock Error (' + t + '): ' + e.toString());
+    }
 });
-logs.push(`TW Stock Sync: ${twTickers.length} attempted`);
+logs.push('TW Stock Sync: ' + twTickers.length + ' attempted');
 
 const resultData = { fx: fx, prices: prices };
 CacheService.getScriptCache().put(CACHE_KEY, JSON.stringify(resultData), CACHE_TIME);
@@ -255,7 +255,7 @@ CacheService.getScriptCache().put(CACHE_KEY, JSON.stringify(resultData), CACHE_T
 return { logs: logs, data: resultData };
 
     } catch (e) {
-    logs.push(`Sync Error: ${e.toString()}`);
+        logs.push('Sync Error: ' + e.toString());
     return { logs: logs, data: { fx: 32.5, prices: {} } };
 }
 }
