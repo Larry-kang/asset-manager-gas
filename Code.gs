@@ -199,7 +199,7 @@ function syncMarketData(ss, forceRefresh) {
         let fxRes = UrlFetchApp.fetch("https://api.exchangerate-api.com/v4/latest/USD");
         let fxData = JSON.parse(fxRes.getContentText());
         fx = fxData.rates.TWD || 32.5;
-        logs.push(`FX Sync: ${ fx } `);
+        logs.push('FX Sync: ' + fx);
 
         // 2. Fetch Crypto (Binance)
         let coins = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'];
