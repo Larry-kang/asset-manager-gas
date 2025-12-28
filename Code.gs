@@ -17,11 +17,11 @@ function include(filename) {
 }
 
 /**
- * ���o�̷s��� (�e�� Polling)
+ * 獲取儀表板數據 (前端 Polling)
  */
 function getData(password) {
     try {
-        // ���ұK�X
+        // 初始化存儲
         GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: false });
 
         // Sync Market Data if needed
@@ -259,6 +259,4 @@ return { logs: logs, data: resultData };
     return { logs: logs, data: { fx: 32.5, prices: {} } };
 }
 }
-
-
-
+```
