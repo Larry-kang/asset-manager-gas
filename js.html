@@ -14,7 +14,8 @@
 
                 if (d.status === 'success' || d.success === true) {
                     DATA = d;
-                    setVal('netWorth', fmt(d.netWorthTWD));
+                    // setVal('netWorth', fmt(d.netWorthTWD));
+                    animateValue('netWorth', 0, d.netWorthTWD, 1000);
                     renderDashboard(d);
                 } else {
                     showMsg('Error', d.message || 'Unknown error');
@@ -30,8 +31,9 @@
         window.APP_DATA = d; // Global Store
         const dc = document.getElementById('dailyChange');
         if (dc) {
-            const color = d.dailyChange >= 0 ? '#4ADE80' : '#F87171';
-            dc.innerHTML = `<span style="color:${color}">${d.dailyChange >= 0 ? '+' : ''}${fmt(d.dailyChange)}</span> Today`;
+            const isPos = d.dailyChange >= 0;
+            dc.className = `daily-change-pill ${isPos ? 'positive' : 'negative'}`;
+            dc.innerHTML = `${isPos ? '+' : ''}${fmt(d.dailyChange)} Today`;
         }
 
         renderAssets(d);
@@ -111,17 +113,30 @@
         }
 
         if (window.myChart) window.myChart.destroy();
+
+        // Obsidian Palette
+        const colors = {
+            stocks: '#D4AF37', // Gold
+            crypto: '#38B6FF',  // Blue
+            cash: '#888899'     // Muted
+        };
+
         window.myChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['Stocks', 'Crypto', 'Cash'],
                 datasets: [{
                     data: [stock, crypto, cash],
-                    backgroundColor: ['#F59E0B', '#3B82F6', '#10B981'],
-                    borderWidth: 0
+                    backgroundColor: [colors.stocks, colors.crypto, colors.cash],
+                    borderWidth: 0,
+                    hoverOffset: 4
                 }]
             },
-            options: { cutout: '70%', plugins: { legend: { display: false } } }
+            options: {
+                cutout: '75%',
+                plugins: { legend: { display: false } },
+                animation: { animateScale: true, animateRotate: true }
+            }
         });
     }
 
@@ -130,7 +145,7 @@
         if (!list) return;
         list.innerHTML = '';
         if (!d.recentTx || d.recentTx.length === 0) {
-            list.innerHTML = '<div style="text-align:center;color:#666;padding:20px">No recent transactions</div>';
+            list.innerHTML = '<div style="text-align:center;color:var(--obsidian-muted);padding:20px">No recent transactions</div>';
             return;
         }
         d.recentTx.slice(0, 5).forEach(t => {
@@ -140,17 +155,17 @@
             row.innerHTML = `
 <div style="display:flex; align-items:center; gap:12px">
     <div
-        style="width:40px; height:40px; border-radius:50%; background:#1A1A1A; display:flex; align-items:center; justify-content:center; color:${isIn ? 'var(--color-green)' : 'var(--text-primary)'}">
+        style="width:40px; height:40px; border-radius:50%; background:var(--obsidian-charcoal); display:flex; align-items:center; justify-content:center; color:${isIn ? 'var(--obsidian-success)' : 'var(--obsidian-muted)'}">
         <i class="fa-solid ${isIn ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
     </div>
     <div>
-        <div style="font-weight:600">${t.ticker}</div>
-        <div class="tx-date">${new Date(t.date).toLocaleDateString()}</div>
+        <div style="font-weight:600; color:var(--obsidian-text-main)">${t.ticker}</div>
+        <div class="tx-date" style="color:var(--obsidian-muted)">${new Date(t.date).toLocaleDateString()}</div>
     </div>
 </div>
 <div style="text-align:right">
-    <div style="font-weight:600">${isIn ? '+' : '-'} ${fmt(t.qty * t.price)}</div>
-    <div style="font-size:12px; color:var(--text-secondary)">${t.type}</div>
+    <div style="font-weight:600; color:${isIn ? 'var(--obsidian-success)' : 'var(--obsidian-text-main)'}">${isIn ? '+' : '-'} ${fmt(t.qty * t.price)}</div>
+    <div style="font-size:12px; color:var(--obsidian-muted)">${t.type}</div>
 </div>
 `;
             list.appendChild(row);
@@ -173,20 +188,22 @@
         for (let c in cats) {
             if (cats[c].length === 0) continue;
             const hdr = document.createElement('div');
-            hdr.className = 'section-title';
-            hdr.style.fontSize = '16px';
+            hdr.className = 'h-label';
+            hdr.style.fontSize = '14px';
+            hdr.style.textTransform = 'uppercase';
+            hdr.style.letterSpacing = '0.05em';
             hdr.style.marginTop = '24px';
-            hdr.style.color = 'var(--text-gold)';
+            hdr.style.marginBottom = '12px'; // Added spacing
             hdr.innerText = c;
             list.appendChild(hdr);
 
             const card = document.createElement('div');
-            card.className = 'card';
+            card.className = 'obsidian-card';
             card.style.padding = "0 16px";
 
             cats[c].forEach(h => {
                 if (h.qty <= 0.0001 && h.cat !== '現金') return; const isCash = h.cat === '現金'; const pnlColor = h.pnl >= 0 ?
-                    'var(--color-green)' : 'var(--color-red)';
+                    'var(--obsidian-success)' : 'var(--obsidian-danger)';
 
                 const row = document.createElement('div');
                 row.className = 'asset-row';
@@ -228,8 +245,8 @@
         style="grid-column: 1 / -1; text-align:center; padding:48px 24px; color:var(--text-secondary); background:var(--bg-card); border-radius:16px; border:1px dashed var(--border-color)">
         <i class="fa-solid fa-vault"
             style="font-size:48px; margin-bottom:16px; color:var(--text-gold); opacity:0.5"></i>
-        <div style="font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:8px">No Active Loans</div>
-        <div style="font-size:13px">Your vault is empty. Create a new loan to get started.</div>
+        <div style="font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:8px">${t('NoLoans')}</div>
+        <div style="font-size:13px">${t('VaultEmpty')}</div>
     </div>
     `;
             return;
@@ -239,17 +256,16 @@
             d.risks.forEach(r => {
                 const riskColor = r.status === 'Safe' ? 'var(--color-green)' : (r.status === 'Warning' ? '#FBBF24' :
                     'var(--color-red)');
-                let ratio = parseFloat(r.rate); // Logic returns '50.2%' or 'N/A'
+                let ratio = parseFloat(r.rate);
                 if (isNaN(ratio)) ratio = 0;
 
                 let barPct = Math.min(Math.max(ratio, 0), 100);
 
                 const card = document.createElement('div');
-                card.className = 'card';
+                card.className = 'obsidian-card';
                 card.style.position = 'relative';
                 card.onclick = () => openLoanAction(r.source, 'repay');
 
-                // Construct HTML carefully
                 card.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
         <div class="card-label" style="font-size:16px; font-weight:600; color:white">
@@ -257,12 +273,12 @@
         </div>
         <div
             style="font-size:12px; color:${riskColor}; border:1px solid ${riskColor}; padding:2px 8px; border-radius:12px">
-            ${r.status}
+            ${t(r.status)}
         </div>
     </div>
     <div style="margin-bottom:20px">
         <div style="display:flex; justify-content:space-between; align-items:baseline">
-            <div style="color:var(--text-secondary); font-size:12px">Ratio</div>
+            <div style="color:var(--text-secondary); font-size:12px">${t('Ratio')}</div>
             <div class="card-value" style="font-size:24px; color:${riskColor}">${r.rate}</div>
         </div>
         <div class="health-bar-container">
@@ -274,23 +290,23 @@
     <div
         style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding-top:16px; border-top:1px solid var(--border-color)">
         <div>
-            <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px">Collateral</div>
+            <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px">${t('Collateral')}</div>
             <div style="font-weight:600; font-size:15px; color:white">${fmt(getVal(r.collateral))}</div>
         </div>
         <div style="text-align:right">
-            <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px">Debt</div>
+            <div style="color:var(--text-secondary); font-size:12px; margin-bottom:4px">${t('Debt')}</div>
             <div style="font-weight:600; font-size:15px; color:white">${fmt(getVal(r.debt))}</div>
         </div>
     </div>
     <div style="margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:12px">
-        <button class="btn-gold-pill" style="width:100%; height:40px; font-size:14px; padding:0"
+        <button class="btn btn-gold" style="width:100%; height:40px; font-size:14px; padding:0"
             onclick="event.stopPropagation(); openLoanAction('${r.source}', 'addCol')">
-            <i class="fa-solid fa-plus" style="margin-right:4px"></i>Add Col
+            <i class="fa-solid fa-plus" style="margin-right:4px"></i>${t('AddCol')}
         </button>
         <button class="btn-outline"
             style="width:100%; height:40px; border-radius:99px; font-size:14px; color:var(--text-secondary); border-color:var(--border-color)"
             onclick="event.stopPropagation(); openLoanAction('${r.source}', 'repay')">
-            Repay
+            ${t('Repay')}
         </button>
     </div>`;
                 rList.appendChild(card);
@@ -315,7 +331,7 @@
     function subLoan() {
         const type = document.getElementById('lType').value;
         const val = parseFloat(document.getElementById('lVal').value);
-        if (isNaN(val) && type !== 'payPeriod') { showMsg('Error', 'Invalid Value'); return; }
+        if (isNaN(val) && type !== 'payPeriod') { showMsg(t('Error'), t('InvalidVal')); return; }
 
         const payload = {
             source: document.getElementById('lSource').value,
@@ -324,12 +340,12 @@
             price: parseFloat(document.getElementById('lPrice').value) || 0
         };
 
-        setVal('btnLoan', 'Processing...');
+        setVal('btnLoan', t('Processing'));
         google.script.run.withSuccessHandler(res => {
-            setVal('btnLoan', 'Submit Action');
+            setVal('btnLoan', t('SubmitAction'));
             document.getElementById('modalLoan').style.display = 'none';
-            if (res.success || res === 'Success') { showMsg('Success', 'Action Recorded'); load(true); }
-            else showMsg('Error', res.message || res);
+            if (res.success || res === 'Success') { showMsg(t('Success'), t('ActionRec')); load(true); }
+            else showMsg(t('Error'), res.message || res);
         }).processContractAction(payload);
     }
 
@@ -345,17 +361,17 @@
         };
         const btn = document.getElementById('btnTx');
         btn.disabled = true;
-        btn.innerText = 'Syncing...';
+        btn.innerText = t('Syncing');
 
         google.script.run.withSuccessHandler(res => {
             btn.disabled = false;
-            btn.innerText = 'Confirm Transaction';
+            btn.innerText = t('ConfirmTx');
             if (res.success || res === 'Transaction Added') {
                 closeTxModal();
-                showMsg(curLang === 'zh' ? '成功' : 'Success', curLang === 'zh' ? '交易已記錄' : 'Transaction Added');
+                showMsg(t('Success'), t('TxRec'));
                 // Optimistic UI could go here, but reload is safer for now
                 load(true);
-            } else showMsg('Error', res.message || res);
+            } else showMsg(t('Error'), res.message || res);
         }).addTransaction(payload);
     }
 
@@ -364,7 +380,7 @@
         const span = btn.querySelector('span');
         const originalText = span ? span.innerText : 'Evolve';
 
-        if (span) span.innerText = curLang === 'zh' ? '進化中...' : 'Evolving...';
+        if (span) span.innerText = t('Evolving');
         btn.disabled = true;
 
         google.script.run
@@ -372,14 +388,14 @@
                 btn.disabled = false;
                 if (span) span.innerText = originalText;
                 const count = insights.length;
-                showMsg(curLang === 'zh' ? '分析完成' : 'Audit Complete',
-                    curLang === 'zh' ? `偵測到 ${count} 項建議。請告知代理進行代碼演進。` : `Detected ${count} points. Please ask your Agent to evolve code.`);
+                showMsg(t('AuditComp'),
+                    `${t('AuditRes')} (${count})`);
                 load(true);
             })
             .withFailureHandler(err => {
                 btn.disabled = false;
                 if (span) span.innerText = originalText;
-                showMsg('Evolution Failed', err.message);
+                showMsg(t('EvoFail'), err.message);
             })
             .runEvolution();
     }
@@ -530,8 +546,46 @@
         'Dash': { zh: '儀表板', en: 'Dashboard' },
         'Tx': { zh: '交易', en: 'Transactions' },
         'Set': { zh: '設定', en: 'Settings' },
-        'Evolve': { zh: '進化分析', en: 'Evolve Audit' }
+        'Set': { zh: '設定', en: 'Settings' },
+        'Port': { zh: '投資組合', en: 'Portfolio' },
+        'Assets': { zh: '資產', en: 'Assets' },
+        'NetWarning': { zh: '總資產淨值', en: 'Total Net Worth' },
+        'Evolve': { zh: '進化分析', en: 'Evolve System' },
+        'NewLoan': { zh: '新增貸款', en: 'New Loan' },
+        'NoLoans': { zh: '無活躍貸款', en: 'No Active Loans' },
+        'VaultEmpty': { zh: '您的金庫是空的。建立新貸款以開始。', en: 'Your vault is empty. Create a new loan to get started.' },
+        'Ratio': { zh: '抵押率', en: 'Ratio' },
+        'Collateral': { zh: '抵押品', en: 'Collateral' },
+        'Debt': { zh: '債務', en: 'Debt' },
+        'AddCol': { zh: '增加抵押', en: 'Add Col' },
+        'Repay': { zh: '還款', en: 'Repay' },
+        'Submit': { zh: '提交', en: 'Submit' },
+        'Processing': { zh: '處理中...', en: 'Processing...' },
+        'Success': { zh: '成功', en: 'Success' },
+        'Error': { zh: '錯誤', en: 'Error' },
+        'ActionRec': { zh: '操作已記錄', en: 'Action Recorded' },
+        'TxRec': { zh: '交易已記錄', en: 'Transaction Added' },
+        'InvalidVal': { zh: '無效數值', en: 'Invalid Value' },
+        'Syncing': { zh: '同步中...', en: 'Syncing...' },
+        'ConfirmTx': { zh: '確認交易', en: 'Confirm Transaction' },
+        'Evolving': { zh: '進化中...', en: 'Evolving...' },
+        'AuditComp': { zh: '分析完成', en: 'Audit Complete' },
+        'AuditRes': { zh: '偵測到建議。請告知代理進行代碼演進。', en: 'points detected. Please ask your Agent to evolve code.' },
+        'EvoFail': { zh: '進化失敗', en: 'Evolution Failed' },
+        'SubmitAction': { zh: '提交操作', en: 'Submit Action' },
+        'Close': { zh: '關閉', en: 'Close' },
+        'Appearance': { zh: '外觀', en: 'Appearance' },
+        'Diagnostics': { zh: '診斷', en: 'Diagnostics' },
+        'SystemStatus': { zh: '系統狀態', en: 'System Status' },
+        'Safe': { zh: '安全', en: 'Safe' },
+        'Warning': { zh: '警告', en: 'Warning' },
+        'Danger': { zh: '危險', en: 'Danger' }
     };
+
+    function t(key) {
+        if (!i18nData[key]) return key;
+        return i18nData[key][curLang] || i18nData[key]['en'];
+    }
 
     function setLang(lang) {
         curLang = lang;
@@ -576,7 +630,7 @@
             return;
         }
 
-        let html = '<table class="table" style="font-size:0.9em;"><thead><tr><th>Cat</th><th>Target</th><th>Diff</th><th>Action</th></tr></thead><tbody>';
+        let html = '<table class="data-table" style="font-size:0.9em;"><thead><tr><th>Cat</th><th>Target</th><th>Diff</th><th>Action</th></tr></thead><tbody>';
         list.forEach(item => {
             let color = item.action === 'Buy' ? 'text-success' : 'text-danger';
             html += `<tr>
@@ -643,5 +697,79 @@
     function closeModal(id) {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
+    }
+    /* --- HIGH-TECH SFX & ANIMATION --- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSfx(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'hover') {
+            // High pitch short blip
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+        } else if (type === 'click') {
+            // Mech click
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'success') {
+            // Eth-style success chime
+            osc.frequency.setValueAtTime(440, now); // A4
+            osc.frequency.setValueAtTime(554, now + 0.1); // C#5
+            osc.frequency.setValueAtTime(659, now + 0.2); // E5
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.linearRampToValueAtTime(0.1, now + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            osc.start(now);
+            osc.stop(now + 0.6);
+        }
+    }
+
+    // Auto-attach SFX to buttons
+    document.addEventListener('DOMContentLoaded', () => {
+        document.body.addEventListener('mouseover', e => {
+            if (e.target.closest('button') || e.target.closest('.nav-item') || e.target.closest('.obsidian-card')) {
+                // Throttle slightly to avoid spam
+                if (Math.random() > 0.5) playSfx('hover');
+            }
+        });
+        document.body.addEventListener('click', e => {
+            if (e.target.closest('button') || e.target.closest('.nav-item')) {
+                playSfx('click');
+            }
+        });
+    });
+
+    // Number Ticker Animation
+    function animateValue(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const val = progress * (end - start) + start;
+            obj.innerHTML = fmt(val);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                obj.innerHTML = fmt(end); // Ensure exact final value
+            }
+        };
+        window.requestAnimationFrame(step);
     }
 </script>

@@ -26,3 +26,7 @@ test_report*.txt
 test_output*.log
 playwright-report/
 test-results/
+
+# AI Swarm
+my-ai-swarm/
+.agent/

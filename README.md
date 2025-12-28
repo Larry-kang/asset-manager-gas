@@ -164,7 +164,13 @@
 
 ## 變更歷程 (Changelog)
 
-### v4.0 (Current)
+### v4.1 (Protocol Obsidian)
+- [UI] **Protocol Obsidian Design**: 全面導入全新設計系統，採用深色/金色 (Dark/Gold) 的 DeFi 精品風格。
+- [Feature] **全站國際化 (i18n)**: 實作完整的繁/英多語言切換架構，支援動態內容翻譯。
+- [Fix] **行動版體驗重構**: 修正手機版卡片堆疊順序 (Assets > Transactions) 與導覽列排版。
+- [UX] **介面優化**: 隱藏開發者工具，優化 Portfolio 間距，提升閱讀體驗。
+
+### v4.0 (Base)
 - [Doc] **Documentation Refresh**: Updated `FEATURES.md` and `task.md` to reflect current system state.
 - [UI] **Frontend Version**: Sidebar updated to "ASSET V4".
 - [Core] **Optimization**: Verified `GasStore` integrity and logic flow.

@@ -66,8 +66,8 @@ window.google = {
                      ],
                      recentTx: [],
                      risks: [
-                         { source: 'Sinopac', label: 'Maint Ratio', ratio: '160.00', status: 'Safe', debtTWD: 500000, colValTWD: 800000 },
-                         { source: 'AAVE', label: 'Aggregated HF', ratio: '1.25', status: 'Warning', debtTWD: 1000000, colValTWD: 1250000 }
+                         { source: 'Sinopac', label: 'Maint Ratio', rate: '160.00', status: 'Safe', debt: 500000, collateral: 800000 },
+                         { source: 'AAVE', label: 'Aggregated HF', rate: '1.25', status: 'Warning', debt: 1000000, collateral: 1250000 }
                      ],
                      contracts: [],
                      fx: 32.5,
