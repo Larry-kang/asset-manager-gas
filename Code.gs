@@ -203,13 +203,13 @@ function syncMarketData(ss, forceRefresh) {
 
         // 2. Fetch Crypto (Binance)
         let coins = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'];
-        let cryptoRes = UrlFetchApp.fetch(`https://api.binance.com/api/v3/ticker/price?symbols=["${coins.join('","')}"]`);
-let cryptoData = JSON.parse(cryptoRes.getContentText());
-cryptoData.forEach(item => {
-    let symbol = item.symbol.replace('USDT', '');
-    prices[symbol] = parseFloat(item.price);
-});
-logs.push(`Crypto Sync: ${cryptoData.length} items`);
+        let cryptoRes = UrlFetchApp.fetch('https://api.binance.com/api/v3/ticker/price?symbols=["' + coins.join('","') + '"]');
+        let cryptoData = JSON.parse(cryptoRes.getContentText());
+        cryptoData.forEach(item => {
+            let symbol = item.symbol.replace('USDT', '');
+            prices[symbol] = parseFloat(item.price);
+        });
+        logs.push('Crypto Sync: ' + cryptoData.length + ' items');
 
 // 3. Fetch TW Stocks (Yahoo Finance / TwStock Scraper)
 let twTickers = ['2330', '2454', '2317', '0050', '0056'];
@@ -234,18 +234,18 @@ const fetchUrl = (url) => {
 twTickers.forEach(t => {
     try {
         let url = `https://query1.finance.yahoo.com/v8/finance/chart/${t}.TW`;
-        let content = fetchUrl(url);
-        if (content) {
-            let data = JSON.parse(content);
-            if (data.chart && data.chart.result) {
-                let meta = data.chart.result[0].meta;
-                let price = meta.regularMarketPrice || meta.previousClose;
-                if (price) prices[t] = price;
-            }
-        }
-    } catch (e) {
-        logs.push(`TW Stock Error (${t}): ${e.toString()}`);
+let content = fetchUrl(url);
+if (content) {
+    let data = JSON.parse(content);
+    if (data.chart && data.chart.result) {
+        let meta = data.chart.result[0].meta;
+        let price = meta.regularMarketPrice || meta.previousClose;
+        if (price) prices[t] = price;
     }
+}
+    } catch (e) {
+    logs.push(`TW Stock Error (${t}): ${e.toString()}`);
+}
 });
 logs.push(`TW Stock Sync: ${twTickers.length} attempted`);
 
