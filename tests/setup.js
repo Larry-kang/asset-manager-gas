@@ -238,8 +238,8 @@ const codeWithExports = codeContent;
 vm.runInContext(codeWithExports, context);
 
 // Explicitly export Classes from Repository.gs to Context
-const repoWithExports = repoContent +
-    "\n; this.SheetRepository = SheetRepository; this.LogRepository = LogRepository; this.LoanRepository = LoanRepository; this.LoanActionRepository = LoanActionRepository;";
+const repoWithExports = repoContent.replace(/const /g, 'var ') +
+    "\n; this.SheetRepository = SheetRepository; this.LogRepository = LogRepository; this.LoanRepository = LoanRepository; this.LoanActionRepository = LoanActionRepository; this.RepositoryFactory = RepositoryFactory;";
 vm.runInContext(repoWithExports, context);
 vm.runInContext(actionsContent, context); // Actions depend on logic/repo
 
@@ -253,15 +253,19 @@ const {
     // Actions
     getDashboardData, addTransaction, syncMarketData, processLoanAction, processContractAction,
     // Repository
-    SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
+    SheetRepository, LogRepository, LoanRepository, LoanActionRepository, RepositoryFactory,
     // Constants
     TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET, ACT_BUY, TYPE_STOCK,
-    DB_STORE_NAME, DB_ENCRYPTION_KEY
+    DB_STORE_NAME, DB_ENCRYPTION_KEY,
+    // Services
+    UrlFetchApp, CacheService, PropertiesService
 } = context;
 
 module.exports = {
     context,
     GasStore,
+    // Services
+    UrlFetchApp, CacheService, PropertiesService,
     // Mock classes
     MockSheet, MockSS,
     // Logic
@@ -273,7 +277,7 @@ module.exports = {
     syncMarketData,
     processLoanAction, processContractAction,
     // Repository
-    SheetRepository, LogRepository, LoanRepository, LoanActionRepository,
+    SheetRepository, LogRepository, LoanRepository, LoanActionRepository, RepositoryFactory,
     // Constants
     TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET, ACT_BUY, TYPE_STOCK,
     DB_STORE_NAME, DB_ENCRYPTION_KEY

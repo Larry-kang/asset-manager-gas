@@ -1,0 +1,79 @@
+?? Starting Deployment Process...
+?妒 Running Tests...
+
+> asset-manager-gas@1.0.0 test
+> jest
+
+PASS tests/integration.test.js
+  ??Console
+
+    console.log
+      GasStore: Committed 1 changes.
+
+      at Object.commit (evalmachine.<anonymous>:398:21)
+
+    console.log
+      GasStore: Committed 1 changes.
+
+      at Object.commit (evalmachine.<anonymous>:398:21)
+
+    console.log
+      GasStore: Committed 2 changes.
+
+      at Object.commit (evalmachine.<anonymous>:398:21)
+
+PASS tests/qa.test.js
+  ??Console
+
+    console.log
+      GasStore: Committed 1 changes.
+
+      at Object.commit (evalmachine.<anonymous>:398:21)
+
+    console.log
+      QA Warning: expect(received).toBe(expected) // Object.is equality
+      
+      Expected: true
+      Received: undefined
+
+      at Object.log (tests/qa.test.js:82:21)
+
+    console.log
+      GasStore: Committed 1 changes.
+
+      at Object.commit (evalmachine.<anonymous>:398:21)
+
+PASS tests/logic.test.js
+PASS tests/aggregation.test.js
+PASS tests/sync_dynamic.test.js
+PASS tests/repository.test.js
+PASS tests/loan_lifecycle.test.js
+PASS tests/rebalance.test.js
+
+Test Suites: 8 passed, 8 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        2.551 s
+Ran all test suites.
+??Tests Passed.
+? Pushing to Google Apps Script...
+Pushed 18 files.
+?? Actions.gs
+?? appsscript.json
+?? Code.gs
+?? Constants.gs
+?? constants.html
+?? css.html
+?? GasStore.gs
+?? icons.html
+?? index.html
+?? js.html
+?? Logic.gs
+?? Maintenance.gs
+?? Migration.gs
+?? playwright-report\index.html
+?? Repository.gs
+?? SelfEvolve.gs
+?? Tests.gs
+?? Triggers.gs
+??Deployment Complete! (Files synced to GAS Project)

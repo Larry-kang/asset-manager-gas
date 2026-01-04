@@ -7,7 +7,12 @@ const {
     processContractAction,
     processLoanAction,
     DB_STORE_NAME,
-    DB_ENCRYPTION_KEY
+    DB_ENCRYPTION_KEY,
+    MockSS,
+    TAB_LOG,
+    TAB_MARKET,
+    TAB_LOAN,
+    TAB_LOAN_ACTIONS
 } = require('./setup');
 
 describe('System Integration Tests', () => {
@@ -17,7 +22,13 @@ describe('System Integration Tests', () => {
         context.mockSheets = {};
         context.PropertiesService._props = {};
         context.CacheService._cache = {};
-        
+
+        // Setup required sheets
+        MockSS.insertSheet(TAB_LOG).appendRow(['Date', 'Type', 'Category', 'Ticker', 'Qty', 'Price', 'Currency', 'Note']);
+        MockSS.insertSheet(TAB_MARKET);
+        MockSS.insertSheet(TAB_LOAN).appendRow(['Source', 'Date', 'Amount', 'Rate', 'Collateral', 'ColQty', 'Currency', 'Warn', 'Liq']);
+        MockSS.insertSheet(TAB_LOAN_ACTIONS).appendRow(['Time', 'LoanID', 'Type', 'Protocol', 'Action', 'Asset', 'Amount', 'Note']);
+
         GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY });
     });
 
@@ -61,7 +72,7 @@ describe('System Integration Tests', () => {
         expect(dash.totalAssetsTWD).toBe(1000000);
         expect(dash.netWorthTWD).toBe(900000); // (1000*1000) - 100000
         expect(dash.totalDebtTWD).toBe(100000);
-        
+
         const h2330 = dash.holdings.find(h => h.ticker === '2330');
         expect(h2330).toBeDefined();
         expect(h2330.qty).toBe(1000);
@@ -84,7 +95,7 @@ describe('System Integration Tests', () => {
     test('Market Sync Logic and Caching', () => {
         const res1 = syncMarketData(null, true);
         expect(res1.logs).toContain('FX Sync: 32.5');
-        
+
         // Cache check
         const res2 = syncMarketData(null, false);
         expect(res2.logs).toContain('Loaded from cache');

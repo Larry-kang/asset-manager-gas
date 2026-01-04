@@ -30,3 +30,6 @@ test-results/
 # AI Swarm
 my-ai-swarm/
 .agent/
+
+# Project Logs
+logs/

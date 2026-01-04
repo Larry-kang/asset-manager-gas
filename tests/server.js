@@ -99,7 +99,7 @@ window.google = {
             runSystemCheck: function() { },
             checkDbStructure: function() { 
                 console.log('[Client] checkDbStructure called');
-                if (this._successHandler) setTimeout(() => this._successHandler('Mock: Database Structure Valid ?\n- Config: OK\n- Transactions: OK'), 500);
+                if (this._successHandler) setTimeout(() => this._successHandler('Mock: Database Structure Valid ?\\n- Config: OK\\n- Transactions: OK'), 500);
             },
             resetDatabase: function() {
                 console.log('[Client] resetDatabase called');
@@ -114,7 +114,7 @@ window.google = {
 app.get('/', (req, res) => {
     console.log('[Server] GET / request received');
     let html = renderTemplate('index');
-    html = html.replace('</body>', `${mockClientScript}</body>`);
+    html = html.replace(/<\/head>/i, `${mockClientScript}</head>`);
     res.send(html);
 });
 

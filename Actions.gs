@@ -26,6 +26,26 @@ function addTransaction(d) {
         });
 
         GasStore.set('DB:LOG', logs);
+
+        // [New] Persist to Sheet via Repository
+        try {
+            const repo = RepositoryFactory.getLogRepo();
+            repo.append({
+                Date: d.date,
+                Type: d.type,
+                Category: d.cat,
+                Ticker: normalizeTicker(d.ticker),
+                Qty: Number(d.qty),
+                Price: Number(d.price),
+                Currency: d.currency,
+                Note: d.note || '',
+                Status: 'Active',
+                Hash: ''
+            });
+        } catch (e) {
+            console.error('Failed to persist to Sheet:', e);
+        }
+
         return { success: true, message: "交易紀錄新增成功" };
     });
 }
@@ -57,6 +77,25 @@ function processLoanAction(d) {
                 currency: d.currency || 'TWD'
             });
             GasStore.set('DB:LOAN', loans);
+
+            // [New] Persist to Sheet
+            try {
+                const repo = RepositoryFactory.getLoanRepo();
+                repo.append({
+                    Source: d.source,
+                    Protocol: d.type || '質押',
+                    CollateralAsset: normalizeTicker(d.collateral),
+                    CollateralQty: Number(d.colQty),
+                    LoanAmount: Number(d.amount),
+                    InterestRate: Number(d.rate),
+                    LiquidationPrice: Number(d.liq),
+                    Status: 'Active',
+                    Updated: new Date()
+                });
+            } catch (e) {
+                console.error('Failed to persist Loan:', e);
+            }
+
             return 'Loan Contract Added';
         }
 
@@ -272,6 +311,26 @@ function processContractAction(d) {
 
             GasStore.set('DB:LOAN', loans);
             GasStore.set('DB:LOG', logs);
+
+            // [New] Update Sheet
+            try {
+                const repo = RepositoryFactory.getLoanRepo();
+                const all = repo.findAll();
+                // Find matching active loan. Logic: Source matches, Status not Closed
+                const match = all.find(r => r.Source === d.source && r.Status !== 'Closed');
+
+                if (match) {
+                    match.LoanAmount = loans[idx].amount; // Updated amount from GasStore logic
+                    match.Updated = new Date();
+                    if (match.LoanAmount <= 0) match.Status = 'Closed';
+
+                    // Also handle Log syncing if needed, but Loan update is critical
+                    repo.update(match);
+                }
+            } catch (e) {
+                console.error('Failed to update Loan Sheet:', e);
+            }
+
             return `Repaid ${repayAmt} (${principal} Prin + ${interest} Int)`;
         }
 

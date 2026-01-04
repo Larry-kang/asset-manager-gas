@@ -56,6 +56,49 @@ class SheetRepository {
         }
         return entity;
     }
+
+    /**
+     * 新增資料
+     * @param {Object} entity 
+     */
+    append(entity) {
+        const row = this._mapEntityToRow(entity);
+        this.sheet.appendRow(row);
+    }
+
+    /**
+     * 更新資料
+     * @param {Object} entity - 必須包含 _row 屬性
+     */
+    update(entity) {
+        if (!entity._row) throw new Error("Entity must have _row for update");
+        const row = this._mapEntityToRow(entity);
+        // DB_SCHEMA keys map to columns. 
+        // We need to write specifically to the columns defined in schema.
+        // Simplified: Overwrite the whole row range defined by schema.
+        const numCols = Object.keys(this.schema).length; // Check if schema covers all columns?
+        // Actually, schema map keys to 1-based index. 
+        // Max index is:
+        const maxIdx = Math.max(...Object.values(this.schema));
+
+        // Write cell by cell or range? Range is better.
+        // row is array [col1, col2, ...]. 
+        // Caveat: _mapEntityToRow needs to return array with correct order.
+        this.sheet.getRange(entity._row, 1, 1, row.length).setValues([row]);
+    }
+
+    _mapEntityToRow(entity) {
+        // Find max column index
+        const maxIdx = Math.max(...Object.values(this.schema));
+        const row = new Array(maxIdx).fill('');
+
+        for (const [key, colIdx] of Object.entries(this.schema)) {
+            if (entity[key] !== undefined) {
+                row[colIdx - 1] = entity[key];
+            }
+        }
+        return row;
+    }
 }
 
 // --- Specific Repositories ---
@@ -110,12 +153,12 @@ class LoanActionRepository extends SheetRepository {
     appendAction(action) {
         // action: { loanId, type, protocol, actionStr, asset, amount, note }
         const time = new Date();
-        this.append([
+        this.sheet.appendRow([
             time,
             action.loanId,
-            action.type, // e.g., 'Stock', 'Crypto'
-            action.protocol, // e.g., 'Sinopac', 'AAVE'
-            action.actionStr, // 'OPEN', 'BORROW', 'SUPPLY', 'REPAY'
+            action.type,
+            action.protocol,
+            action.actionStr,
             action.asset,
             action.amount,
             action.note || ''

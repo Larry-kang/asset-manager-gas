@@ -23,12 +23,13 @@ function getInventoryMap(logRows, loanRows) {
     data.forEach(row => {
         let type = String(row[1]); // Type
         let ticker = normalizeTicker(row[2]);
+        let category = row[3];
         let qty = Number(row[4]);
         let price = Number(row[5]);
         let currency = row[6];
 
         if (!ticker) return;
-        if (!inventory[ticker]) inventory[ticker] = { qty: 0, cost: 0, currency: currency };
+        if (!inventory[ticker]) inventory[ticker] = { qty: 0, cost: 0, currency: currency, cat: category };
 
         // Use Global Constants or fallback to strings if running standalone test without context?
         // In strict setup, ACT_BUY is defined.
