@@ -25,9 +25,46 @@ class SheetRepository {
         if (!this._sheet) {
             const ss = SpreadsheetApp.getActiveSpreadsheet();
             this._sheet = ss.getSheetByName(this.tabName);
-            if (!this._sheet) throw new Error(`Sheet not found: ${this.tabName}`);
+            // Auto-init removed from getter to keep it pure, handled by initSheet() explicitly
         }
         return this._sheet;
+    }
+
+    /**
+     * 初始化或檢查 Sheet
+     */
+    initSheet() {
+        const ss = SpreadsheetApp.getActiveSpreadsheet();
+        let sheet = ss.getSheetByName(this.tabName);
+        if (!sheet) {
+            sheet = ss.insertSheet(this.tabName);
+        }
+        this._sheet = sheet;
+        this.ensureHeader();
+        return sheet;
+    }
+
+    /**
+     * 確保標題列存在
+     */
+    ensureHeader() {
+        if (this.sheet.getLastRow() === 0) {
+            const header = Object.keys(this.schema).length > 0
+                ? this._mapSchemaToHeader()
+                : []; // Fallback for action logs
+            if (header.length > 0) {
+                this.sheet.appendRow(header);
+            }
+        }
+    }
+
+    _mapSchemaToHeader() {
+        const maxIdx = Math.max(...Object.values(this.schema));
+        const header = new Array(maxIdx).fill('');
+        for (const [key, colIdx] of Object.entries(this.schema)) {
+            header[colIdx - 1] = key;
+        }
+        return header;
     }
 
     /**
@@ -126,13 +163,38 @@ class LoanRepository extends SheetRepository {
         DB_SCHEMA.Vault.forEach((col, i) => schema[col] = i + 1);
         super(TAB_LOAN, schema);
     }
+
+    findByLoanId(loanId) {
+        const all = this.findAll();
+        return all.filter(row => row.LoanID === loanId);
+    }
+}
+
+class SnapshotRepository extends SheetRepository {
+    constructor() {
+        const schema = {};
+        ['Date', 'TotalAssetsTWD', 'TotalDebtTWD', 'NetWorthTWD', 'JSON'].forEach((v, i) => schema[v] = i + 1);
+        super(TAB_HISTORY, schema);
+    }
 }
 
 // --- Factory / Locator ---
 
 const RepositoryFactory = {
     getLogRepo: () => new LogRepository(),
-    getLoanRepo: () => new LoanRepository()
+    getLoanRepo: () => new LoanRepository(),
+    getLoanActionRepo: () => new LoanActionRepository(),
+    getSnapshotRepo: () => new SnapshotRepository(),
+
+    /**
+     * 初始化所有必要的 Sheets
+     */
+    initAll: function () {
+        this.getLogRepo().initSheet();
+        this.getLoanRepo().initSheet();
+        this.getLoanActionRepo().initSheet();
+        this.getSnapshotRepo().initSheet();
+    }
 };
 
 /*
@@ -140,14 +202,9 @@ const RepositoryFactory = {
  */
 class LoanActionRepository extends SheetRepository {
     constructor() {
-        super(TAB_LOAN_ACTIONS);
-    }
-
-    // 確保 Header 存在
-    _ensureHeader(sheet) {
-        if (sheet.getLastRow() === 0) {
-            sheet.appendRow(['Time', 'LoanID', 'Type', 'Protocol', 'Action', 'Asset', 'Amount', 'Note']);
-        }
+        const schema = {};
+        ['Time', 'LoanID', 'Type', 'Protocol', 'Action', 'Asset', 'Amount', 'Note'].forEach((v, i) => schema[v] = i + 1);
+        super(TAB_LOAN_ACTIONS, schema);
     }
 
     appendAction(action) {

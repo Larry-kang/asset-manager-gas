@@ -462,6 +462,26 @@ var GasStore = (function () {
             this.commit();
             props.deleteProperty(_queueKey);
             console.log("GasStore Worker: Flush complete.");
+        },
+        /**
+         * [New] Clear All Data (Destructive)
+         */
+        clearAll: function () {
+            // Clear L1
+            _memory = {};
+
+            // Clear L2 (Best effort, we can't iterate all keys in Cache, but we can clear specific prefix if needed?)
+            // CacheService doesn't support clearAll(). We rely on keys expiring or overwriting.
+            // However, if we clear L3, L2 becomes invalid mostly.
+
+            // Clear L3 (Sheet)
+            const sheet = _getDbSheet();
+            if (sheet.getLastRow() > 1) {
+                // Clear all data rows (keep header)
+                sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).clearContent();
+            }
+
+            console.log("GasStore: All data cleared.");
         }
     };
 })();

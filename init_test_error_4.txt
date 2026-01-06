@@ -1,0 +1,62 @@
+  console.log
+    GasStore: All data cleared.
+
+      at Object.clearAll (evalmachine.<anonymous>:484:21)
+
+  console.log
+    GasStore: All data cleared.
+
+      at Object.clearAll (evalmachine.<anonymous>:484:21)
+
+  console.log
+    GasStore: All data cleared.
+
+      at Object.clearAll (evalmachine.<anonymous>:484:21)
+
+  console.log
+    GasStore: Committed 3 changes.
+
+      at Object.commit (evalmachine.<anonymous>:399:21)
+
+FAIL tests/init.test.js
+  System Initialization Tests
+    ? initSheet should create sheet and headers (18 ms)
+    ? initializeSystem should reset settings and sheets (7 ms)
+
+  ??System Initialization Tests ??initSheet should create sheet and headers
+
+    expect(received).not.toBeNull()
+
+    Received: null
+
+      17 |         const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('嚙踝蕭嚙踝蕭嚙踝蕭嚙?);
+      18 |         expect(sheet).toBeDefined();
+    > 19 |         expect(sheet).not.toBeNull();
+         |                           ^
+      20 |
+      21 |         const data = sheet.getDataRange().getValues();
+      22 |         // Header verification
+
+      at Object.toBeNull (tests/init.test.js:19:27)
+
+  ??System Initialization Tests ??initializeSystem should reset settings and sheets
+
+    expect(received).toBeUndefined()
+
+    Received: null
+
+      36 |         expect(GasStore.get('CONF:CURRENCY')).toBe('TWD');
+      37 |         expect(GasStore.get('CONF:TARGETS')).toEqual({ 'Stock': 60, 'Crypto': 40 });
+    > 38 |         expect(GasStore.get('CONF:TEST')).toBeUndefined();
+         |                                           ^
+      39 |
+      40 |         // Verify Sheets Created
+      41 |         const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+      at Object.toBeUndefined (tests/init.test.js:38:43)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        0.456 s, estimated 1 s
+Ran all test suites matching /tests\\init.test.js/i.

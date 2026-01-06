@@ -121,7 +121,8 @@ const MockSS = {
         context.mockSheets[name] = s;
         return s;
     }),
-    getSheets: jest.fn(() => Object.values(context.mockSheets))
+    getSheets: jest.fn(() => Object.values(context.mockSheets)),
+    _clearSheets: () => { context.mockSheets = {}; }
 };
 
 // 3. Create VM Context
@@ -256,6 +257,7 @@ const {
     getInventoryMap, processMarketData, calculatePortfolio, calculateLoans, normalizeTicker, calculateRebalancing,
     // Actions
     getDashboardData, addTransaction, syncMarketData, processLoanAction, processContractAction,
+    initializeSystem, systemHardReset,
     // Repository
     SheetRepository, LogRepository, LoanRepository, LoanActionRepository, RepositoryFactory,
     // Constants
@@ -280,6 +282,7 @@ module.exports = {
     addTransaction,
     syncMarketData,
     processLoanAction, processContractAction,
+    initializeSystem, systemHardReset,
     // Repository
     SheetRepository, LogRepository, LoanRepository, LoanActionRepository, RepositoryFactory,
     // Constants

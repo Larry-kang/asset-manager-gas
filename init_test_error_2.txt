@@ -1,0 +1,38 @@
+FAIL tests/init.test.js
+  System Initialization Tests
+    ? initSheet should create sheet and headers (5 ms)
+    ? initializeSystem should reset settings and sheets
+
+  ??System Initialization Tests ??initSheet should create sheet and headers
+
+    TypeError: GasStore.clearAll is not a function
+
+       8 |             SpreadsheetApp.getActiveSpreadsheet()._clearSheets();
+       9 |         }
+    > 10 |         GasStore.clearAll();
+         |                  ^
+      11 |     });
+      12 |
+      13 |     test('initSheet should create sheet and headers', () => {
+
+      at Object.clearAll (tests/init.test.js:10:18)
+
+  ??System Initialization Tests ??initializeSystem should reset settings and sheets
+
+    TypeError: GasStore.clearAll is not a function
+
+       8 |             SpreadsheetApp.getActiveSpreadsheet()._clearSheets();
+       9 |         }
+    > 10 |         GasStore.clearAll();
+         |                  ^
+      11 |     });
+      12 |
+      13 |     test('initSheet should create sheet and headers', () => {
+
+      at Object.clearAll (tests/init.test.js:10:18)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        0.584 s, estimated 1 s
+Ran all test suites matching /tests\\init.test.js/i.

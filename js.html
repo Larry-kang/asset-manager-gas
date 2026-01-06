@@ -736,7 +736,12 @@
         'Suggestions': { zh: '建議操作', en: 'Suggestions' },
         'SaveTargets': { zh: '儲存目標', en: 'Save Targets' },
         'AmountQty': { zh: '金額 / 數量', en: 'Amount / Qty' },
-        'PriceRate': { zh: '價格 / 利率', en: 'Price / Rate' }
+        'PriceRate': { zh: '價格 / 利率', en: 'Price / Rate' },
+        'ClearRebuild': { zh: '清理並重建系統', en: 'Clear & Rebuild System' },
+        'ConfirmRebuild': { zh: '確定要清理並重建系統嗎？這將刪除所有交易紀錄與設定！', en: 'Are you sure you want to clear and rebuild the system? This will delete all transactions and settings!' },
+        'RebuildSuccess': { zh: '系統重建完成！', en: 'System Rebuild Complete!' },
+        'DangerZone': { zh: '危險區域', en: 'Danger Zone' },
+        'ResetWarning': { zh: '※ 此操作會刪除所有交易紀錄與設定並重新初始化表單', en: '* This will delete all data and re-initialize sheets' }
     };
 
     function t(key) {
@@ -748,9 +753,18 @@
         google.script.run.withSuccessHandler(alert).checkDbStructure();
     }
 
-    function resetDatabase() {
-        if (confirm('Are you sure you want to RESET the database? This will archive current sheets and create fresh ones.')) {
-            google.script.run.withSuccessHandler(alert).resetDatabase();
+    function rebuildSystem() {
+        if (confirm(t('ConfirmRebuild'))) {
+            showLoader();
+            google.script.run.withSuccessHandler(res => {
+                hideLoader();
+                if (res.success) {
+                    alert(t('RebuildSuccess'));
+                    location.reload();
+                } else {
+                    alert(t('Error') + ": " + res.message);
+                }
+            }).initializeSystem();
         }
     }
 

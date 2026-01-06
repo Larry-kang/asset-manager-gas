@@ -489,3 +489,26 @@ function withLock(func) {
         throw new Error('Lock timeout');
     }
 }
+/**
+ * 系統清理與重建 (Hard Reset)
+ * 此操作具備破壞性，會移除所有交易紀錄與設定
+ */
+function systemHardReset() {
+    return withLock(() => {
+        // 1. 清理 GasStore (加密資料庫)
+        GasStore.clearAll();
+
+        // 2. 初始化 Sheets
+        RepositoryFactory.initAll();
+
+        // 3. 設置預設設定
+        GasStore.set('CONF:TARGETS', { 'Stock': 60, 'Crypto': 40 });
+        GasStore.set('CONF:CURRENCY', 'TWD');
+        GasStore.set('CONF:LANG', 'zh-TW');
+
+        // 4. 清理 ScriptProperties
+        PropertiesService.getScriptProperties().deleteAllProperties();
+
+        return { success: true, message: "系統已成功清理並重建環境" };
+    });
+}

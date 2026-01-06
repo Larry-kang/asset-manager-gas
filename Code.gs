@@ -301,3 +301,14 @@ function syncMarketData(ss, forceRefresh) {
     }
 }
 
+/**
+ * 初始化系統 (公開接口)
+ */
+function initializeSystem() {
+    try {
+        GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: false });
+        return systemHardReset();
+    } catch (e) {
+        return { success: false, message: "初始化失敗: " + e.message };
+    }
+}

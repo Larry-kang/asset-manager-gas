@@ -1,0 +1,25 @@
+FAIL tests/init.test.js
+  ??Test suite failed to run
+
+    evalmachine.<anonymous>:470
+            clearAll: function () {
+                    ^
+
+    SyntaxError: Unexpected token ':'
+
+      227 | vm.runInContext(constantsWithVar, context);
+      228 |
+    > 229 | vm.runInContext(gasStoreContent, context); // GasStore first
+          |    ^
+      230 |
+      231 | // Explicitly export Classes from Logic.gs to Context
+      232 | // Class declarations in VM might not automatically hoist to 'this'
+
+      at Object.runInContext (tests/setup.js:229:4)
+      at Object.require (tests/init.test.js:1:68)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.553 s
+Ran all test suites matching /tests\\init.test.js/i.
