@@ -41,6 +41,14 @@
           <i class="fa-solid fa-list"></i>
           <span data-i18n="Tx">Transactions</span>
         </div>
+        <div class="nav-item" onclick="go('dividend', this)">
+          <i class="fa-solid fa-hand-holding-dollar"></i>
+          <span data-i18n="Div">Dividends</span>
+        </div>
+        <div class="nav-item" onclick="go('watchlist', this)">
+          <i class="fa-solid fa-eye"></i>
+          <span data-i18n="Watch">Watchlist</span>
+        </div>
         <div class="nav-item mobile-only" onclick="openSettings()">
           <i class="fa-solid fa-gear"></i>
           <span data-i18n="Set">Settings</span>
@@ -76,6 +84,10 @@
             <button class="btn btn-outline" onclick="openRebalance()">
               <i class="fa-solid fa-scale-balanced"></i>
               <span data-i18n="Rebal">Rebalance</span>
+            </button>
+            <button class="btn btn-outline" onclick="document.getElementById('modalImport').style.display='flex'">
+              <i class="fa-solid fa-file-import"></i>
+              <span data-i18n="Import">Import</span>
             </button>
           </div>
         </div>
@@ -316,11 +328,33 @@
   </div>
   </div>
 
+  </div>
+
+  <!-- DIVIDEND DASHBOARD -->
+  <div id="dividend" class="view hidden">
+    <div class="dash-hero">
+      <div class="h-label" data-i18n="AnnualDiv">Estimated Annual Dividend</div>
+      <div class="balance-display" id="totalDiv">...</div>
+    </div>
+    <div class="obsidian-card">
+      <div id="divList" class="tx-list"></div>
+    </div>
+  </div>
+
+  <!-- WATCHLIST -->
+  <div id="watchlist" class="view hidden">
+    <h3 class="h-label" style="margin-bottom:16px" data-i18n="MarketWatch">Market Watchlist</h3>
+    <div class="obsidian-card">
+      <div id="watchList" class="tx-list"></div>
+    </div>
+  </div>
+
   <!-- LOAN ACTION MODAL -->
   <div id="modalLoan" class="modal-overlay"
     onclick="if(event.target === this) document.getElementById('modalLoan').style.display='none'">
     <div class="modal-box">
-      <h3 id="lTitle" class="h-label" style="margin-bottom:16px" style="margin-top:0">Loan Action</h3>
+      <h3 id="lTitle" class="h-label" style="margin-bottom:16px" style="margin-top:0" data-i18n="LoanAction">Loan Action
+      </h3>
       <input type="hidden" id="lRow">
       <input type="hidden" id="lSource">
       <input type="hidden" id="lCurrency">
@@ -335,10 +369,10 @@
       </select>
 
       <div id="lInputs">
-        <label>Amount / Qty</label>
+        <label data-i18n="AmountQty">Amount / Qty</label>
         <input type="number" id="lVal" placeholder="Amount or Qty">
         <div id="lPriceGroup" class="hidden">
-          <label>Price / Rate</label>
+          <label data-i18n="PriceRate">Price / Rate</label>
           <input type="number" id="lPrice" placeholder="Price">
         </div>
       </div>
@@ -351,7 +385,7 @@
 
   <div id="msgModal" class="modal-overlay" style="z-index:300">
     <div class="modal-box" style="text-align:center">
-      <h3 id="msgTitle" class="h-label" style="margin-bottom:16px">Notice</h3>
+      <h3 id="msgTitle" class="h-label" style="margin-bottom:16px" data-i18n="Notice">Notice</h3>
       <p id="msgBody" style="color:var(--text-secondary); margin-bottom:24px"></p>
       <button class="btn-outline" style="width:100%; border-radius:99px"
         onclick="document.getElementById('msgModal').style.display='none'" data-i18n="Close">Close</button>
@@ -362,21 +396,41 @@
   <div id="modalRebalance" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <h3><i class="fas fa-balance-scale"></i> Smart Rebalancing</h3>
+        <h3><i class="fas fa-balance-scale"></i> <span data-i18n="SmartRebal">Smart Rebalancing</span></h3>
         <span class="close-btn" onclick="closeModal('modalRebalance')">&times;</span>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>Target Allocation (%)</label>
+          <label data-i18n="TargetAlloc">Target Allocation (%)</label>
           <div id="rebInputs"></div>
         </div>
         <hr>
-        <h4>Suggestions</h4>
+        <h4 data-i18n="Suggestions">Suggestions</h4>
         <div id="rebSuggestions" class="tx-list"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeModal('modalRebalance')" data-i18n="Close">Close</button>
-        <button class="btn btn-gold" onclick="saveRebalance()">Save Targets</button>
+        <button class="btn btn-gold" onclick="saveRebalance()" data-i18n="SaveTargets">Save Targets</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Modal -->
+  <div id="modalImport" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-file-import"></i> <span data-i18n="CSVImport">CSV Import</span></h3>
+        <span class="close-btn" onclick="closeModal('modalImport')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px; color:var(--text-secondary); margin-bottom:16px">
+          <span data-i18n="ImportFormat">Format</span>: Date, Type, Ticker, Category, Qty, Price, Currency, Note
+        </p>
+        <textarea id="csvInput" placeholder="2024-01-01, Buy, 2330, Stock, 100, 500, TWD, Initial"
+          style="width:100%; height:150px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:8px;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-gold" onclick="processImport()" data-i18n="ProcessCSV">Process CSV</button>
       </div>
     </div>
   </div>
@@ -442,6 +496,23 @@
   <!-- SCRIPTS -->
   <?!= include('icons'); ?>
   <?!= include('constants'); ?>
+
+  <!-- CSV IMPORT MODAL -->
+  <div id="modalImport" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-box">
+      <h3 class="h-label" style="margin-bottom:16px">Batch Import (CSV)</h3>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">
+        Format: date, type, ticker, category, qty, price, [currency], [note]
+      </p>
+      <textarea id="csvInput" rows="10"
+        style="width:100%;background:rgba(0,0,0,0.2);color:white;border:1px solid var(--obsidian-muted);padding:8px;border-radius:4px;font-family:monospace;"></textarea>
+      <div style="margin-top:16px;display:flex;gap:12px">
+        <button class="btn btn-gold" style="flex:1" onclick="processImport()">Import</button>
+        <button class="btn btn-outline" style="flex:1"
+          onclick="document.getElementById('modalImport').style.display='none'">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     function go(id, el) {

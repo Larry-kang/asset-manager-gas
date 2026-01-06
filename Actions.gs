@@ -405,9 +405,68 @@ function processWizard(d) {
                 });
             });
             GasStore.set('DB:LOAN', loans);
-            return "Wizard: AAVE Position Created";
+            return { success: true, message: "Wizard: AAVE 倉位已建立" };
         }
-        return "Unknown Protocol";
+        return { success: false, message: "未知協定" };
+    });
+}
+
+/**
+ * 批次匯入交易
+ */
+function processBulkImport(csvData) {
+    return withLock(() => {
+        let logs = GasStore.get('DB:LOG', []);
+        let lines = csvData.split('\n');
+        let count = 0;
+
+        lines.forEach(line => {
+            let parts = line.split(',').map(s => s.trim());
+            if (parts.length < 6) return;
+
+            let [date, type, ticker, cat, qty, price, currency, note] = parts;
+            if (!ticker || isNaN(qty) || isNaN(price)) return;
+
+            logs.push({
+                date: date,
+                type: type,
+                ticker: normalizeTicker(ticker),
+                cat: cat,
+                qty: Number(qty),
+                price: Number(price),
+                currency: currency || 'TWD',
+                note: note || 'Imported'
+            });
+            count++;
+        });
+
+        GasStore.set('DB:LOG', logs);
+        return { success: true, message: `成功匯入 ${count} 筆交易` };
+    });
+}
+
+/**
+ * 儲存殖利率數據
+ */
+function saveYieldData(yieldMap) {
+    return withLock(() => {
+        let data = GasStore.get('DB:METRICS:YIELD', {});
+        for (let k in yieldMap) {
+            data[k] = Number(yieldMap[k]);
+        }
+        GasStore.set('DB:METRICS:YIELD', data);
+        return { success: true };
+    });
+}
+
+/**
+ * 更新觀察清單
+ */
+function updateWatchlist(watchlist) {
+    return withLock(() => {
+        // watchlist: [{ticker, cat}]
+        GasStore.set('DB:WATCHLIST', watchlist);
+        return { success: true };
     });
 }
 

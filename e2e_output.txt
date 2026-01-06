@@ -1,0 +1,40 @@
+
+> asset-manager-gas@1.0.0 test:e2e
+> playwright test tests/e2e
+
+
+Running 2 tests using 2 workers
+
+[1A[2K[1/2] [chromium] ??tests\e2e\loan_ui.spec.js:3:1 ??Dashboard and Lifecycle Flow
+[1A[2K[2/2] [chromium] ??tests\e2e\rebalance_ui.spec.js:3:1 ??Smart Rebalancing UI Flow
+[1A[2K[chromium] ??tests\e2e\rebalance_ui.spec.js:3:1 ??Smart Rebalancing UI Flow
+[Browser] --- Mock GAS Environment Loaded ---
+
+[1A[2K[Browser] [Client] withSuccessHandler called
+
+[1A[2K[Browser] [Client] withFailureHandler called
+
+[1A[2K[Browser] [Client] getDashboardData called with pass: undefined
+
+[1A[2K[Browser] openRebalance called
+
+[1A[2K[Browser] APP_DATA: {status: success, netWorthTWD: 1580000, dailyChange: 12500, holdings: Array(2), recentTx: Array(0)}
+
+[1A[2K[Browser] RebInputs HTML set length: 892
+
+[1A[2K[Browser] [Client] withSuccessHandler called
+
+[1A[2K[Browser] [Client] saveTargets called {Stock: 60, Crypto: 40}
+
+[1A[2K[Browser] [Client] withSuccessHandler called
+
+[1A[2K[Browser] [Client] withFailureHandler called
+
+[1A[2K[Browser] [Client] getDashboardData called with pass: undefined
+
+[1A[2K  2 passed (6.3s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

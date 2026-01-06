@@ -52,7 +52,7 @@ describe('Logic.gs Tests', () => {
     });
 
     test('getInventoryMap should calculate total inventory', () => {
-        const inv = getInventoryMap(mockLogRows, mockLoanRows);
+        const { inventory: inv } = getInventoryMap(mockLogRows, mockLoanRows);
         expect(inv['2330']).toBeDefined();
         // Buy 1000 - Sell 200 = 800
         expect(inv['2330'].qty).toBe(800);

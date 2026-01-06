@@ -34,12 +34,27 @@
             const isPos = d.dailyChange >= 0;
             dc.className = `daily-change-pill ${isPos ? 'positive' : 'negative'}`;
             dc.innerHTML = `${isPos ? '+' : ''}${fmt(d.dailyChange)} Today`;
+
+            // Add Realized PnL
+            if (d.realizedPnLTWD !== undefined) {
+                const rpnl = document.createElement('span');
+                rpnl.id = 'realizedPnLDisplay';
+                rpnl.style.marginLeft = '12px';
+                rpnl.style.opacity = '0.7';
+                rpnl.style.fontSize = '12px';
+                rpnl.innerHTML = ` | ${t('Realized')}: ${fmt(getVal(d.realizedPnLTWD))}`;
+                let old = document.getElementById('realizedPnLDisplay');
+                if (old) old.remove();
+                dc.appendChild(rpnl);
+            }
         }
 
         renderAssets(d);
         renderTx(d);
         renderHoldings(d);
         renderLoan(d);
+        renderDividend(d);
+        renderWatchlist(d);
 
         const tList = document.getElementById('tickerList');
         if (tList && d.knownTickers) {
@@ -50,6 +65,126 @@
                 tList.appendChild(opt);
             });
         }
+    }
+
+    function renderDividend(d) {
+        const totalDivEl = document.getElementById('totalDiv');
+        if (totalDivEl) totalDivEl.innerText = fmt(getVal(d.totalDivTWD || 0));
+
+        const list = document.getElementById('divList');
+        if (!list) return;
+        list.innerHTML = '';
+
+        if (!d.list) return;
+        d.list.forEach(h => {
+            if (h.annDivTWD <= 0 && (!h.yield || h.yield === '0%')) return;
+            const row = document.createElement('div');
+            row.className = 'asset-row';
+            row.innerHTML = `
+                <div>
+                    <div style="font-weight:600">${h.ticker}</div>
+                    <div style="font-size:12px;color:var(--text-secondary)">${t('Yield')}: ${h.yield}</div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-weight:600">${fmt(getVal(h.annDivTWD))} / ${curLang === 'zh' ? '年' : 'yr'}</div>
+                    <div style="font-size:11px;color:var(--text-gold);cursor:pointer;" onclick="editYield('${h.ticker}')"><i class="fas fa-edit"></i> ${t('Edit')}</div>
+                </div>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    function renderWatchlist(d) {
+        const list = document.getElementById('watchList');
+        if (!list) return;
+        list.innerHTML = '';
+
+        if (!d.watchlist || d.watchlist.length === 0) {
+            list.innerHTML = `
+                <div style="text-align:center;padding:20px;">
+                    <p style="color:var(--text-secondary)">${t('WatchEmpty')}</p>
+                    <button class="btn btn-outline" style="width:auto;margin:auto;" onclick="addWatch()">${t('AddAsset')}</button>
+                </div>`;
+            return;
+        }
+
+        d.watchlist.forEach(w => {
+            const row = document.createElement('div');
+            row.className = 'asset-row';
+            row.innerHTML = `
+                <div>
+                    <div style="font-weight:600">${w.ticker}</div>
+                    <div style="font-size:12px;color:var(--text-secondary)">${w.cat}</div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-weight:600">${fmt(getVal(w.price))}</div>
+                    <div style="font-size:11px;color:var(--obsidian-danger);cursor:pointer;" onclick="removeWatch('${w.ticker}')"><i class="fas fa-trash"></i></div>
+                </div>
+            `;
+            list.appendChild(row);
+        });
+
+        const foot = document.createElement('div');
+        foot.style.padding = '12px';
+        foot.innerHTML = `<button class="btn btn-outline" style="width:100%" onclick="addWatch()">${t('AddTicker')}</button>`;
+        list.appendChild(foot);
+    }
+
+    function processImport() {
+        const csv = document.getElementById('csvInput').value;
+        if (!csv) return;
+
+        showLoader();
+        google.script.run.withSuccessHandler(res => {
+            hideLoader();
+            if (res.success) {
+                showMsg('Success', res.message);
+                document.getElementById('modalImport').style.display = 'none';
+                load(true);
+            } else {
+                showMsg('Error', res.message);
+            }
+        }).processImport(csv);
+    }
+
+    function editYield(ticker) {
+        const y = prompt(`Enter estimated Annual Yield (%) for ${ticker}:`, '5');
+        if (y === null) return;
+        const val = parseFloat(y);
+        if (isNaN(val)) return;
+
+        let map = {};
+        map[ticker] = val;
+        google.script.run.withSuccessHandler(() => {
+            showMsg('Success', 'Yield updated');
+            load(true);
+        }).saveYieldData(map);
+    }
+
+    function addWatch() {
+        const t = prompt('Enter Ticker (e.g. BTC, 2330):');
+        if (!t) return;
+        const c = prompt('Category (Stock / Crypto):', 'Stock');
+
+        let wl = window.APP_DATA.watchlist || [];
+        let list = wl.map(x => ({ ticker: x.ticker, cat: x.cat }));
+        list.push({ ticker: t.toUpperCase(), cat: c });
+
+        google.script.run.withSuccessHandler(() => {
+            showMsg('Success', 'Watchlist updated');
+            load(true);
+        }).updateWatchlist(list);
+    }
+
+    function removeWatch(ticker) {
+        if (!confirm(`Remove ${ticker} from watchlist?`)) return;
+        let wl = window.APP_DATA.watchlist || [];
+        let list = wl.filter(x => x.ticker !== ticker).map(x => ({ ticker: x.ticker, cat: x.cat }));
+
+        google.script.run.withSuccessHandler(() => {
+            showMsg('Success', 'Removed');
+            load(true);
+        }).updateWatchlist(list);
     }
 
     window.onload = function () {
@@ -579,7 +714,29 @@
         'SystemStatus': { zh: '系統狀態', en: 'System Status' },
         'Safe': { zh: '安全', en: 'Safe' },
         'Warning': { zh: '警告', en: 'Warning' },
-        'Danger': { zh: '危險', en: 'Danger' }
+        'Danger': { zh: '危險', en: 'Danger' },
+        'Yield': { zh: '殖利率', en: 'Yield' },
+        'Div': { zh: '股息', en: 'Dividends' },
+        'Watch': { zh: '觀察清單', en: 'Watchlist' },
+        'WatchEmpty': { zh: '觀察清單目前是空的', en: 'Watchlist is empty' },
+        'AddAsset': { zh: '+ 新增資產', en: '+ Add Asset' },
+        'AddTicker': { zh: '+ 新增標的', en: '+ Add Ticker' },
+        'Edit': { zh: '編輯', en: 'Edit' },
+        'Import': { zh: '匯入', en: 'Import' },
+        'Realized': { zh: '已實現', en: 'Realized' },
+        'AnnualDiv': { zh: '預估年股息', en: 'Estimated Annual Div' },
+        'MarketWatch': { zh: '市場觀察清單', en: 'Market Watchlist' },
+        'CSVImport': { zh: 'CSV 批量匯入', en: 'CSV Import' },
+        'ProcessCSV': { zh: '處理 CSV', en: 'Process CSV' },
+        'ImportFormat': { zh: '格式', en: 'Format' },
+        'Notice': { zh: '通知', en: 'Notice' },
+        'LoanAction': { zh: '借貸操作', en: 'Loan Action' },
+        'SmartRebal': { zh: '智慧再平衡', en: 'Smart Rebalancing' },
+        'TargetAlloc': { zh: '目標權重 (%)', en: 'Target Allocation (%)' },
+        'Suggestions': { zh: '建議操作', en: 'Suggestions' },
+        'SaveTargets': { zh: '儲存目標', en: 'Save Targets' },
+        'AmountQty': { zh: '金額 / 數量', en: 'Amount / Qty' },
+        'PriceRate': { zh: '價格 / 利率', en: 'Price / Rate' }
     };
 
     function t(key) {

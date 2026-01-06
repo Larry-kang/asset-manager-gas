@@ -25,6 +25,12 @@ function setupTriggers() {
     .everyDays(1)
     .create();
 
+  // 3. 每分鐘執行一發 Write-Behind Flush
+  ScriptApp.newTrigger('trigger_WorkerFlush')
+    .timeBased()
+    .everyMinutes(1)
+    .create();
+
   Logger.log("? 排程設定完成");
 }
 
@@ -79,34 +85,25 @@ function trigger_RecordDailyHistory() {
   let totalAssets = portfolio.totalAssetsTWD;
   let totalDebt = loanCalc.totalDebtTWD;
 
-  // 5. Write to History
-  let sheet = ss.getSheetByName(TAB_HISTORY);
-  if (!sheet) {
-    sheet = ss.insertSheet(TAB_HISTORY);
-    sheet.appendRow(['日期', '淨資產', '總資產', '總負債']);
-  }
+  // 5. Take Snapshot
+  SnapshotService.takeSnapshot({
+    netWorthTWD: netWorth,
+    totalAssetsTWD: totalAssets,
+    totalDebtTWD: totalDebt,
+    realizedPnLTWD: portfolio.realizedPnLTWD
+  });
 
-  let today = new Date().toISOString().split('T')[0];
-  // 檢查今天是否已經紀錄過，避免重複
-  let lastRow = sheet.getLastRow();
-  if (lastRow > 1) {
-    let lastDate = sheet.getRange(lastRow, 1).getValue();
-    // 處理日期格式
-    if (lastDate instanceof Date) {
-      let offset = lastDate.getTimezoneOffset() * 60000;
-      lastDate = new Date(lastDate.getTime() - offset).toISOString().split('T')[0];
-    }
+  // Flush GasStore
+  GasStore.commit();
+  console.log("排程執行: 資產快照完成 (SnapshotService)");
+}
 
-    if (lastDate === today) {
-      // 更新今日數據
-      sheet.getRange(lastRow, 2, 1, 3).setValues([[netWorth, totalAssets, totalDebt]]);
-      console.log("排程執行: 更新今日資產紀錄");
-      return;
-    }
-  }
-
-  sheet.appendRow([today, netWorth, totalAssets, totalDebt]);
-  console.log("排程執行: 新增今日資產紀錄");
+/**
+ * [New] GasStore Worker Flush
+ */
+function trigger_WorkerFlush() {
+  GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY });
+  GasStore.workerFlush();
 }
 
 

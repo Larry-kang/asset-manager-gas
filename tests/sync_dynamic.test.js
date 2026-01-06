@@ -14,10 +14,15 @@ describe('Dynamic Market Data Sync', () => {
 
         // Mock services
         UrlFetchApp.fetch = jest.fn((url) => {
-            if (url.includes('exchangerate')) return { getContentText: () => JSON.stringify({ rates: { TWD: 32 } }) };
-            if (url.includes('binance')) return { getContentText: () => JSON.stringify([{ symbol: 'DOGEUSDT', price: '0.5' }]) };
-            if (url.includes('yahoo')) return { getContentText: () => JSON.stringify({ chart: { result: [{ meta: { regularMarketPrice: 50 } }] } }) };
-            return { getContentText: () => '{}', getResponseCode: () => 200 };
+            const mockRes = (content) => ({
+                getContentText: () => JSON.stringify(content),
+                getResponseCode: () => 200
+            });
+
+            if (url.includes('exchangerate')) return mockRes({ rates: { TWD: 32 } });
+            if (url.includes('binance')) return mockRes([{ symbol: 'DOGEUSDT', price: '0.5' }]);
+            if (url.includes('yahoo')) return mockRes({ chart: { result: [{ meta: { regularMarketPrice: 50 } }] } });
+            return mockRes({});
         });
 
         CacheService.getScriptCache = jest.fn(() => ({

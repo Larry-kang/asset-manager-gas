@@ -16,8 +16,9 @@ function normalizeTicker(ticker) {
  */
 function getInventoryMap(logRows, loanRows) {
     let inventory = {};
+    let realizedPnL = 0;
 
-    if (!logRows || logRows.length <= 1) return inventory;
+    if (!logRows || logRows.length <= 1) return { inventory, realizedPnL };
 
     const data = logRows.slice(1);
     data.forEach(row => {
@@ -31,23 +32,28 @@ function getInventoryMap(logRows, loanRows) {
         if (!ticker) return;
         if (!inventory[ticker]) inventory[ticker] = { qty: 0, cost: 0, currency: currency, cat: category };
 
-        // Use Global Constants or fallback to strings if running standalone test without context?
-        // In strict setup, ACT_BUY is defined.
-        // Fallback for safety if constants missing:
         const _BUY = (typeof ACT_BUY !== 'undefined') ? ACT_BUY : '買入';
         const _SELL = (typeof ACT_SELL !== 'undefined') ? ACT_SELL : '賣出';
+        const _DIV = (typeof ACT_DIVIDEND !== 'undefined') ? ACT_DIVIDEND : '領息'; // Support Dividend tracking
 
         if (type === _BUY || type === '配股') {
             let totalCost = inventory[ticker].cost * inventory[ticker].qty + price * qty;
             inventory[ticker].qty += qty;
             inventory[ticker].cost = (inventory[ticker].qty > 0) ? totalCost / inventory[ticker].qty : 0;
         } else if (type === _SELL) {
+            // Realized PnL Calculation
+            let gain = (price - inventory[ticker].cost) * qty;
+            realizedPnL += (currency === 'USD') ? (gain * 32.5) : gain; // Approx FX if not provided
+
             inventory[ticker].qty -= qty;
             if (inventory[ticker].qty < 0) inventory[ticker].qty = 0;
+        } else if (type === _DIV) {
+            // Dividend tracking - doesn't affect cost/qty but we might want to track separately
+            // For now, let's keep it simple.
         }
     });
 
-    return inventory;
+    return { inventory, realizedPnL };
 }
 
 /**
@@ -76,13 +82,16 @@ function processMarketData(marketRows) {
  * 計算投資組合總額
  */
 function calculatePortfolio(logRows, marketData, pledgedData) {
-    let invMap = getInventoryMap(logRows, null);
+    let { inventory: invMap, realizedPnL } = getInventoryMap(logRows, null);
 
     let totalAssetsTWD = 0;
     let list = [];
 
     let fx = marketData.fx || 32.5;
     let prices = marketData.prices || {};
+
+    let totalDivTWD = 0;
+    let yieldData = GasStore.get('DB:METRICS:YIELD', {});
 
     for (let ticker in invMap) {
         let item = invMap[ticker];
@@ -95,6 +104,11 @@ function calculatePortfolio(logRows, marketData, pledgedData) {
 
         let marketVal = marketPrice * item.qty;
         let marketValTWD = (item.currency === 'USD') ? marketVal * fx : marketVal;
+
+        // Dividend Calc
+        let yieldPct = Number(yieldData[ticker]) || 0;
+        let annDivTWD = (marketValTWD * yieldPct) / 100;
+        totalDivTWD += annDivTWD;
 
         let profit = (marketPrice - item.cost) * item.qty;
         let profitTWD = (item.currency === 'USD') ? profit * fx : profit;
@@ -112,13 +126,22 @@ function calculatePortfolio(logRows, marketData, pledgedData) {
             marketValTWD: Math.round(marketValTWD),
             profitTWD: Math.round(profitTWD),
             roi: (roi * 100).toFixed(2) + '%',
-            currency: item.currency
+            annDivTWD: Math.round(annDivTWD),
+            yield: yieldPct + '%',
+            currency: item.currency,
+            cat: item.cat
         });
     }
 
     list.sort((a, b) => b.marketValTWD - a.marketValTWD);
 
-    return { totalAssetsTWD: Math.round(totalAssetsTWD), list: list, inventory: invMap };
+    return {
+        totalAssetsTWD: Math.round(totalAssetsTWD),
+        totalDivTWD: Math.round(totalDivTWD),
+        list: list,
+        inventory: invMap,
+        realizedPnLTWD: Math.round(realizedPnL)
+    };
 }
 
 /**

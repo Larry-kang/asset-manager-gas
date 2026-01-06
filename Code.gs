@@ -109,8 +109,18 @@ function getData(password) {
             propsStore.setProperty('LAST_KNOWN_VAL', String(netWorth));
         }
 
-        // Historical Logs (Optional - simplified)
-        let historyData = []; // GasStore.get('DB:HISTORY', []);
+        // Snapshot if new day (Background)
+        if (lastDate !== today) {
+            SnapshotService.takeSnapshot({
+                ...portfolio,
+                netWorthTWD: netWorth,
+                totalDebtTWD: loanCalc.totalDebtTWD
+            });
+            propsStore.setProperty('LAST_DATE', today);
+        }
+
+        // Historical Logs
+        let historyData = SnapshotService.getHistory(30);
 
         // Fetch Targets
         let targets = GasStore.get('DB:SETTINGS:TARGETS', {});
@@ -128,6 +138,9 @@ function getData(password) {
             inventory: portfolio.inventory,
             targets: targets,
             rebalancing: calculateRebalancing(portfolio, targets, netWorth), // Logic.gs
+            realizedPnLTWD: portfolio.realizedPnLTWD,
+            history: historyData,
+            watchlist: SnapshotService.getWatchlistPrices(),
             recentTx: logs.slice(-10).reverse(), // Last 10
             logs: marketRes.logs, // Debug logs
             debug: [],
@@ -162,6 +175,33 @@ function saveTargets(targets) {
         return JSON.stringify({ status: "success" });
     } catch (e) {
         return JSON.stringify({ status: "error", message: e.toString() });
+    }
+}
+
+function processImport(csvData) {
+    try {
+        GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: true });
+        return Actions.processBulkImport(csvData);
+    } catch (e) {
+        return { success: false, message: e.toString() };
+    }
+}
+
+function saveYieldData(yieldMap) {
+    try {
+        GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: true });
+        return Actions.saveYieldData(yieldMap);
+    } catch (e) {
+        return { success: false, message: e.toString() };
+    }
+}
+
+function updateWatchlist(watchlist) {
+    try {
+        GasStore.init({ sheet_name: DB_STORE_NAME, encryption_key: DB_ENCRYPTION_KEY, use_lock: true });
+        return Actions.updateWatchlist(watchlist);
+    } catch (e) {
+        return { success: false, message: e.toString() };
     }
 }
 
@@ -215,6 +255,7 @@ function syncMarketData(ss, forceRefresh) {
 
     try {
         // 1. Fetch FX (USD/TWD)
+        // Exchange Rate API for USD/TWD
         let fxRes = UrlFetchApp.fetch("https://api.exchangerate-api.com/v4/latest/USD");
         let fxData = JSON.parse(fxRes.getContentText());
         fx = fxData.rates.TWD || 32.5;
@@ -224,91 +265,35 @@ function syncMarketData(ss, forceRefresh) {
         const logRepo = RepositoryFactory.getLogRepo();
         const allLogs = logRepo.findAll();
 
-        // Filter unique Tickers that are Active (Stock & Crypto)
-        // We can use a Set to ensure Uniqueness
-        // Category helps distinguish Crypto for Binance vs Stock using Yahoo
         const activeTickers = new Set();
         const activeCoins = new Set();
 
         allLogs.forEach(log => {
-            // Assuming we want to track everything we ever touched? 
-            // Or filter by current Qty? Logic.gs calculates Qty. 
-            // For simplicity/safety, we track everything that appears in logs (or maybe simplify to just all unique Tickers found?)
-            // Better: Track all unique tickers. If Qty is 0, we still fetch price (harmless, just cache update).
             if (!log.Ticker) return;
-            if (log.Category === 'Crypto') activeCoins.add(log.Ticker + 'USDT'); // Approx mapping
+            if (log.Category === 'Crypto') activeCoins.add(log.Ticker);
             else activeTickers.add(log.Ticker);
         });
 
-        // Add defaults if empty (bootstrapping)
-        if (activeTickers.size === 0) ['2330', '0050'].forEach(t => activeTickers.add(t));
-        if (activeCoins.size === 0) ['BTCUSDT', 'ETHUSDT'].forEach(c => activeCoins.add(c));
-
-        const coins = Array.from(activeCoins);
-        const twTickers = Array.from(activeTickers);
-
-        // Fetch Crypto Prices
-        if (coins.length > 0) {
-            // Binance API supports bulk: ["BTCUSDT","ETHUSDT"]
-            // Beware URL length limits if too many coins. 
-            // Chunking might be needed if > 20 coins? For now assume valid length.
-            try {
-                let coinParam = '["' + coins.join('","') + '"]';
-                let cryptoRes = UrlFetchApp.fetch('https://api.binance.com/api/v3/ticker/price?symbols=' + coinParam);
-                let cryptoData = JSON.parse(cryptoRes.getContentText());
-                cryptoData.forEach(item => {
-                    let symbol = item.symbol.replace('USDT', '');
-                    prices[symbol] = parseFloat(item.price);
-                });
-                logs.push('Crypto Sync: ' + cryptoData.length + ' items');
-            } catch (e) {
-                logs.push('Crypto Sync Error: ' + e.toString());
-            }
+        // Default if empty
+        if (activeTickers.size === 0 && activeCoins.size === 0) {
+            activeTickers.add('2330');
+            activeTickers.add('BTC'); // BTC can be cat-less here, PriceService handles it
         }
 
-        // Helper: Fetch with Headers & Retry
-        const fetchUrl = (url) => {
-            const params = {
-                muteHttpExceptions: true,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
-            };
-            for (let i = 0; i < 3; i++) {
-                try {
-                    let res = UrlFetchApp.fetch(url, params);
-                    if (res.getResponseCode() === 200) return res.getContentText();
-                } catch (e) { Utilities.sleep(500 * (i + 1)); }
-            }
-            return null;
-        };
-
-        twTickers.forEach(t => {
-            try {
-                let url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + t + '.TW';
-                let content = fetchUrl(url);
-                if (content) {
-                    let data = JSON.parse(content);
-                    if (data.chart && data.chart.result) {
-                        let meta = data.chart.result[0].meta;
-                        let price = meta.regularMarketPrice || meta.previousClose;
-                        if (price) prices[t] = price;
-                    }
-                }
-            } catch (e) {
-                logs.push('TW Stock Error (' + t + '): ' + e.toString());
-            }
+        // 3. Use PriceService for bulk fetching
+        let priceResult = PriceService.getBulkPrices({
+            Stock: Array.from(activeTickers),
+            Crypto: Array.from(activeCoins)
         });
-        logs.push('TW Stock Sync: ' + twTickers.length + ' attempted');
+
+        prices = priceResult.prices;
+        priceResult.logs.forEach(l => logs.push(l));
 
         const resultData = { fx: fx, prices: prices };
-        // Cache needs timestamp
         const cacheObj = { fx: fx, prices: prices, lastSync: new Date().toISOString() };
         CacheService.getScriptCache().put(CACHE_KEY, JSON.stringify(cacheObj), CACHE_TIME);
 
         return { logs: logs, data: resultData, lastSync: cacheObj.lastSync };
-
-
 
     } catch (e) {
         logs.push('Sync Error: ' + e.toString());

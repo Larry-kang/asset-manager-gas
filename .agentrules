@@ -1,0 +1,4 @@
+trigger: agent_finish
+condition: match_prompt: ".*\[RWL\].*"
+behavior: if_fail: "reject_and_retry"
+message: "未偵測到 <promise>DONE</promise> 標籤，請繼續修正以符合 RWL 持久化協議。"

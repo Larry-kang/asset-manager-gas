@@ -22,7 +22,8 @@ var GasStore = (function () {
     // --- L1 Cache (Memory) ---
     // Store: { key: { val: any, exp: timestamp, dirty: bool } }
     let _memory = {};
-    let _dirtyCount = 0; // [New] Counter for dirty writes
+    let _dirtyCount = 0;
+    let _queueKey = 'GASSTORE_DIRTY_QUEUE'; // Key for PropertiesService to track dirty keys
 
     // --- Private Helpers ---
 
@@ -396,6 +397,71 @@ var GasStore = (function () {
 
             console.timeEnd('GasStore.commit');
             console.log(`GasStore: Committed ${dirtyKeys.length} changes.`);
+        },
+
+        /**
+         * [New] Batch Put
+         */
+        batchPut: function (dataMap) {
+            for (let k in dataMap) {
+                this.set(k, dataMap[k]);
+            }
+        },
+
+        /**
+         * [New] Enqueue for Background Commit
+         * Uses PropertiesService to store keys that need flushing
+         */
+        enqueue: function () {
+            const dirtyKeys = Object.keys(_memory).filter(k => _memory[k].dirty);
+            if (dirtyKeys.length === 0) return;
+
+            const props = PropertiesService.getScriptProperties();
+            let queueStr = props.getProperty(_queueKey) || "";
+            let existing = queueStr ? queueStr.split(',') : [];
+
+            let updated = Array.from(new Set([...existing, ...dirtyKeys]));
+            props.setProperty(_queueKey, updated.join(','));
+
+            // Clear memory dirty flags since they are now in "Persistent Queue"
+            dirtyKeys.forEach(k => _memory[k].dirty = false);
+            _dirtyCount = 0;
+            console.log(`GasStore: Enqueued ${dirtyKeys.length} keys for background flush.`);
+        },
+
+        /**
+         * [New] Worker Flush
+         * Should be called by a Time-Based Trigger
+         */
+        workerFlush: function () {
+            const props = PropertiesService.getScriptProperties();
+            let queueStr = props.getProperty(_queueKey);
+            if (!queueStr) return;
+
+            let keys = queueStr.split(',');
+            if (keys.length === 0) {
+                props.deleteProperty(_queueKey);
+                return;
+            }
+
+            console.log(`GasStore Worker: Flushing ${keys.length} keys...`);
+
+            // To flush, we need to load these keys into memory first (if not there)
+            // and mark them as dirty, then call commit.
+            keys.forEach(k => {
+                if (!_memory[k]) {
+                    let val = this.get(k); // Load from L2/L3
+                    if (val !== null) {
+                        _memory[k] = { val: val, exp: 0, dirty: true };
+                    }
+                } else {
+                    _memory[k].dirty = true;
+                }
+            });
+
+            this.commit();
+            props.deleteProperty(_queueKey);
+            console.log("GasStore Worker: Flush complete.");
         }
     };
 })();

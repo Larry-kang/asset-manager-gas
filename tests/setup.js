@@ -20,6 +20,8 @@ const repoContent = fs.readFileSync(path.join(__dirname, '../Repository.gs'), 'u
 const actionsContent = fs.readFileSync(path.join(__dirname, '../Actions.gs'), 'utf8').replace(/^\uFEFF/, ''); // Actions depends on Logic/Repo
 const constantsContent = fs.readFileSync(path.join(__dirname, '../Constants.gs'), 'utf8').replace(/^\uFEFF/, ''); // Load Constants
 const gasStoreContent = fs.readFileSync(path.join(__dirname, '../GasStore.gs'), 'utf8').replace(/^\uFEFF/, ''); // Load GasStore
+const priceServiceContent = fs.readFileSync(path.join(__dirname, '../Service_Price.gs'), 'utf8').replace(/^\uFEFF/, '');
+const snapshotServiceContent = fs.readFileSync(path.join(__dirname, '../Service_Snapshot.gs'), 'utf8').replace(/^\uFEFF/, '');
 
 // 2. Mock GAS Environment
 const MockSheet = class {
@@ -241,6 +243,8 @@ vm.runInContext(codeWithExports, context);
 const repoWithExports = repoContent.replace(/const /g, 'var ') +
     "\n; this.SheetRepository = SheetRepository; this.LogRepository = LogRepository; this.LoanRepository = LoanRepository; this.LoanActionRepository = LoanActionRepository; this.RepositoryFactory = RepositoryFactory;";
 vm.runInContext(repoWithExports, context);
+vm.runInContext(priceServiceContent, context);
+vm.runInContext(snapshotServiceContent, context);
 vm.runInContext(actionsContent, context); // Actions depend on logic/repo
 
 // Export context for tests
@@ -258,14 +262,14 @@ const {
     TAB_LOG, TAB_LOAN, TAB_LOAN_ACTIONS, TAB_MARKET, ACT_BUY, TYPE_STOCK,
     DB_STORE_NAME, DB_ENCRYPTION_KEY,
     // Services
-    UrlFetchApp, CacheService, PropertiesService
+    UrlFetchApp, CacheService, PropertiesService, PriceService, SnapshotService
 } = context;
 
 module.exports = {
     context,
     GasStore,
     // Services
-    UrlFetchApp, CacheService, PropertiesService,
+    UrlFetchApp, CacheService, PropertiesService, PriceService, SnapshotService,
     // Mock classes
     MockSheet, MockSS,
     // Logic

@@ -1,0 +1,88 @@
+
+> asset-manager-gas@1.0.0 test
+> jest --verbose
+
+PASS tests/repository.test.js
+  LogRepository Tests
+    ??findAll should return mapped entities (14 ms)
+    ??findByTicker should filter results (2 ms)
+
+PASS tests/rebalance.test.js
+  Smart Rebalancing Logic
+    ??Should suggest No Action if balanced (13 ms)
+    ??Should suggest Buy/Sell correctly
+
+PASS tests/loan_lifecycle.test.js
+  Loan Lifecycle Tests
+    ??Interest Accrual over Time (15 ms)
+    ??Repayment/Cleared Handling (1 ms)
+
+PASS tests/logic.test.js
+  Helper Functions
+    ??normalizeTicker should format correctly (11 ms)
+  Logic.gs Tests
+    ??processMarketData should parse prices (1 ms)
+    ??getInventoryMap should calculate total inventory (1 ms)
+    ??calculateLoans should compute debt and risk (1 ms)
+    ??calculatePortfolio should return correct totals (1 ms)
+
+PASS tests/aggregation.test.js
+  Aggregation Logic Tests
+    ??Stock Aggregation: Multiple Positions -> One Ratio (13 ms)
+    ??Crypto Aggregation: Health Factor
+
+  console.log
+    GasStore: Committed 1 changes.
+
+      at Object.commit (evalmachine.<anonymous>:399:21)
+
+  console.log
+    GasStore: Committed 1 changes.
+
+      at Object.commit (evalmachine.<anonymous>:399:21)
+
+  console.log
+    GasStore: Committed 4 changes.
+
+      at Object.commit (evalmachine.<anonymous>:399:21)
+
+PASS tests/integration.test.js
+  System Integration Tests
+    ??Full Lifecycle: Buy -> Sync -> Loan -> Repay (77 ms)
+    ??Market Sync Logic and Caching (1 ms)
+
+  console.log
+    GasStore: Committed 3 changes.
+
+      at Object.commit (evalmachine.<anonymous>:399:21)
+
+  console.log
+    QA Warning: expect(received).toBe(expected) // Object.is equality
+    
+    Expected: true
+    Received: undefined
+
+      at Object.log (tests/qa.test.js:82:21)
+
+  console.log
+    GasStore: Committed 1 changes.
+
+      at Object.commit (evalmachine.<anonymous>:399:21)
+
+PASS tests/qa.test.js
+  QA Integration Scenarios
+    ??User visits Dashboard - should return correct data structure (17 ms)
+    ??User adds funds (Buy Stock) - should append to log (55 ms)
+    ??User performs loan action - verify data update (4 ms)
+    ??End-to-End: Buy Stock -> Check Inventory (2 ms)
+
+PASS tests/sync_dynamic.test.js
+  Dynamic Market Data Sync
+    ??should fetch tickers from Repository (15 ms)
+    ??should use default tickers if logs empty (1 ms)
+
+Test Suites: 8 passed, 8 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        1.682 s, estimated 2 s
+Ran all test suites.
